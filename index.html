@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pixelwalls — The Eternal Wall on Solana</title>
+<meta name="description" content="1,000,000 permanent pixel spaces on Solana. Upload your image. Own it forever."/>
+<meta property="og:title" content="Pixelwalls — The Eternal Wall on Solana"/>
+<meta property="og:url" content="https://pixelwalls.xyz"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+:root{--void:#0a0612;--deep:#110d22;--purple:#2d1b69;--violet:#5b21b6;--lav:#8b5cf6;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;--green:#4ade80;--white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--white);font-family:'Press Start 2P',monospace;overflow-x:hidden;}
+.pixel-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(91,33,182,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(91,33,182,.04) 1px,transparent 1px);background-size:32px 32px;}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;animation:twinkle var(--d,3s) var(--del,0s) infinite;}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:1;transform:scale(1.5)}}
+.fp{position:fixed;width:6px;height:6px;pointer-events:none;z-index:0;opacity:0;animation:fp-rise var(--d,10s) var(--del,0s) linear infinite;}
+@keyframes fp-rise{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.5}90%{opacity:.3}100%{transform:translateY(-100px) rotate(720deg);opacity:0}}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(91,33,182,.4);backdrop-filter:blur(12px);gap:10px;}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-text{font-size:10px;color:var(--gold);letter-spacing:1px;}
+.nav-links{display:flex;gap:18px;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:7px;letter-spacing:1px;transition:color .2s;white-space:nowrap;}
+.nav-links a:hover{color:var(--lav);}
+.nav-right{display:flex;gap:6px;flex-shrink:0;}
+.nav-btn{background:transparent;border:1px solid;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;}
+.nbw{border-color:var(--lav);color:var(--lav);}.nbw:hover,.nbw.connected{background:var(--lav);color:var(--void);}
+.nbb{border-color:var(--gold);color:var(--gold);}.nbb:hover{background:rgba(251,191,36,.12);}
+
+/* HERO */
+.hero{position:relative;z-index:1;text-align:center;padding:52px 28px 36px;display:flex;flex-direction:column;align-items:center;}
+.wizard-wrap{position:relative;margin-bottom:26px;display:inline-flex;align-items:center;justify-content:center;}
+.wizard-svg{animation:wfloat 3s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(139,92,246,.7));image-rendering:pixelated;}
+@keyframes wfloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-12px) rotate(1deg)}}
+.magic-ring{position:absolute;border-radius:50%;border:1px solid;top:50%;left:50%;animation:ring-out 2.5s ease-out infinite;}
+@keyframes ring-out{0%{width:100px;height:100px;margin:-50px 0 0 -50px;opacity:.8}100%{width:280px;height:280px;margin:-140px 0 0 -140px;opacity:0}}
+.hero-badge{display:inline-block;background:rgba(232,121,249,.1);border:1px solid rgba(232,121,249,.4);color:var(--pink);font-size:7px;padding:7px 15px;margin-bottom:18px;letter-spacing:2px;animation:bglow 2s ease-in-out infinite;}
+@keyframes bglow{0%,100%{box-shadow:0 0 8px rgba(232,121,249,.2)}50%{box-shadow:0 0 24px rgba(232,121,249,.5)}}
+.hero-title{font-size:clamp(16px,3.5vw,30px);line-height:1.5;margin-bottom:14px;background:linear-gradient(135deg,var(--gold) 0%,var(--pink) 50%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-family:'VT323',monospace;font-size:21px;color:var(--muted);margin-bottom:30px;max-width:580px;line-height:1.6;}
+.hero-sub em{color:var(--gold);font-style:normal;}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:linear-gradient(135deg,var(--violet),var(--pink));border:none;color:white;font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 24px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(139,92,246,.5);}
+.btn-outline{background:transparent;border:2px solid var(--gold);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:8px;padding:12px 24px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn-outline:hover{background:rgba(251,191,36,.1);transform:translateY(-2px);}
+
+/* STATS */
+.stats-strip{position:relative;z-index:1;display:flex;justify-content:center;gap:36px;flex-wrap:wrap;padding:18px 28px;background:rgba(17,13,34,.7);border-top:1px solid rgba(91,33,182,.3);border-bottom:1px solid rgba(91,33,182,.3);}
+.stat-pill .num{font-family:'VT323',monospace;font-size:26px;color:var(--cyan);}
+.stat-pill .lbl{font-size:6px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-align:center;}
+
+/* TICKER */
+.ticker{overflow:hidden;background:rgba(45,27,105,.4);padding:9px 0;border-bottom:1px solid rgba(91,33,182,.2);}
+.ticker-inner{display:flex;gap:60px;animation:scroll 28s linear infinite;white-space:nowrap;}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.tick{font-size:7px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;flex-shrink:0;}
+.tick .sym{color:var(--gold);}.tick .up{color:var(--green);}
+
+/* WALL */
+.wall-section{position:relative;z-index:1;padding:44px 0;background:rgba(17,13,34,.3);}
+.s-label{text-align:center;font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:12px;}
+.s-title{text-align:center;font-size:clamp(13px,2.5vw,18px);margin-bottom:28px;line-height:1.6;}
+.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 28px 14px;}
+.ctrl-label{font-size:7px;color:var(--muted);}
+.ctrl-input{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.5);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;padding:7px 9px;width:76px;outline:none;text-align:center;}
+.ctrl-input:focus{border-color:var(--lav);}
+.qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:6px 8px;cursor:pointer;transition:all .2s;}
+.qbtn:hover,.qbtn.active{background:rgba(91,33,182,.4);border-color:var(--lav);color:var(--white);}
+.zoom-hint{padding:0 28px 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.zoom-hint span{color:var(--lav);}
+.wall-wrap{display:flex;gap:0;padding:0 28px;}
+.canvas-area{position:relative;flex:1;min-width:0;}
+#wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
+.minimap-wrap{position:absolute;bottom:10px;left:10px;background:rgba(10,6,18,.88);border:1px solid rgba(91,33,182,.5);padding:4px;}
+#miniMap{display:block;image-rendering:pixelated;cursor:pointer;}
+.mini-lbl{font-size:5px;color:var(--muted);text-align:center;margin-top:2px;letter-spacing:1px;}
+
+/* SIDEBAR */
+.sidebar{width:272px;flex-shrink:0;background:rgba(17,13,34,.92);border-left:1px solid rgba(91,33,182,.3);display:flex;flex-direction:column;max-height:720px;overflow-y:auto;}
+.sidebar-tabs{display:flex;border-bottom:1px solid rgba(91,33,182,.3);}
+.stab{flex:1;padding:11px 4px;font-size:7px;color:var(--muted);text-align:center;cursor:pointer;border:none;border-right:1px solid rgba(91,33,182,.2);background:none;font-family:'Press Start 2P',monospace;transition:all .2s;}
+.stab:last-child{border-right:none;}
+.stab.active{color:var(--gold);background:rgba(45,27,105,.4);}
+.stab:hover:not(.active){color:var(--lav);}
+.tab-panel{display:none;flex-direction:column;}
+.tab-panel.active{display:flex;}
+.sb-card{padding:14px;border-bottom:1px solid rgba(91,33,182,.2);}
+.sb-title{font-size:7px;color:var(--gold);margin-bottom:10px;letter-spacing:1px;}
+.space-preview{width:100%;height:86px;border:1px solid rgba(91,33,182,.4);display:flex;align-items:center;justify-content:center;font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:10px;overflow:hidden;position:relative;}
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.info-key{font-size:6px;color:var(--muted);}
+.info-val{font-family:'VT323',monospace;font-size:15px;}
+.f-label{font-size:6px;color:var(--muted);margin-bottom:3px;letter-spacing:1px;}
+.f-input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);color:var(--white);font-family:'VT323',monospace;font-size:15px;padding:7px 9px;margin-bottom:9px;outline:none;}
+.f-input:focus{border-color:var(--lav);}
+.upload-area{width:100%;height:64px;border:1px dashed rgba(139,92,246,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:9px;transition:all .2s;position:relative;overflow:hidden;}
+.upload-area:hover{border-color:var(--lav);color:var(--lav);}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.aBtn{width:100%;padding:10px;font-family:'Press Start 2P',monospace;font-size:7px;cursor:pointer;letter-spacing:1px;transition:all .2s;border:none;margin-bottom:7px;}
+.aBtn-primary{background:linear-gradient(135deg,var(--violet),var(--pink));color:white;}
+.aBtn-primary:hover{box-shadow:0 4px 14px rgba(139,92,246,.4);transform:translateY(-1px);}
+.aBtn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);}
+.aBtn-outline:hover{background:rgba(251,191,36,.1);}
+.aBtn-x{background:transparent;border:1px solid #1DA1F2;color:#1DA1F2;}
+.aBtn-x:hover{background:rgba(29,161,242,.08);}
+.aBtn-danger{background:transparent;border:1px solid var(--red);color:var(--red);font-size:6px;}
+.aBtn:disabled{opacity:.28;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+/* MY SPACES */
+.my-spaces-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px;}
+.space-tile{background:rgba(45,27,105,.25);border:1px solid rgba(91,33,182,.3);cursor:pointer;transition:all .2s;overflow:hidden;}
+.space-tile:hover{border-color:var(--lav);transform:scale(1.03);}
+.space-tile-img{width:100%;height:60px;object-fit:cover;display:block;}
+.space-tile-color{width:100%;height:60px;display:block;}
+.space-tile-info{padding:5px;font-family:'VT323',monospace;font-size:12px;}
+.space-tile-coord{color:var(--cyan);}
+.space-tile-size{color:var(--muted);font-size:11px;}
+.no-spaces{padding:22px;text-align:center;font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;}
+
+/* TIER */
+.tier-row{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:2.1;}
+.tier-now{color:var(--green);}
+
+/* TOKEN */
+.section{position:relative;z-index:1;padding:48px 28px;}
+.pump-card{max-width:560px;margin:0 auto;background:rgba(17,13,34,.95);border:1px solid rgba(232,121,249,.3);padding:32px;position:relative;}
+.pump-card::before{content:'';position:absolute;inset:-1px;z-index:-1;background:linear-gradient(135deg,var(--violet),var(--pink),var(--cyan),var(--violet));background-size:300% 300%;animation:bspin 5s linear infinite;}
+@keyframes bspin{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.ca-box{background:rgba(0,0,0,.5);border:1px solid rgba(91,33,182,.4);padding:11px;font-family:'VT323',monospace;font-size:13px;color:var(--cyan);word-break:break-all;margin:14px 0;cursor:pointer;transition:border-color .2s;}
+.ca-box:hover{border-color:var(--cyan);}
+.live-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0;}
+.ls{background:rgba(45,27,105,.3);border:1px solid rgba(91,33,182,.2);padding:11px 6px;text-align:center;}
+.ls .n{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
+.ls .l{font-size:6px;color:var(--muted);margin-top:2px;letter-spacing:1px;}
+.ext-links{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+.ext-link{flex:1;min-width:90px;padding:8px;font-family:'Press Start 2P',monospace;font-size:6px;cursor:pointer;letter-spacing:1px;text-align:center;text-decoration:none;border:1px solid;transition:all .2s;display:block;}
+.ext-link:hover{opacity:.75;}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;max-width:860px;margin:0 auto;}
+.f-card{background:rgba(17,13,34,.8);border:1px solid rgba(91,33,182,.3);padding:22px 18px;position:relative;transition:all .3s;}
+.f-card:hover{border-color:rgba(139,92,246,.6);transform:translateY(-3px);}
+.f-card::before{content:'';position:absolute;top:0;left:0;width:12px;height:12px;border-top:2px solid var(--lav);border-left:2px solid var(--lav);}
+.f-card::after{content:'';position:absolute;bottom:0;right:0;width:12px;height:12px;border-bottom:2px solid var(--lav);border-right:2px solid var(--lav);}
+.f-icon{font-size:22px;margin-bottom:10px;display:block;}
+.f-name{font-size:7px;color:var(--gold);margin-bottom:8px;letter-spacing:1px;}
+.f-desc{font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.5;}
+
+/* HOW */
+.steps{display:flex;max-width:880px;margin:0 auto;flex-wrap:wrap;}
+.step-item{flex:1;min-width:150px;padding:22px 16px;text-align:center;border-right:1px solid rgba(91,33,182,.2);}
+.step-item:last-child{border-right:none;}
+.step-num{width:38px;height:38px;border-radius:50%;background:rgba(45,27,105,.6);border:2px solid var(--lav);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--lav);margin:0 auto 12px;}
+.step-name{font-size:7px;color:var(--gold);margin-bottom:7px;line-height:1.6;}
+.step-desc{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.5;}
+
+/* LORE */
+.scroll-paper{max-width:640px;margin:0 auto;background:rgba(17,13,34,.7);border:1px solid rgba(251,191,36,.2);padding:32px;position:relative;font-family:'VT323',monospace;font-size:18px;color:var(--muted);line-height:1.9;}
+.scroll-paper em{color:var(--gold);font-style:normal;}
+.scroll-paper::before{content:'✦';position:absolute;top:11px;left:11px;color:var(--gold);}
+.scroll-paper::after{content:'✦';position:absolute;bottom:11px;right:11px;color:var(--gold);}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid rgba(91,33,182,.3);padding:32px;text-align:center;}
+footer .logo{font-size:11px;color:var(--gold);margin-bottom:13px;}
+footer .links{display:flex;gap:18px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+footer .links a{color:var(--lav);text-decoration:none;font-size:7px;transition:color .2s;}
+footer .links a:hover{color:var(--white);}
+footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204,.4);max-width:580px;margin:0 auto;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;align-items:center;justify-content:center;padding:18px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--deep);border:2px solid var(--lav);padding:30px;max-width:400px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-close{position:absolute;top:11px;right:14px;background:none;border:none;color:var(--muted);font-family:'Press Start 2P',monospace;font-size:11px;cursor:pointer;}
+.modal-close:hover{color:var(--white);}
+.modal-title{font-size:9px;color:var(--gold);margin-bottom:16px;line-height:1.5;}
+.price-showcase{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);padding:18px;text-align:center;margin:12px 0;}
+.price-sol{font-family:'VT323',monospace;font-size:36px;color:var(--gold);}
+.price-usd{font-size:7px;color:var(--muted);margin-top:4px;}
+.checklist{margin:12px 0;display:flex;flex-direction:column;gap:6px;}
+.check-item{font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;gap:7px;}
+.check-item::before{content:'✦';color:var(--lav);flex-shrink:0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:2000;background:rgba(45,27,105,.97);border:1px solid var(--lav);padding:11px 16px;font-size:7px;color:var(--white);max-width:272px;line-height:1.7;transform:translateX(200%);transition:transform .35s ease;}
+.toast.show{transform:translateX(0);}
+
+@media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0 14px;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}}
+</style>
+</head>
+<body>
+<div class="pixel-bg"></div>
+<div class="stars" id="stars"></div>
+<div class="fp" style="left:7%;--d:9s;--del:0s;background:#8b5cf6;"></div>
+<div class="fp" style="left:23%;--d:7s;--del:2s;background:#e879f9;"></div>
+<div class="fp" style="left:60%;--d:11s;--del:1s;background:#fbbf24;"></div>
+<div class="fp" style="left:82%;--d:8s;--del:3s;background:#22d3ee;"></div>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering:pixelated;">
+      <rect x="7" y="1" width="2" height="2" fill="#fbbf24"/><rect x="6" y="3" width="4" height="2" fill="#fbbf24"/>
+      <rect x="5" y="5" width="6" height="2" fill="#8b5cf6"/><rect x="4" y="7" width="8" height="1" fill="#5b21b6"/>
+      <rect x="3" y="8" width="10" height="1" fill="#2d1b69"/><rect x="7" y="2" width="2" height="1" fill="#fff"/>
+      <rect x="5" y="9" width="2" height="2" fill="#22d3ee"/><rect x="9" y="9" width="2" height="2" fill="#22d3ee"/>
+      <rect x="7" y="12" width="2" height="2" fill="#9d8ccc"/><rect x="13" y="5" width="1" height="3" fill="#fbbf24"/>
+    </svg>
+    <span class="logo-text">PIXELWALLS</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#wall">THE WALL</a></li>
+    <li><a href="#token">$PIXEL</a></li>
+    <li><a href="#how">HOW IT WORKS</a></li>
+    <li><a href="#lore">LORE</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
+    <button class="nav-btn nbb" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">BUY $PIXEL ▶</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wizard-wrap">
+    <div class="magic-ring" style="border-color:rgba(139,92,246,.5);animation-delay:0s;"></div>
+    <div class="magic-ring" style="border-color:rgba(232,121,249,.3);animation-delay:.9s;"></div>
+    <svg class="wizard-svg" width="140" height="178" viewBox="0 0 16 20" style="image-rendering:pixelated;">
+      <rect x="7" y="0" width="2" height="1" fill="#fbbf24"/><rect x="6" y="1" width="4" height="1" fill="#fbbf24"/>
+      <rect x="5" y="2" width="6" height="1" fill="#e879f9"/><rect x="4" y="3" width="8" height="1" fill="#8b5cf6"/>
+      <rect x="3" y="4" width="10" height="1" fill="#7c3aed"/><rect x="2" y="5" width="12" height="1" fill="#5b21b6"/>
+      <rect x="1" y="6" width="14" height="1" fill="#4c1d95"/><rect x="0" y="7" width="16" height="1" fill="#2d1b69"/>
+      <rect x="6" y="1" width="1" height="1" fill="#fff"/>
+      <rect x="3" y="8" width="10" height="4" fill="#d4a76a"/><rect x="3" y="8" width="10" height="2" fill="#b45309"/>
+      <rect x="4" y="9" width="2" height="2" fill="#111"/><rect x="10" y="9" width="2" height="2" fill="#111"/>
+      <rect x="4" y="9" width="1" height="1" fill="#22d3ee"/><rect x="10" y="9" width="1" height="1" fill="#22d3ee"/>
+      <rect x="3" y="12" width="10" height="1" fill="#f0e6ff"/><rect x="4" y="13" width="8" height="1" fill="#e8d5ff"/>
+      <rect x="2" y="12" width="12" height="6" fill="#3730a3"/><rect x="1" y="13" width="14" height="5" fill="#3730a3"/>
+      <rect x="3" y="12" width="1" height="6" fill="#fbbf24"/><rect x="12" y="12" width="1" height="6" fill="#fbbf24"/>
+      <rect x="6" y="14" width="1" height="1" fill="#e879f9"/><rect x="9" y="15" width="1" height="1" fill="#22d3ee"/>
+      <rect x="7" y="16" width="1" height="1" fill="#fbbf24"/>
+      <rect x="14" y="10" width="1" height="4" fill="#92400e"/>
+      <rect x="13" y="9" width="1" height="1" fill="#fbbf24"/><rect x="15" y="9" width="1" height="1" fill="#22d3ee"/>
+    </svg>
+  </div>
+  <div class="hero-badge">✦ LIVE ON SOLANA × PUMP.FUN ✦</div>
+  <h1 class="hero-title">THE WIZARD'S<br/>ETERNAL WALL</h1>
+  <p class="hero-sub"><em>1,000,000 permanent spaces</em> on Solana — forever.<br/>Upload your image. Set your link. Own it. Sell it anytime.</p>
+  <div class="cta-row">
+    <button class="btn-primary" onclick="document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ CLAIM YOUR SPACE</button>
+    <button class="btn-outline" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">🔮 BUY $PIXEL</button>
+  </div>
+</section>
+
+<div class="stats-strip">
+  <div class="stat-pill"><div class="num" id="statClaimed">0</div><div class="lbl">SPACES CLAIMED</div></div>
+  <div class="stat-pill"><div class="num" id="statAvail">1,000,000</div><div class="lbl">AVAILABLE</div></div>
+  <div class="stat-pill"><div class="num" id="statVol">0 SOL</div><div class="lbl">WALL VOLUME</div></div>
+  <div class="stat-pill"><div class="num" id="statPrice" style="color:var(--gold)">—</div><div class="lbl">$PIXEL PRICE</div></div>
+  <div class="stat-pill"><div class="num" id="statMcap">—</div><div class="lbl">MARKET CAP</div></div>
+  <div class="stat-pill"><div class="num" id="statChange">—</div><div class="lbl">PRICE 24H</div></div>
+</div>
+
+<div class="ticker"><div class="ticker-inner">
+  <span class="tick"><span class="sym">$PIXEL</span><span class="up">LIVE ON PUMP.FUN</span></span>
+  <span class="tick"><span class="sym">PIXELWALLS.XYZ</span>THE ETERNAL WALL</span>
+  <span class="tick">CA: <span class="sym">7QaS...pump</span></span>
+  <span class="tick">FROM <span class="sym">0.01 SOL</span> PER PIXEL</span>
+  <span class="tick">UPLOAD YOUR IMAGE — <span class="up">YOUR SPACE FOREVER</span></span>
+  <span class="tick">1,000,000 SPACES — <span class="sym">CLAIM EARLY</span></span>
+  <span class="tick">VERIFY YOUR <span class="sym">X ACCOUNT</span></span>
+  <span class="tick"><span class="sym">$PIXEL</span><span class="up">LIVE ON PUMP.FUN</span></span>
+  <span class="tick"><span class="sym">PIXELWALLS.XYZ</span>THE ETERNAL WALL</span>
+  <span class="tick">CA: <span class="sym">7QaS...pump</span></span>
+  <span class="tick">FROM <span class="sym">0.01 SOL</span> PER PIXEL</span>
+  <span class="tick">UPLOAD YOUR IMAGE — <span class="up">YOUR SPACE FOREVER</span></span>
+  <span class="tick">1,000,000 SPACES — <span class="sym">CLAIM EARLY</span></span>
+  <span class="tick">VERIFY YOUR <span class="sym">X ACCOUNT</span></span>
+</div></div>
+
+<section class="wall-section" id="wall">
+  <p class="s-label">✦ THE ETERNAL WALL ✦</p>
+  <h2 class="s-title">1,000,000 SPACES — CLICK TO CLAIM</h2>
+  <div class="wall-controls">
+    <span class="ctrl-label">PIXELS TO BUY:</span>
+    <input class="ctrl-input" type="number" id="pixelCount" value="1" min="1" max="10000" oninput="onCountChange(this.value)"/>
+    <div style="display:flex;gap:5px;">
+      <button class="qbtn active" onclick="setCount(1,this)">1</button>
+      <button class="qbtn" onclick="setCount(5,this)">5</button>
+      <button class="qbtn" onclick="setCount(10,this)">10</button>
+      <button class="qbtn" onclick="setCount(25,this)">25</button>
+      <button class="qbtn" onclick="setCount(100,this)">100</button>
+      <button class="qbtn" onclick="setCount(500,this)">500</button>
+    </div>
+    <span class="ctrl-label" style="margin-left:8px;">ZOOM:</span>
+    <button class="qbtn" onclick="zoomBy(2)">＋</button>
+    <button class="qbtn" onclick="zoomBy(0.5)">－</button>
+    <button class="qbtn" onclick="resetZoom()">FIT</button>
+  </div>
+  <div class="zoom-hint">
+    <span>🖱 Scroll=zoom · Drag=pan · Click=select</span>
+    <span id="zoomLabel">Zoom: 1×</span>
+    <span id="cursorCoord" style="color:var(--cyan);">Hover to see coords</span>
+    <span id="selInfo" style="color:var(--pink);"></span>
+  </div>
+  <div class="wall-wrap">
+    <div class="canvas-area">
+      <canvas id="wallCanvas" style="max-width:100%;"></canvas>
+      <div class="minimap-wrap">
+        <canvas id="miniMap" width="108" height="108"></canvas>
+        <div class="mini-lbl">MINIMAP · CLICK TO JUMP</div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-tabs">
+        <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
+        <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
+      </div>
+      <!-- SELECT TAB -->
+      <div class="tab-panel active" id="tab-select">
+        <div class="sb-card">
+          <div class="sb-title">✦ SELECTED SPACE</div>
+          <div class="space-preview" id="spacePreview"><span id="previewText">Click the wall to select</span></div>
+          <div class="info-row"><span class="info-key">TOP-LEFT</span><span class="info-val" id="infoCoord" style="color:var(--cyan);">—</span></div>
+          <div class="info-row"><span class="info-key">SIZE</span><span class="info-val" id="infoSize" style="color:var(--lav);">—</span></div>
+          <div class="info-row"><span class="info-key">STATUS</span><span class="info-val" id="infoStatus">—</span></div>
+          <div class="info-row"><span class="info-key">PRICE</span><span class="info-val" id="infoPrice" style="color:var(--gold);">—</span></div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ CUSTOMIZE YOUR SPACE</div>
+          <div class="f-label">UPLOAD IMAGE (optional)</div>
+          <div class="upload-area" id="uploadArea">
+            <span id="uploadText">⬆ Click to upload image</span>
+            <img id="uploadPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"/>
+            <input type="file" id="imageFile" accept="image/*" onchange="handleImageUpload(event)"/>
+          </div>
+          <div class="f-label">BACKGROUND COLOR</div>
+          <input type="color" id="colorPicker" value="#8b5cf6" style="width:100%;height:30px;cursor:pointer;border:1px solid rgba(91,33,182,.4);background:none;padding:2px;margin-bottom:9px;"/>
+          <div class="f-label">YOUR URL (optional)</div>
+          <input class="f-input" id="urlInput" placeholder="https://yourproject.xyz"/>
+          <button class="aBtn aBtn-primary" id="claimBtn" onclick="claimSpace()" disabled>🔮 CLAIM THIS SPACE</button>
+          <button class="aBtn aBtn-x" id="verifyXBtn" onclick="verifyX()" disabled>𝕏 VERIFY X ACCOUNT</button>
+          <button class="aBtn aBtn-danger" onclick="clearSelection()">✕ CLEAR</button>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ PRICE TIERS</div>
+          <div class="tier-row">
+            <div class="tier-now">0–100K &nbsp;→ 0.01 SOL ✦ NOW</div>
+            <div>100K–300K → 0.03 SOL</div>
+            <div>300K–600K → 0.07 SOL</div>
+            <div>600K–900K → 0.15 SOL</div>
+            <div>900K–1M &nbsp;→ 0.50 SOL</div>
+          </div>
+        </div>
+      </div>
+      <!-- MY WALL TAB -->
+      <div class="tab-panel" id="tab-mywall">
+        <div class="sb-card"><div class="sb-title">✦ MY SPACES</div><div id="myWallSummary" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);"></div></div>
+        <div id="mySpacesGrid" class="my-spaces-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="token" style="background:rgba(17,13,34,.3);">
+  <p class="s-label">✦ THE TOKEN ✦</p>
+  <h2 class="s-title">$PIXEL — LIVE MARKET DATA</h2>
+
+  <!-- LIVE STATS ROW -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:860px;margin:0 auto 28px;padding:0 4px;">
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">PRICE USD</div>
+      <div class="n" id="mcap" style="font-size:18px;color:var(--gold);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">MARKET CAP</div>
+      <div class="n" id="dexMcap" style="font-size:18px;color:var(--cyan);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">VOLUME 24H</div>
+      <div class="n" id="vol24" style="font-size:18px;color:var(--lav);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">LIQUIDITY</div>
+      <div class="n" id="dexLiq" style="font-size:18px;color:var(--pink);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">PRICE CHANGE 24H</div>
+      <div class="n" id="dexChange" style="font-size:18px;">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">BUYS / SELLS 24H</div>
+      <div class="n" id="holders" style="font-size:18px;color:var(--white);">—</div>
+    </div>
+  </div>
+
+  <!-- DEXSCREENER CHART EMBED -->
+  <div style="max-width:860px;margin:0 auto 24px;border:1px solid rgba(91,33,182,.4);overflow:hidden;">
+    <div style="background:rgba(17,13,34,.8);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(91,33,182,.3);">
+      <span style="font-size:7px;color:var(--gold);letter-spacing:1px;">✦ LIVE CHART — DEXSCREENER</span>
+      <a href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank" style="font-size:6px;color:var(--lav);text-decoration:none;letter-spacing:1px;">OPEN FULL CHART ↗</a>
+    </div>
+    <style>#dexscreener-embed{position:relative;width:100%;padding-bottom:125%;}@media(min-width:1400px){#dexscreener-embed{padding-bottom:65%;}}#dexscreener-embed iframe{position:absolute;width:100%;height:100%;top:0;left:0;border:0;}</style>
+    <div id="dexscreener-embed">
+      <iframe src="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE?embed=1&loadChartSettings=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15"></iframe>
+    </div>
+  </div>
+
+  <!-- CA + BUY BUTTONS -->
+  <div style="max-width:860px;margin:0 auto;">
+    <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:5px;text-align:center;">CONTRACT ADDRESS</div>
+    <div class="ca-box" id="caBox" onclick="copyCA()" title="Click to copy" style="max-width:860px;text-align:center;font-size:15px;">
+      7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button class="aBtn aBtn-primary" style="flex:2;min-width:200px;font-size:8px;padding:14px;" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">⚡ BUY $PIXEL ON PUMP.FUN</button>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--cyan);color:var(--cyan);padding:14px;" href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank">📈 DEXSCREENER</a>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--lav);color:var(--lav);padding:14px;" href="https://gmgn.ai/sol/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">📊 GMGN</a>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--muted);color:var(--muted);padding:14px;" href="https://solscan.io/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">🔍 SOLSCAN</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <p class="s-label">✦ THE MAGIC ✦</p>
+  <h2 class="s-title">WHAT THE WALL OFFERS</h2>
+  <div class="features-grid">
+    <div class="f-card"><span class="f-icon">⛓️</span><p class="f-name">PERMANENT ON-CHAIN</p><p class="f-desc">Your space is a Solana NFT. It exists as long as the blockchain does. No servers. No expiry.</p></div>
+    <div class="f-card"><span class="f-icon">🖼️</span><p class="f-name">UPLOAD ANY IMAGE</p><p class="f-desc">Upload your logo, art or photo. It lives on your pixels permanently — visible to all visitors.</p></div>
+    <div class="f-card"><span class="f-icon">𝕏</span><p class="f-name">X VERIFIED PROFILE</p><p class="f-desc">Connect your X account. Gold verified badge, handle and profile link on your space forever.</p></div>
+    <div class="f-card"><span class="f-icon">💰</span><p class="f-name">RESELL ANYTIME</p><p class="f-desc">List your space at any price. Edit it, hold it, or flip it — it's your NFT to do with as you wish.</p></div>
+    <div class="f-card"><span class="f-icon">⚡</span><p class="f-name">$PIXEL FLYWHEEL</p><p class="f-desc">10% of every sale auto-buys $PIXEL via Jupiter. Product growth = token buy pressure. Automatic.</p></div>
+    <div class="f-card"><span class="f-icon">📈</span><p class="f-name">BONDING CURVE</p><p class="f-desc">Starts at 0.01 SOL per pixel. Rises through 5 tiers as the wall fills. Early = cheapest. Always.</p></div>
+  </div>
+</section>
+
+<section class="section" id="how" style="background:rgba(17,13,34,.3);">
+  <p class="s-label">✦ THE PROCESS ✦</p>
+  <h2 class="s-title">HOW IT WORKS</h2>
+  <div class="steps">
+    <div class="step-item"><div class="step-num">1</div><div class="step-name">CONNECT WALLET</div><div class="step-desc">Phantom, Solflare, or Backpack. No signup required.</div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-name">CHOOSE PIXELS</div><div class="step-desc">Enter how many pixels you want. Click the wall to place them.</div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-name">UPLOAD IMAGE</div><div class="step-desc">Upload your logo or art. It fills your claimed area permanently.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-name">PAY IN SOL</div><div class="step-desc">Approve in your wallet. 0.01 SOL per pixel to start.</div></div>
+    <div class="step-item"><div class="step-num">5</div><div class="step-name">OWN FOREVER</div><div class="step-desc">Your NFT. Edit it, flex it, or resell. Yours forever.</div></div>
+  </div>
+</section>
+
+<section class="section" id="lore">
+  <p class="s-label">✦ THE LORE ✦</p>
+  <h2 class="s-title">FROM THE ARCHMAGE'S GRIMOIRE</h2>
+  <div class="scroll-paper">
+    Before the first block was mined, the <em>Archmage of Pixelwalls</em> saw what the chain would become — not merely a ledger, but a <em>living canvas</em>.<br/><br/>
+    He conjured a great wall — one million bricks strong. Each brick a soul. Each soul a story. The <em>Eternal Spell</em> ensures no force can erase what is written there.<br/><br/>
+    The wall starts empty. <em>You</em> fill it. Your image. Your link. Your legacy — inscribed forever on the chain. <em>Will you take your place on the wall?</em>
+  </div>
+</section>
+
+<footer>
+  <div class="logo">✦ PIXELWALLS.XYZ ✦</div>
+  <div class="links">
+    <a href="https://twitter.com/pixel_walls" target="_blank">𝕏 @PIXEL_WALLS</a>
+    <a href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">PUMP.FUN</a>
+    <a href="https://gmgn.ai/sol/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">GMGN</a>
+    <a href="https://solscan.io/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">SOLSCAN</a>
+    <a href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank">DEXSCREENER</a>
+    <a href="#wall">THE WALL</a>
+    <a href="#token">$PIXEL</a>
+  </div>
+  <div class="disc">Pixelwalls is a community project on Solana. $PIXEL is a meme token. Crypto involves risk. DYOR. Not financial advice. Magic not guaranteed.</div>
+</footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="claimModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('claimModal')">✕</button>
+    <div class="modal-title">🔮 CONFIRM YOUR CLAIM</div>
+    <div id="claimBody" style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:10px;"></div>
+    <div class="price-showcase"><div class="price-sol" id="claimPrice">—</div><div class="price-usd" id="claimUsd">—</div></div>
+    <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:15px;color:var(--gold);line-height:1.8;">
+      ✦ Smart contract deploying imminently<br/>
+      ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for the launch alert
+    </div>
+    <button class="aBtn aBtn-primary" onclick="window.open('https://twitter.com/pixel_walls','_blank')">𝕏 FOLLOW @pixel_walls FOR LAUNCH</button>
+    <button class="aBtn aBtn-outline" onclick="closeModal('claimModal')">CLOSE</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    <div class="modal-title" id="editTitle">✦ EDIT SPACE</div>
+    <div id="editPreview" style="width:100%;height:110px;margin-bottom:14px;overflow:hidden;border:1px solid rgba(91,33,182,.4);background:#1a1030;"></div>
+    <div class="f-label">REPLACE IMAGE</div>
+    <div class="upload-area" style="margin-bottom:10px;"><span>⬆ Click to upload new image</span><input type="file" id="editImageFile" accept="image/*" onchange="handleEditImage(event)"/></div>
+    <div class="f-label">BACKGROUND COLOR</div>
+    <input type="color" id="editColor" style="width:100%;height:30px;cursor:pointer;border:1px solid rgba(91,33,182,.4);background:none;padding:2px;margin-bottom:9px;"/>
+    <div class="f-label">YOUR URL</div>
+    <input class="f-input" id="editUrl" placeholder="https://yourproject.xyz"/>
+    <div class="f-label">LIST FOR SALE — SOL PRICE (blank = not for sale)</div>
+    <input class="f-input" id="editListPrice" type="number" placeholder="e.g. 0.05" step="0.001" min="0"/>
+    <button class="aBtn aBtn-primary" onclick="saveEdit()">💾 SAVE CHANGES</button>
+    <button class="aBtn aBtn-danger" onclick="closeModal('editModal')">CANCEL</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="xModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('xModal')">✕</button>
+    <div class="modal-title">𝕏 VERIFY YOUR X ACCOUNT</div>
+    <div style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Connect your X account to display your profile on the wall. Your avatar, handle and X link will appear on your space.</div>
+    <div class="checklist">
+      <div class="check-item">GOLD VERIFIED BADGE ON YOUR SPACE</div>
+      <div class="check-item">PROFILE IMAGE ON THE WALL</div>
+      <div class="check-item">DIRECT X LINK FROM YOUR SPACE</div>
+      <div class="check-item">ONLY REQUIRES OWNING A PIXEL</div>
+    </div>
+    <button class="aBtn aBtn-x" onclick="doXOAuth()">𝕏 CONNECT X ACCOUNT</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const PUMP_URL='https://pump.fun/coin/'+CA;
+const GRID=1000, SOL_USD=170;
+const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
+
+// ── WALLET ────────────────────────────────────────────────
+let walletConnected=false,walletAddress=null;
+function getWallets(){
+  const w=[];
+  if(window.phantom?.solana?.isPhantom)w.push({name:'Phantom',obj:window.phantom.solana});
+  else if(window.solana?.isPhantom)w.push({name:'Phantom',obj:window.solana});
+  if(window.solflare?.isSolflare)w.push({name:'Solflare',obj:window.solflare});
+  if(window.backpack?.isBackpack)w.push({name:'Backpack',obj:window.backpack});
+  return w;
+}
+async function connectWallet(){
+  const ws=getWallets();
+  if(!ws.length){showToast('No wallet found — opening Phantom...');setTimeout(()=>window.open('https://phantom.app','_blank'),600);return;}
+  if(ws.length===1){await doConnect(ws[0]);return;}
+  showPickerModal(ws);
+}
+async function doConnect(w){
+  try{
+    const r=await w.obj.connect();
+    const pk=r?.publicKey?.toString()||w.obj.publicKey?.toString();
+    if(!pk)throw new Error('No public key');
+    walletAddress=pk;walletConnected=true;
+    const s=pk.slice(0,4)+'...'+pk.slice(-4);
+    const btn=document.getElementById('walletBtn');
+    btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
+    closePicker();loadMySpaces();showToast('✦ '+w.name+' connected: '+s);
+    if(sel.col>=0)refreshSidebar();
+  }catch(e){showToast(e.code===4001?'Cancelled.':(e.message||'Error'));}
+}
+function disconnectWallet(){
+  walletConnected=false;walletAddress=null;
+  const btn=document.getElementById('walletBtn');
+  btn.textContent='CONNECT WALLET';btn.classList.remove('connected');btn.onclick=connectWallet;
+  document.getElementById('claimBtn').disabled=true;
+  document.getElementById('verifyXBtn').disabled=true;
+  showToast('Wallet disconnected.');
+}
+async function tryAutoReconnect(){
+  for(const w of getWallets()){
+    try{if(w.obj.isConnected&&w.obj.publicKey){
+      walletAddress=w.obj.publicKey.toString();walletConnected=true;
+      const s=walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
+      const btn=document.getElementById('walletBtn');
+      btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
+      loadMySpaces();break;
+    }}catch(e){}
+  }
+}
+function showPickerModal(ws){
+  let el=document.getElementById('wpm');if(el)el.remove();
+  const ov=document.createElement('div');ov.id='wpm';ov.className='modal-overlay open';
+  ov.innerHTML=`<div class="modal" style="max-width:270px;"><button class="modal-close" onclick="closePicker()">✕</button>
+    <div class="modal-title" style="font-size:9px;margin-bottom:12px;">SELECT WALLET</div>
+    ${ws.map((_,i)=>`<button class="aBtn aBtn-primary" style="margin-bottom:7px;" onclick="doConnect(getWallets()[${i}])">⚡ ${ws[i].name}</button>`).join('')}
+    <button class="aBtn aBtn-outline" onclick="closePicker()">CANCEL</button></div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)closePicker();});
+  document.body.appendChild(ov);
+}
+function closePicker(){const m=document.getElementById('wpm');if(m)m.remove();}
+function shortAddr(){return walletAddress?walletAddress.slice(0,4)+'...'+walletAddress.slice(-4):'';}
+
+// ── DATA STORE (localStorage until contract deploys) ──────
+let claimedSpaces={},totalClaimed=0,totalVol=0;
+function spaceKey(c,r){return c+','+r;}
+function saveToStorage(){
+  if(!walletAddress)return;
+  try{
+    const mine=Object.entries(claimedSpaces).filter(([,v])=>v.owner===shortAddr()).map(([k,v])=>[k,{...v,imageDataUrl:null}]);
+    localStorage.setItem('pw_'+walletAddress,JSON.stringify(mine));
+  }catch(e){}
+}
+function loadFromStorage(){
+  if(!walletAddress)return;
+  try{
+    const raw=localStorage.getItem('pw_'+walletAddress);
+    if(!raw)return;
+    JSON.parse(raw).forEach(([k,v])=>{if(!claimedSpaces[k]){claimedSpaces[k]=v;totalClaimed++;totalVol+=parseFloat(v.price||0);}});
+    paintAll();updateStats();render();
+  }catch(e){}
+}
+function loadMySpaces(){loadFromStorage();renderMySpaces();}
+
+// ── CANVAS ────────────────────────────────────────────────
+const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
+const miniMap=document.getElementById('miniMap'),mctx=miniMap.getContext('2d');
+function resizeCanvas(){
+  const w=canvas.parentElement.clientWidth-2,sz=Math.min(w,700);
+  canvas.width=sz;canvas.height=sz;canvas.style.width=sz+'px';canvas.style.height=sz+'px';render();
+}
+let zoom=1,panX=0,panY=0;
+const MINZ=1,MAXZ=80;
+function cs(){return canvas.width*zoom/GRID;}
+function g2c(c,r){const s=cs();return{x:(c-panX)*s,y:(r-panY)*s};}
+function c2g(px,py){const s=cs();return{col:Math.floor(px/s+panX),row:Math.floor(py/s+panY)};}
+function clampPan(){const v=GRID/zoom;panX=Math.max(0,Math.min(panX,GRID-v));panY=Math.max(0,Math.min(panY,GRID-v));}
+function zoomBy(f,px,py){
+  const CW=canvas.width;px=px??CW/2;py=py??CW/2;
+  const s=cs(),gx=px/s+panX,gy=py/s+panY;
+  zoom=Math.max(MINZ,Math.min(MAXZ,zoom*f));
+  const ns=cs();panX=gx-px/ns;panY=gy-py/ns;clampPan();
+  document.getElementById('zoomLabel').textContent='Zoom: '+zoom.toFixed(1)+'×';render();
+}
+function resetZoom(){zoom=MINZ;panX=0;panY=0;document.getElementById('zoomLabel').textContent='Zoom: 1×';render();}
+
+const off=document.createElement('canvas');off.width=GRID;off.height=GRID;
+const ofc=off.getContext('2d');
+function initOff(){ofc.fillStyle='#0d0820';ofc.fillRect(0,0,GRID,GRID);}
+function paintAll(){
+  ofc.fillStyle='#0d0820';ofc.fillRect(0,0,GRID,GRID);
+  for(const k in claimedSpaces){const d=claimedSpaces[k];ofc.fillStyle=d.color||'#3730a3';ofc.fillRect(d.col,d.row,d.w||1,d.h||1);}
+}
+const imgCache={};
+function loadImg(url){return new Promise(r=>{if(imgCache[url]){r(imgCache[url]);return;}const i=new Image();i.onload=()=>{imgCache[url]=i;r(i);};i.src=url;});}
+
+function render(){
+  ctx.imageSmoothingEnabled=false;
+  const CW=canvas.width,v=GRID/zoom,s=cs();
+  ctx.drawImage(off,panX,panY,v,v,0,0,CW,CW);
+  // Images
+  for(const k in claimedSpaces){
+    const d=claimedSpaces[k];if(!d.imageDataUrl)continue;
+    const p=g2c(d.col,d.row),iw=(d.w||1)*s,ih=(d.h||1)*s;
+    if(p.x+iw<0||p.y+ih<0||p.x>CW||p.y>CW)continue;
+    const img=imgCache[d.imageDataUrl];
+    if(img)ctx.drawImage(img,p.x,p.y,iw,ih);
+    else loadImg(d.imageDataUrl).then(()=>render());
+  }
+  // Grid lines
+  if(s>=5){
+    ctx.strokeStyle='rgba(91,33,182,0.12)';ctx.lineWidth=.5;
+    const sc=Math.floor(panX),ec=Math.ceil(panX+v),sr=Math.floor(panY),er=Math.ceil(panY+v);
+    for(let c=sc;c<=ec;c++){const x=(c-panX)*s;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CW);ctx.stroke();}
+    for(let r=sr;r<=er;r++){const y=(r-panY)*s;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
+  }
+  // For-sale & verified
+  if(s>=2){
+    ctx.strokeStyle='#22d3ee';ctx.lineWidth=Math.max(.5,s*.1);
+    for(const k in claimedSpaces){if(claimedSpaces[k].listPrice){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.strokeRect(p.x,p.y,(d.w||1)*s,(d.h||1)*s);}}
+    ctx.fillStyle='rgba(29,161,242,.7)';
+    for(const k in claimedSpaces){if(claimedSpaces[k].xVerified){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.fillRect(p.x,p.y,Math.max(2,s*.4),Math.max(2,s*.4));}}
+  }
+  // Hover
+  if(hoverPos.col>=0&&!isPanning){
+    const[bw,bh]=blockDims(),sc2=Math.min(hoverPos.col,GRID-bw),sr2=Math.min(hoverPos.row,GRID-bh);
+    const p=g2c(sc2,sr2);
+    ctx.fillStyle='rgba(139,92,246,.2)';ctx.fillRect(p.x,p.y,s*bw,s*bh);
+    ctx.strokeStyle='rgba(139,92,246,.6)';ctx.lineWidth=1;ctx.strokeRect(p.x,p.y,s*bw,s*bh);
+  }
+  // Selection
+  if(sel.col>=0){
+    const[bw,bh]=blockDims(),sc2=Math.min(sel.col,GRID-bw),sr2=Math.min(sel.row,GRID-bh);
+    const p=g2c(sc2,sr2);
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=Math.max(1.5,s*.12);
+    ctx.strokeRect(p.x+1,p.y+1,s*bw-2,s*bh-2);
+    ctx.fillStyle='rgba(251,191,36,.1)';ctx.fillRect(p.x,p.y,s*bw,s*bh);
+  }
+  // Minimap
+  mctx.imageSmoothingEnabled=false;
+  mctx.drawImage(off,0,0,GRID,GRID,0,0,108,108);
+  const mv=GRID/zoom,mx=(panX/GRID)*108,my=(panY/GRID)*108,mw=Math.max(2,(mv/GRID)*108),mh=Math.max(2,(mv/GRID)*108);
+  mctx.strokeStyle='#fbbf24';mctx.lineWidth=1.5;mctx.strokeRect(mx,my,mw,mh);
+}
+
+// ── CANVAS EVENTS ─────────────────────────────────────────
+let sel={col:-1,row:-1},hoverPos={col:-1,row:-1};
+let isPanning=false,panStart=null,panStartXY=null;
+function evtPos(e){const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width,sy=canvas.height/r.height;return{px:(e.clientX-r.left)*sx,py:(e.clientY-r.top)*sy};}
+
+canvas.addEventListener('wheel',e=>{e.preventDefault();const{px,py}=evtPos(e);zoomBy(e.deltaY<0?1.25:.8,px,py);},{passive:false});
+canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;isPanning=true;panStart={panX,panY};panStartXY={x:e.clientX,y:e.clientY};canvas.style.cursor='grabbing';});
+canvas.addEventListener('mousemove',e=>{
+  const{px,py}=evtPos(e);const{col,row}=c2g(px,py);
+  const bc=Math.max(0,Math.min(col,GRID-1)),br=Math.max(0,Math.min(row,GRID-1));
+  document.getElementById('cursorCoord').textContent=`(${bc}, ${br})`;
+  if(isPanning){
+    const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width,sy=canvas.height/r.height;
+    const dx=(e.clientX-panStartXY.x)*sx,dy=(e.clientY-panStartXY.y)*sy,s=cs();
+    panX=panStart.panX-dx/s;panY=panStart.panY-dy/s;clampPan();render();return;
+  }
+  hoverPos={col:bc,row:br};render();
+});
+canvas.addEventListener('mouseup',e=>{
+  if(!isPanning)return;
+  const moved=Math.abs(e.clientX-panStartXY.x)+Math.abs(e.clientY-panStartXY.y);
+  isPanning=false;canvas.style.cursor='crosshair';
+  if(moved<5){const{px,py}=evtPos(e);const{col,row}=c2g(px,py);selectSpace(col,row);}
+});
+canvas.addEventListener('mouseleave',()=>{isPanning=false;hoverPos={col:-1,row:-1};canvas.style.cursor='crosshair';document.getElementById('cursorCoord').textContent='Hover to see coords';render();});
+let ltd=null;
+canvas.addEventListener('touchstart',e=>{if(e.touches.length===2)ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&ltd){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);zoomBy(d/ltd);ltd=d;}},{passive:false});
+canvas.addEventListener('touchend',()=>{ltd=null;});
+miniMap.addEventListener('click',e=>{
+  const r=miniMap.getBoundingClientRect(),mx=(e.clientX-r.left)/108,my=(e.clientY-r.top)/108,v=GRID/zoom;
+  panX=mx*GRID-v/2;panY=my*GRID-v/2;clampPan();render();
+});
+
+// ── PIXEL COUNT ───────────────────────────────────────────
+let pixelCount=1;
+function blockDims(){const w=Math.ceil(Math.sqrt(pixelCount)),h=Math.ceil(pixelCount/w);return[w,h];}
+function setCount(n,btn){
+  pixelCount=n;document.getElementById('pixelCount').value=n;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');updateSelInfo();if(sel.col>=0)refreshSidebar();
+}
+function onCountChange(v){
+  pixelCount=Math.max(1,Math.min(10000,parseInt(v)||1));
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  updateSelInfo();if(sel.col>=0)refreshSidebar();
+}
+function updateSelInfo(){
+  const[bw,bh]=blockDims(),price=+(getCurrentPrice()*pixelCount).toFixed(4);
+  document.getElementById('selInfo').textContent=`${pixelCount}px (${bw}×${bh}) = ${price} SOL`;
+}
+
+// ── SELECTION ─────────────────────────────────────────────
+function selectSpace(col,row){
+  col=Math.max(0,Math.min(col,GRID-1));row=Math.max(0,Math.min(row,GRID-1));
+  const[bw,bh]=blockDims();
+  sel={col:Math.min(col,GRID-bw),row:Math.min(row,GRID-bh)};
+  refreshSidebar();render();
+}
+
+function refreshSidebar(){
+  const[bw,bh]=blockDims(),sc=Math.min(sel.col,GRID-bw),sr=Math.min(sel.row,GRID-bh);
+  const key=spaceKey(sc,sr),data=claimedSpaces[key];
+  const total=+(getCurrentPrice()*pixelCount).toFixed(4);
+  document.getElementById('infoCoord').textContent=`(${sc}, ${sr})`;
+  document.getElementById('infoSize').textContent=`${bw}×${bh} = ${pixelCount} pixel${pixelCount>1?'s':''}`;
+  const prev=document.getElementById('spacePreview');prev.innerHTML='';
+  if(data){
+    if(data.imageDataUrl){const img=document.createElement('img');img.src=data.imageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
+    else{prev.style.background=data.color||'#3730a3';const pt=document.createElement('span');pt.textContent=data.xVerified?'✦ X VERIFIED':'';prev.appendChild(pt);}
+    document.getElementById('infoStatus').textContent=data.listPrice?'FOR SALE':'OWNED';
+    document.getElementById('infoStatus').style.color=data.listPrice?'#22d3ee':'#e879f9';
+    document.getElementById('infoPrice').textContent=(data.listPrice||data.price||total)+' SOL';
+    document.getElementById('claimBtn').textContent=data.listPrice?'⚡ BUY FOR '+data.listPrice+' SOL':'🔒 ALREADY OWNED';
+    document.getElementById('claimBtn').disabled=!data.listPrice;
+  }else{
+    prev.style.background='';
+    const pt=document.createElement('span');pt.textContent='YOUR SPACE';prev.appendChild(pt);
+    if(pendingImageDataUrl){const img=document.createElement('img');img.src=pendingImageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;';prev.style.position='relative';prev.appendChild(img);}
+    else prev.style.background=document.getElementById('colorPicker').value;
+    document.getElementById('infoStatus').textContent='AVAILABLE';
+    document.getElementById('infoStatus').style.color='#4ade80';
+    document.getElementById('infoPrice').textContent=total+' SOL ≈ $'+(total*SOL_USD).toFixed(2);
+    document.getElementById('claimBtn').textContent=`🔮 CLAIM ${pixelCount} PIXEL${pixelCount>1?'S':''} (${total} SOL)`;
+    document.getElementById('claimBtn').disabled=false;
+  }
+  document.getElementById('verifyXBtn').disabled=!(walletConnected&&data&&data.owner===shortAddr());
+}
+
+function clearSelection(){
+  sel={col:-1,row:-1};
+  ['infoCoord','infoSize','infoPrice'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('infoStatus').textContent='—';document.getElementById('infoStatus').style.color='';
+  const prev=document.getElementById('spacePreview');prev.innerHTML='';prev.style.background='';
+  const pt=document.createElement('span');pt.id='previewText';pt.textContent='Click the wall to select';prev.appendChild(pt);
+  document.getElementById('claimBtn').disabled=true;document.getElementById('verifyXBtn').disabled=true;render();
+}
+
+// ── IMAGE UPLOAD ──────────────────────────────────────────
+let pendingImageDataUrl=null;
+function handleImageUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    pendingImageDataUrl=ev.target.result;
+    const prev=document.getElementById('uploadPreview');
+    prev.src=pendingImageDataUrl;prev.style.display='block';
+    document.getElementById('uploadText').style.display='none';
+    if(sel.col>=0)refreshSidebar();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CLAIM ─────────────────────────────────────────────────
+async function claimSpace(){
+  if(sel.col<0){showToast('Select a space first!');return;}
+  if(!walletConnected){showToast('Connecting wallet...');await connectWallet();return;}
+  const[bw,bh]=blockDims();
+  const sc=Math.min(sel.col,GRID-bw),sr=Math.min(sel.row,GRID-bh);
+  const key=spaceKey(sc,sr);
+  if(claimedSpaces[key]&&!claimedSpaces[key].listPrice){showToast('This space is already owned!');return;}
+  const price=+(getCurrentPrice()*pixelCount).toFixed(4);
+  document.getElementById('claimBody').innerHTML=
+    `Claiming <span style="color:var(--cyan)">(${sc}, ${sr})</span> — <span style="color:var(--lav)">${bw}×${bh}</span> = <span style="color:var(--green)">${pixelCount} pixel${pixelCount>1?'s':''}</span>`;
+  document.getElementById('claimPrice').textContent=price+' SOL';
+  document.getElementById('claimUsd').textContent='≈ $'+(price*SOL_USD).toFixed(2)+' USD';
+  document.getElementById('claimModal').classList.add('open');
+}
+
+// ── MY WALL ───────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
+  if(name==='mywall')renderMySpaces();
+}
+function renderMySpaces(){
+  const grid=document.getElementById('mySpacesGrid'),summary=document.getElementById('myWallSummary');
+  const mine=Object.values(claimedSpaces).filter(d=>d.owner===shortAddr());
+  if(!walletConnected){grid.innerHTML='<div class="no-spaces">Connect your wallet to see your spaces.</div>';summary.textContent='';return;}
+  if(!mine.length){grid.innerHTML='<div class="no-spaces">No spaces yet. Click the wall to claim your first pixel! 🧙</div>';summary.textContent='';return;}
+  const totalPx=mine.reduce((a,d)=>a+(d.w||1)*(d.h||1),0);
+  summary.textContent=`${mine.length} space${mine.length>1?'s':''} · ${totalPx} pixel${totalPx>1?'s':''}`;
+  grid.innerHTML='';
+  mine.forEach(d=>{
+    const tile=document.createElement('div');tile.className='space-tile';tile.onclick=()=>openEditModal(d);
+    let ph=d.imageDataUrl?`<img class="space-tile-img" src="${d.imageDataUrl}" alt="space"/>`:`<div class="space-tile-color" style="background:${d.color||'#3730a3'};"></div>`;
+    tile.innerHTML=`${ph}<div class="space-tile-info"><div class="space-tile-coord">(${d.col},${d.row})</div><div class="space-tile-size">${d.w||1}×${d.h||1}${d.xVerified?' ✦ X':''}</div>${d.listPrice?`<div style="color:var(--gold);font-size:10px;">FOR SALE: ${d.listPrice} SOL</div>`:''}</div>`;
+    grid.appendChild(tile);
+  });
+}
+
+// ── EDIT MODAL ────────────────────────────────────────────
+let editingSpace=null;
+function openEditModal(d){
+  editingSpace=d;
+  document.getElementById('editTitle').textContent=`✦ EDIT (${d.col}, ${d.row})`;
+  const prev=document.getElementById('editPreview');
+  if(d.imageDataUrl)prev.innerHTML=`<img src="${d.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;"/>`;
+  else{prev.innerHTML='';prev.style.background=d.color||'#3730a3';}
+  document.getElementById('editColor').value=d.color||'#8b5cf6';
+  document.getElementById('editUrl').value=d.url||'';
+  document.getElementById('editListPrice').value=d.listPrice||'';
+  document.getElementById('editModal').classList.add('open');
+}
+function handleEditImage(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{if(editingSpace)editingSpace.tempImg=ev.target.result;
+    const prev=document.getElementById('editPreview');
+    prev.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"/>`;};
+  reader.readAsDataURL(file);
+}
+function saveEdit(){
+  if(!editingSpace)return;
+  const d=editingSpace;
+  if(d.tempImg){d.imageDataUrl=d.tempImg;delete d.tempImg;loadImg(d.imageDataUrl);}
+  d.color=document.getElementById('editColor').value;
+  d.url=document.getElementById('editUrl').value.trim();
+  const lp=parseFloat(document.getElementById('editListPrice').value);
+  d.listPrice=(!isNaN(lp)&&lp>0)?lp.toFixed(3):null;
+  ofc.fillStyle=d.color||'#3730a3';ofc.fillRect(d.col,d.row,d.w||1,d.h||1);
+  saveToStorage();renderMySpaces();render();
+  closeModal('editModal');showToast('✦ Space updated!');
+}
+
+// ── PRICING ───────────────────────────────────────────────
+function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p;return .50;}
+
+// ── X VERIFY ─────────────────────────────────────────────
+function verifyX(){if(!walletConnected){showToast('Connect wallet first!');return;}document.getElementById('xModal').classList.add('open');}
+function doXOAuth(){
+  // X verification backend coming soon — follow @pixel_walls for launch
+  window.open('https://twitter.com/intent/follow?screen_name=pixel_walls','_blank');
+  closeModal('xModal');
+  showToast('𝕏 Follow @pixel_walls — X verification activates at contract launch!');
+}
+
+// ── TOKEN DATA — DexScreener primary, pump.fun fallback ──
+const PAIR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
+const DEX='https://api.dexscreener.com';
+function updateStats(){
+  document.getElementById('statClaimed').textContent=totalClaimed.toLocaleString();
+  document.getElementById('statAvail').textContent=(1000000-totalClaimed).toLocaleString();
+  document.getElementById('statVol').textContent=totalVol.toFixed(2)+' SOL';
+}
+function abbreviate(n){
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+  return n<1?n.toFixed(4):Math.round(n).toString();
+}
+
+function applyDexData(pair){
+  if(!pair) return false;
+  // Price
+  if(pair.priceUsd){
+    const p=parseFloat(pair.priceUsd);
+    const fmt=p<0.000001?p.toExponential(3):'$'+p.toFixed(p<0.01?8:6);
+    document.getElementById('mcap').textContent=fmt;
+    document.getElementById('statPrice').textContent=fmt;
+  }
+  // Market cap
+  if(pair.fdv||pair.marketCap){
+    const mc='$'+abbreviate(pair.fdv||pair.marketCap);
+    document.getElementById('dexMcap').textContent=mc;
+    document.getElementById('statMcap').textContent=mc;
+  }
+  // Volume 24h
+  if(pair.volume?.h24) document.getElementById('vol24').textContent='$'+abbreviate(pair.volume.h24);
+  // Liquidity
+  if(pair.liquidity?.usd) document.getElementById('dexLiq').textContent='$'+abbreviate(pair.liquidity.usd);
+  // Price change 24h
+  if(pair.priceChange?.h24!=null){
+    const ch=parseFloat(pair.priceChange.h24);
+    const el=document.getElementById('dexChange');
+    el.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+    el.style.color=ch>=0?'var(--green)':'var(--red)';
+    const sc=document.getElementById('statChange');
+    sc.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+    sc.style.color=ch>=0?'var(--green)':'var(--red)';
+  }
+  // Buys/sells
+  if(pair.txns?.h24){
+    const {buys=0,sells=0}=pair.txns.h24;
+    document.getElementById('holders').textContent=`${buys.toLocaleString()}B / ${sells.toLocaleString()}S`;
+  }
+  return true;
+}
+
+async function fetchTokenData(){
+  const PAIR_ADDR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
+
+  async function tryFetch(url){
+    try{
+      const r=await fetch(url,{headers:{'Accept':'application/json'},mode:'cors'});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    return null;
+  }
+
+  // 1. Direct pair endpoint
+  let d=await tryFetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${PAIR_ADDR}`);
+  if(d){const pair=d.pair||d.pairs?.[0]||d;if(pair&&pair.priceUsd){applyDexData(pair);return;}}
+
+  // 2. Tokens v1
+  d=await tryFetch(`https://api.dexscreener.com/tokens/v1/solana/${CA}`);
+  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
+
+  // 3. Token pairs v1
+  d=await tryFetch(`https://api.dexscreener.com/token-pairs/v1/solana/${CA}`);
+  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
+
+  // 4. Legacy
+  d=await tryFetch(`https://api.dexscreener.com/latest/dex/tokens/${CA}`);
+  if(d&&d.pairs?.[0]){applyDexData(d.pairs[0]);return;}
+
+  // 5. pump.fun fallback
+  d=await tryFetch(`https://frontend-api.pump.fun/coins/${CA}`);
+  if(d){
+    if(d.usd_market_cap){const mc='$'+abbreviate(d.usd_market_cap);document.getElementById('dexMcap').textContent=mc;document.getElementById('statMcap').textContent=mc;}
+    if(d.virtual_sol_reserves&&d.virtual_token_reserves){const p=(d.virtual_sol_reserves/d.virtual_token_reserves)*(1/1e9)*(1e6);const fmt='$'+p.toFixed(8);document.getElementById('mcap').textContent=fmt;document.getElementById('statPrice').textContent=fmt;}
+    if(d.volume_24h)document.getElementById('vol24').textContent='$'+abbreviate(d.volume_24h);
+  }
+  // CORS errors are expected when testing via file:// — APIs will work on https://pixelwalls.xyz
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
+function initStars(){const s=document.getElementById('stars');for(let i=0;i<100;i++){const d=document.createElement('div');d.className='star';d.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*5}s;--del:${Math.random()*5}s;${Math.random()>.75?'width:3px;height:3px;':''}`;s.appendChild(d);}}
+
+// Color picker live preview
+document.getElementById('colorPicker').addEventListener('input',function(){
+  if(sel.col>=0&&!claimedSpaces[spaceKey(sel.col,sel.row)]&&!pendingImageDataUrl){
+    const prev=document.getElementById('spacePreview');prev.style.background=this.value;
+  }
+});
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('load',async()=>{
+  initStars();resizeCanvas();window.addEventListener('resize',resizeCanvas);
+  initOff();render();
+  await tryAutoReconnect();await fetchTokenData();
+  setInterval(fetchTokenData,30000);updateSelInfo();
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+});
+</script>
+</body>
+</html>
