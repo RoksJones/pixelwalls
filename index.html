@@ -1412,7 +1412,7 @@ function doXOAuth(){
     ref,
     returnUrl:window.location.href
   }));
-  window.location.href='/api/auth/twitter/login?state='+state;
+  window.location.href='/api/xlogin?state='+state;
   closeModal('xModal');
 }
 
