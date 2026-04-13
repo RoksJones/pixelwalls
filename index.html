@@ -66,15 +66,15 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .wall-section{position:relative;z-index:1;padding:44px 0;background:rgba(17,13,34,.3);}
 .s-label{text-align:center;font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:12px;}
 .s-title{text-align:center;font-size:clamp(13px,2.5vw,18px);margin-bottom:28px;line-height:1.6;}
-.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 28px 14px;}
+.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 0 14px;justify-content:center;}
 .ctrl-label{font-size:7px;color:var(--muted);}
 .ctrl-input{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.5);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;padding:7px 9px;width:76px;outline:none;text-align:center;}
 .ctrl-input:focus{border-color:var(--lav);}
 .qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:6px 8px;cursor:pointer;transition:all .2s;}
 .qbtn:hover,.qbtn.active{background:rgba(91,33,182,.4);border-color:var(--lav);color:var(--white);}
-.zoom-hint{padding:0 28px 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;}
 .zoom-hint span{color:var(--lav);}
-.wall-wrap{display:flex;gap:0;padding:0 28px;}
+.wall-wrap{display:flex;gap:0;padding:0;}
 .canvas-area{position:relative;flex:1;min-width:0;}
 #wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
 .minimap-wrap{position:absolute;bottom:10px;left:10px;background:rgba(10,6,18,.88);border:1px solid rgba(91,33,182,.5);padding:4px;}
@@ -82,7 +82,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .mini-lbl{font-size:5px;color:var(--muted);text-align:center;margin-top:2px;letter-spacing:1px;}
 
 /* SIDEBAR */
-.sidebar{width:272px;flex-shrink:0;background:rgba(17,13,34,.92);border-left:1px solid rgba(91,33,182,.3);display:flex;flex-direction:column;max-height:720px;overflow-y:auto;}
+.sidebar{width:300px;flex-shrink:0;background:rgba(17,13,34,.92);border-left:1px solid rgba(91,33,182,.3);display:flex;flex-direction:column;max-height:920px;overflow-y:auto;}
 .sidebar-tabs{display:flex;border-bottom:1px solid rgba(91,33,182,.3);}
 .stab{flex:1;padding:11px 4px;font-size:7px;color:var(--muted);text-align:center;cursor:pointer;border:none;border-right:1px solid rgba(91,33,182,.2);background:none;font-family:'Press Start 2P',monospace;transition:all .2s;}
 .stab:last-child{border-right:none;}
@@ -192,7 +192,28 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 .toast{position:fixed;bottom:22px;right:22px;z-index:2000;background:rgba(45,27,105,.97);border:1px solid var(--lav);padding:11px 16px;font-size:7px;color:var(--white);max-width:272px;line-height:1.7;transform:translateX(200%);transition:transform .35s ease;}
 .toast.show{transform:translateX(0);}
 
-@media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0 14px;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}}
+
+/* ── BOOST TIERS ─────────────────────────────────────────── */
+.boost-tiers{display:flex;flex-direction:column;gap:7px;}
+.boost-tier{border:1px solid;padding:10px 12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.boost-tier:hover{transform:translateX(3px);}
+.boost-tier-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.boost-tier-name{font-size:7px;letter-spacing:1px;}
+.boost-tier-cost{font-family:'VT323',monospace;font-size:15px;}
+.boost-tier-desc{font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.4;}
+.boost-tier-badge{position:absolute;top:0;right:0;font-size:5px;padding:3px 6px;letter-spacing:1px;}
+
+/* Tier colours */
+.tier-bronze{border-color:#cd7f32;}.tier-bronze .boost-tier-name{color:#cd7f32;}.tier-bronze .boost-tier-cost{color:#cd7f32;}
+.tier-silver{border-color:#c0c0c0;}.tier-silver .boost-tier-name{color:#c0c0c0;}.tier-silver .boost-tier-cost{color:#c0c0c0;}
+.tier-gold{border-color:#fbbf24;}.tier-gold .boost-tier-name{color:#fbbf24;}.tier-gold .boost-tier-cost{color:#fbbf24;}
+.tier-wizard{border-color:#e879f9;}.tier-wizard .boost-tier-name{color:#e879f9;}.tier-wizard .boost-tier-cost{color:#e879f9;}
+
+/* Canvas boost animations */
+@keyframes boost-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes boost-rainbow{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+
+@media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
 <body>
@@ -284,7 +305,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 </div></div>
 
 <section class="wall-section" id="wall">
-  <p class="s-label">✦ THE ETERNAL WALL ✦</p>
+  <p class="s-label" style="padding:0;">✦ THE ETERNAL WALL ✦</p>
   <h2 class="s-title">1,000,000 SPACES — CLICK TO CLAIM</h2>
   <div class="wall-controls">
     <span class="ctrl-label">PIXELS TO BUY:</span>
@@ -320,6 +341,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       <div class="sidebar-tabs">
         <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
         <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
+        <button class="stab" onclick="switchTab('boost',this)">BOOST ⚡</button>
       </div>
       <!-- SELECT TAB -->
       <div class="tab-panel active" id="tab-select">
@@ -362,6 +384,65 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       <div class="tab-panel" id="tab-mywall">
         <div class="sb-card"><div class="sb-title">✦ MY SPACES</div><div id="myWallSummary" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);"></div></div>
         <div id="mySpacesGrid" class="my-spaces-grid"></div>
+      </div>
+
+      <!-- BOOST TAB -->
+      <div class="tab-panel" id="tab-boost">
+        <div class="sb-card">
+          <div class="sb-title">⚡ BOOST WITH $PIXEL</div>
+          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
+            Spend $PIXEL to make your space stand out on the wall. Boosted pixels get visual effects that draw attention. $PIXEL used for boosts is sent to the agent wallet and held until manually burned.
+          </div>
+          <div id="boostSpaceInfo" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">Select your space first → then pick a boost.</div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ BOOST TIERS</div>
+          <div class="boost-tiers">
+
+            <div class="boost-tier tier-bronze" onclick="selectBoost('bronze')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">BRONZE BOOST</span>
+                <span class="boost-tier-cost">10K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Glowing border around your space. Visible at any zoom level.</div>
+            </div>
+
+            <div class="boost-tier tier-silver" onclick="selectBoost('silver')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">SILVER BOOST</span>
+                <span class="boost-tier-cost">50K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Pulsing glow + 2× display size on the minimap. Hard to miss.</div>
+            </div>
+
+            <div class="boost-tier tier-gold" onclick="selectBoost('gold')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">GOLD BOOST</span>
+                <span class="boost-tier-cost">250K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Animated gold shimmer + featured in the live activity feed permanently.</div>
+            </div>
+
+            <div class="boost-tier tier-wizard" onclick="selectBoost('wizard')">
+              <div class="boost-tier-badge" style="background:rgba(232,121,249,.2);color:#e879f9;">LEGENDARY</div>
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">WIZARD BOOST</span>
+                <span class="boost-tier-cost">1M $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Rainbow animation + giant border + pinned to top of wall homepage forever. The archmage himself notices.</div>
+            </div>
+
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR ACTIVE BOOSTS</div>
+          <div id="activeBoostsList" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">No active boosts yet.</div>
+        </div>
+        <div class="sb-card">
+          <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204,.5);line-height:1.7;">
+            $PIXEL used for boosts is held in the agent wallet until the Archmage manually burns it. No distributions. No promises. Just fire.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -434,7 +515,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div class="f-card"><span class="f-icon">🖼️</span><p class="f-name">UPLOAD ANY IMAGE</p><p class="f-desc">Upload your logo, art or photo. It lives on your pixels permanently — visible to all visitors.</p></div>
     <div class="f-card"><span class="f-icon">𝕏</span><p class="f-name">X VERIFIED PROFILE</p><p class="f-desc">Connect your X account. Gold verified badge, handle and profile link on your space forever.</p></div>
     <div class="f-card"><span class="f-icon">💰</span><p class="f-name">RESELL ANYTIME</p><p class="f-desc">List your space at any price. Edit it, hold it, or flip it — it's your NFT to do with as you wish.</p></div>
-    <div class="f-card"><span class="f-icon">⚡</span><p class="f-name">$PIXEL FLYWHEEL</p><p class="f-desc">10% of every sale auto-buys $PIXEL via Jupiter. Product growth = token buy pressure. Automatic.</p></div>
+    <div class="f-card"><span class="f-icon">⚡</span><p class="f-name">$PIXEL UTILITY</p><p class="f-desc">Use $PIXEL to boost your space — glowing borders, animations, minimap prominence, and legendary effects. 4 tiers. 10K to 1M $PIXEL.</p></div>
     <div class="f-card"><span class="f-icon">📈</span><p class="f-name">BONDING CURVE</p><p class="f-desc">Starts at 0.01 SOL per pixel. Rises through 5 tiers as the wall fills. Early = cheapest. Always.</p></div>
   </div>
 </section>
@@ -446,7 +527,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div class="step-item"><div class="step-num">1</div><div class="step-name">CONNECT WALLET</div><div class="step-desc">Phantom, Solflare, or Backpack. No signup required.</div></div>
     <div class="step-item"><div class="step-num">2</div><div class="step-name">CHOOSE PIXELS</div><div class="step-desc">Enter how many pixels you want. Click the wall to place them.</div></div>
     <div class="step-item"><div class="step-num">3</div><div class="step-name">UPLOAD IMAGE</div><div class="step-desc">Upload your logo or art. It fills your claimed area permanently.</div></div>
-    <div class="step-item"><div class="step-num">4</div><div class="step-name">PAY IN SOL</div><div class="step-desc">Approve in your wallet. 0.01 SOL per pixel to start.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-name">PAY IN SOL</div><div class="step-desc">Approve in your wallet. 0.01 SOL per pixel to start. 90% to treasury, 10% to agent.</div></div>
     <div class="step-item"><div class="step-num">5</div><div class="step-name">OWN FOREVER</div><div class="step-desc">Your NFT. Edit it, flex it, or resell. Yours forever.</div></div>
   </div>
 </section>
@@ -484,6 +565,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div class="price-showcase"><div class="price-sol" id="claimPrice">—</div><div class="price-usd" id="claimUsd">—</div></div>
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:15px;color:var(--gold);line-height:1.8;">
       ✦ Smart contract deploying imminently<br/>
+      ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
       ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for the launch alert
     </div>
     <button class="aBtn aBtn-primary" onclick="window.open('https://twitter.com/pixel_walls','_blank')">𝕏 FOLLOW @pixel_walls FOR LAUNCH</button>
@@ -529,6 +611,8 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 <script>
 // ── CONFIG ────────────────────────────────────────────────
 const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
+const AGENT_WALLET='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
 const PUMP_URL='https://pump.fun/coin/'+CA;
 const GRID=1000, SOL_USD=170;
 const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
@@ -619,7 +703,7 @@ function loadMySpaces(){loadFromStorage();renderMySpaces();}
 const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
 const miniMap=document.getElementById('miniMap'),mctx=miniMap.getContext('2d');
 function resizeCanvas(){
-  const w=canvas.parentElement.clientWidth-2,sz=Math.min(w,700);
+  const w=canvas.parentElement.clientWidth-2,sz=Math.min(w,900);
   canvas.width=sz;canvas.height=sz;canvas.style.width=sz+'px';canvas.style.height=sz+'px';render();
 }
 let zoom=1,panX=0,panY=0;
@@ -689,6 +773,52 @@ function render(){
     ctx.strokeRect(p.x+1,p.y+1,s*bw-2,s*bh-2);
     ctx.fillStyle='rgba(251,191,36,.1)';ctx.fillRect(p.x,p.y,s*bw,s*bh);
   }
+  // Boost effects
+  for(const key in boostedSpaces){
+    const d=claimedSpaces[key]; if(!d) continue;
+    const bv=boostedSpaces[key], t=BOOST_TIERS[bv.tier];
+    const p=g2c(d.col,d.row), bw=(d.w||1)*s, bh=(d.h||1)*s;
+    if(p.x+bw<0||p.y+bh<0||p.x>canvas.width||p.y>canvas.height) continue;
+    const now=Date.now();
+
+    if(bv.tier==='bronze'){
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.2);
+      ctx.shadowColor=t.color; ctx.shadowBlur=8;
+      ctx.strokeRect(p.x-1,p.y-1,bw+2,bh+2);
+      ctx.shadowBlur=0;
+    }
+    if(bv.tier==='silver'){
+      const pulse=0.5+0.5*Math.sin(now/400);
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.25);
+      ctx.shadowColor=t.color; ctx.shadowBlur=10+pulse*12;
+      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
+      ctx.shadowBlur=0;
+    }
+    if(bv.tier==='gold'){
+      const shimmer=0.5+0.5*Math.sin(now/300);
+      ctx.strokeStyle=`rgba(251,191,36,${0.6+shimmer*0.4})`; ctx.lineWidth=Math.max(3,s*.3);
+      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=14+shimmer*10;
+      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
+      ctx.shadowBlur=0;
+      // Gold corner accents
+      const ac=Math.max(4,s*.5);
+      ctx.fillStyle='#fbbf24';
+      ctx.fillRect(p.x-3,p.y-3,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y-3,ac,ac);
+      ctx.fillRect(p.x-3,p.y+bh+3-ac,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y+bh+3-ac,ac,ac);
+    }
+    if(bv.tier==='wizard'){
+      const hue=(now/20)%360;
+      ctx.strokeStyle=`hsl(${hue},100%,70%)`; ctx.lineWidth=Math.max(4,s*.4);
+      ctx.shadowColor=`hsl(${hue},100%,70%)`; ctx.shadowBlur=20;
+      ctx.strokeRect(p.x-3,p.y-3,bw+6,bh+6);
+      ctx.strokeStyle=`hsl(${(hue+120)%360},100%,70%)`; ctx.lineWidth=Math.max(2,s*.2);
+      ctx.strokeRect(p.x-6,p.y-6,bw+12,bh+12);
+      ctx.shadowBlur=0;
+    }
+  }
+  // Animate if any boosts active
+  if(Object.keys(boostedSpaces).length>0) requestAnimationFrame(render);
+
   // Minimap
   mctx.imageSmoothingEnabled=false;
   mctx.drawImage(off,0,0,GRID,GRID,0,0,108,108);
@@ -831,6 +961,14 @@ function switchTab(name,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
   if(name==='mywall')renderMySpaces();
+  if(name==='boost'){renderActiveBoosts();
+    if(sel.col>=0&&claimedSpaces[spaceKey(sel.col,sel.row)]?.owner===shortAddr()){
+      document.getElementById('boostSpaceInfo').textContent='Space ('+sel.col+', '+sel.row+') selected — choose a boost tier below.';
+      document.getElementById('boostSpaceInfo').style.color='var(--green)';
+    } else {
+      document.getElementById('boostSpaceInfo').textContent='Select an owned space on the wall first, then pick a boost tier.';
+      document.getElementById('boostSpaceInfo').style.color='var(--cyan)';
+    }}
 }
 function renderMySpaces(){
   const grid=document.getElementById('mySpacesGrid'),summary=document.getElementById('myWallSummary');
@@ -982,6 +1120,91 @@ async function fetchTokenData(){
   }
   // CORS errors are expected when testing via file:// — APIs will work on https://pixelwalls.xyz
 }
+
+
+// ── BOOST SYSTEM ─────────────────────────────────────────
+const BOOST_TIERS = {
+  bronze: { name:'Bronze', cost:10000,  label:'10K $PIXEL',  color:'#cd7f32', effect:'glow' },
+  silver: { name:'Silver', cost:50000,  label:'50K $PIXEL',  color:'#c0c0c0', effect:'pulse' },
+  gold:   { name:'Gold',   cost:250000, label:'250K $PIXEL', color:'#fbbf24', effect:'shimmer' },
+  wizard: { name:'Wizard', cost:1000000,label:'1M $PIXEL',   color:'#e879f9', effect:'rainbow' },
+};
+
+// boostedSpaces: { "col,row": { tier, activatedAt } }
+let boostedSpaces = {};
+
+function selectBoost(tier){
+  if(!walletConnected){ showToast('Connect wallet first!'); switchTab('select', document.querySelector('.stab')); return; }
+  if(sel.col < 0){ showToast('Select your space on the wall first, then boost!'); return; }
+
+  const key = spaceKey(sel.col, sel.row);
+  const data = claimedSpaces[key];
+  if(!data || data.owner !== shortAddr()){ showToast('You can only boost spaces you own!'); return; }
+
+  const t = BOOST_TIERS[tier];
+  showBoostConfirmModal(tier, t, key);
+}
+
+function showBoostConfirmModal(tierId, tier, key){
+  let el = document.getElementById('boostModal'); if(el) el.remove();
+  const[col,row] = key.split(',').map(Number);
+  const ov = document.createElement('div');
+  ov.id = 'boostModal'; ov.className = 'modal-overlay open';
+  ov.innerHTML = `<div class="modal">
+    <button class="modal-close" onclick="document.getElementById('boostModal').remove()">✕</button>
+    <div class="modal-title" style="color:${tier.color};">⚡ ${tier.name.toUpperCase()} BOOST</div>
+    <div style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+      Boosting space <span style="color:var(--cyan);">(${col}, ${row})</span> with a <span style="color:${tier.color};">${tier.name} Boost</span>.
+    </div>
+    <div class="price-showcase">
+      <div class="price-sol" style="color:${tier.color};">${tier.label}</div>
+      <div class="price-usd">$PIXEL sent to agent wallet · held until burned</div>
+    </div>
+    <div style="background:rgba(0,0,0,.3);border:1px solid ${tier.color}33;padding:12px;margin:12px 0;font-family:'VT323',monospace;font-size:15px;line-height:1.8;">
+      ${tierId==='bronze'?'✦ Glowing border — visible at all zoom levels':
+        tierId==='silver'?'✦ Pulsing glow<br/>✦ 2× size on minimap':
+        tierId==='gold'?'✦ Animated gold shimmer<br/>✦ Permanently featured in activity feed':
+        '✦ Rainbow animation<br/>✦ Giant border<br/>✦ Pinned to homepage forever<br/>✦ The Archmage himself notices'}
+    </div>
+    <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.8;">
+      ✦ Smart contract deploying imminently<br/>
+      ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for launch alert
+    </div>
+    <button class="aBtn aBtn-primary" onclick="applyBoost('${tierId}','${key}')">⚡ APPLY ${tier.name.toUpperCase()} BOOST</button>
+    <button class="aBtn aBtn-outline" onclick="document.getElementById('boostModal').remove()">CANCEL</button>
+  </div>`;
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function applyBoost(tierId, key){
+  const tier = BOOST_TIERS[tierId];
+  boostedSpaces[key] = { tier: tierId, activatedAt: Date.now() };
+  document.getElementById('boostModal')?.remove();
+  renderActiveBoosts();
+  render();
+  showToast(`⚡ ${tier.name} Boost applied! Effect active on the wall.`);
+}
+
+function renderActiveBoosts(){
+  const el = document.getElementById('activeBoostsList');
+  if(!el) return;
+  const mine = Object.entries(boostedSpaces)
+    .filter(([k]) => claimedSpaces[k]?.owner === shortAddr());
+  if(!mine.length){ el.textContent = 'No active boosts yet.'; return; }
+  el.innerHTML = mine.map(([k,v])=>{
+    const [col,row] = k.split(',').map(Number);
+    const t = BOOST_TIERS[v.tier];
+    return `<div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:5px 0;border-bottom:1px solid rgba(91,33,182,.2);">
+      <span style="color:${t.color};">(${col},${row}) ${t.name}</span>
+      <span style="color:var(--muted);font-size:11px;">${t.label}</span>
+    </div>`;
+  }).join('');
+}
+
+// Update switchTab to set boost info text
+const _origSwitchTab = switchTab;
+// (extend existing switchTab inline below)
 
 // ── UTILS ─────────────────────────────────────────────────
 function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
