@@ -75,7 +75,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
 .zoom-hint span{color:var(--lav);}
 .wall-wrap{display:flex;gap:0;padding:0;max-width:1400px;margin:0 auto;width:100%;}
-.canvas-area{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;}
+.canvas-area{position:relative;flex:1;min-width:0;}
 #wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
 .minimap-wrap{position:absolute;bottom:10px;left:10px;background:rgba(10,6,18,.88);border:1px solid rgba(91,33,182,.5);padding:4px;}
 #miniMap{display:block;image-rendering:pixelated;cursor:pointer;}
@@ -213,6 +213,34 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 @keyframes boost-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes boost-rainbow{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
 
+
+/* ── PROFILE POPUP ──────────────────────────────────────────── */
+.profile-popup{
+  position:fixed;z-index:500;
+  background:rgba(17,13,34,.97);
+  border:1px solid rgba(139,92,246,.5);
+  padding:16px;width:220px;
+  pointer-events:auto;
+  animation:popup-in .15s ease-out;
+}
+@keyframes popup-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.profile-popup-avatar{width:48px;height:48px;border-radius:50%;border:2px solid var(--lav);object-fit:cover;display:block;margin-bottom:8px;}
+.profile-popup-avatar-placeholder{width:48px;height:48px;border-radius:50%;border:2px solid var(--lav);background:rgba(91,33,182,.4);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px;}
+.profile-popup-handle{font-size:9px;color:var(--gold);margin-bottom:2px;}
+.profile-popup-wallet{font-family:'VT323',monospace;font-size:13px;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;}
+.profile-popup-meta{font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.6;}
+.profile-popup-meta span{color:var(--cyan);}
+.profile-popup-actions{display:flex;gap:6px;margin-top:10px;}
+.profile-popup-btn{flex:1;padding:6px 4px;font-family:'Press Start 2P',monospace;font-size:5px;cursor:pointer;letter-spacing:.5px;border:none;transition:all .2s;}
+
+/* ── INVITE / REFERRAL ──────────────────────────────────────── */
+.invite-card{background:rgba(17,13,34,.9);border:1px solid rgba(251,191,36,.3);padding:16px;margin:0 0 14px;}
+.invite-link-box{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);padding:8px 10px;font-family:'VT323',monospace;font-size:13px;color:var(--cyan);word-break:break-all;cursor:pointer;margin:8px 0;}
+.invite-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+.invite-stat{background:rgba(45,27,105,.3);padding:8px;text-align:center;}
+.invite-stat .n{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
+.invite-stat .l{font-size:5px;color:var(--muted);letter-spacing:.5px;}
+
 @media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
@@ -342,6 +370,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
         <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
         <button class="stab" onclick="switchTab('boost',this)">BOOST ⚡</button>
+        <button class="stab" onclick="switchTab('invite',this)">INVITE</button>
       </div>
       <!-- SELECT TAB -->
       <div class="tab-panel active" id="tab-select">
@@ -443,6 +472,49 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
             $PIXEL used for boosts is held in the agent wallet until the Archmage manually burns it. No distributions. No promises. Just fire.
           </div>
         </div>
+
+      <!-- INVITE TAB -->
+      <div class="tab-panel" id="tab-invite">
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR WIZARD RANK</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+            <div style="font-family:'VT323',monospace;font-size:42px;line-height:1;" id="inviteLevel">0</div>
+            <div>
+              <div style="font-size:9px;letter-spacing:1px;margin-bottom:3px;" id="inviteLevelName">Wanderer</div>
+              <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);" id="inviteLevelDesc">Yet to find your first follower.</div>
+            </div>
+          </div>
+          <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);margin-bottom:4px;" id="inviteProgress"></div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR INVITE LINK</div>
+          <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
+            Own a pixel to unlock your link. A referral earns reward points only when the invited user has <span style="color:var(--gold);">bought a pixel</span> AND <span style="color:var(--cyan);">verified X</span>.
+          </div>
+          <div id="inviteLinkBox" class="invite-link-box" onclick="copyInviteLink()" title="Click to copy">Buy a pixel to unlock your invite link</div>
+          <button class="aBtn aBtn-outline" style="font-size:6px;" onclick="copyInviteLink()">COPY INVITE LINK</button>
+          <button class="aBtn aBtn-x" style="font-size:6px;margin-top:6px;" onclick="shareOnX()">𝕏 SHARE ON X</button>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ INVITE STATS</div>
+          <div class="invite-stats">
+            <div class="invite-stat"><div class="n" id="inviteCount">0</div><div class="l">QUALIFIED</div></div>
+            <div class="invite-stat"><div class="n" id="invitePending">0</div><div class="l">PENDING</div></div>
+            <div class="invite-stat"><div class="n" id="inviteChain">—</div><div class="l">INVITED BY</div></div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR INVITES</div>
+          <div id="inviteList" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">
+            No invites yet. Share your link!
+          </div>
+        </div>
+        <div class="sb-card">
+          <div style="font-family:'VT323',monospace;font-size:12px;color:rgba(157,140,204,.4);line-height:1.7;">
+            Levels and rewards announced by @pixel_walls. Your invite tree is permanent — early supporters will be remembered by the Archmage.
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -568,7 +640,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
       ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for the launch alert
     </div>
-    <button class="aBtn aBtn-primary" onclick="window.open('https://twitter.com/pixel_walls','_blank')">𝕏 FOLLOW @pixel_walls FOR LAUNCH</button>
+    <button class="aBtn aBtn-primary" onclick="window.open('https://twitter.com/pixel_walls','_blank');markInviteePurchased(walletAddress||'');">𝕏 FOLLOW @pixel_walls FOR LAUNCH</button>
     <button class="aBtn aBtn-outline" onclick="closeModal('claimModal')">CLOSE</button>
   </div>
 </div>
@@ -595,12 +667,13 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   <div class="modal">
     <button class="modal-close" onclick="closeModal('xModal')">✕</button>
     <div class="modal-title">𝕏 VERIFY YOUR X ACCOUNT</div>
-    <div style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Connect your X account to display your profile on the wall. Your avatar, handle and X link will appear on your space.</div>
+    <div style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:10px;">Connect your X account. No pixel ownership required — anyone can verify. Owning a pixel links your profile visually on the wall.</div>
+    <div id="xVerifySpace" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:12px;"></div>
     <div class="checklist">
-      <div class="check-item">GOLD VERIFIED BADGE ON YOUR SPACE</div>
-      <div class="check-item">PROFILE IMAGE ON THE WALL</div>
-      <div class="check-item">DIRECT X LINK FROM YOUR SPACE</div>
-      <div class="check-item">ONLY REQUIRES OWNING A PIXEL</div>
+      <div class="check-item">VERIFIED PROFILE IN THE COMMUNITY</div>
+      <div class="check-item">PROFILE IMAGE + HANDLE LINKED TO YOUR WALLET</div>
+      <div class="check-item">GOLD BADGE IF YOU OWN A SPACE</div>
+      <div class="check-item">INVITE LINK GENERATED FOR YOU</div>
     </div>
     <button class="aBtn aBtn-x" onclick="doXOAuth()">𝕏 CONNECT X ACCOUNT</button>
   </div>
@@ -642,7 +715,12 @@ async function doConnect(w){
     const s=pk.slice(0,4)+'...'+pk.slice(-4);
     const btn=document.getElementById('walletBtn');
     btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
-    closePicker();loadMySpaces();showToast('✦ '+w.name+' connected: '+s);
+    closePicker();
+    loadMySpaces();
+    processReferralOnConnect(pk);
+    // Enable verify button immediately on connect
+    document.getElementById('verifyXBtn').disabled=false;
+    showToast('✦ '+w.name+' connected: '+s);
     if(dragStart)refreshSidebar();
   }catch(e){showToast(e.code===4001?'Cancelled.':(e.message||'Error'));}
 }
@@ -703,14 +781,11 @@ function loadMySpaces(){loadFromStorage();renderMySpaces();}
 const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
 const miniMap=document.getElementById('miniMap'),mctx=miniMap.getContext('2d');
 function resizeCanvas(){
-  // Measure available width: viewport minus sidebar minus any scrollbar
-  const sidebar=document.querySelector('.sidebar');
-  const sidebarW=sidebar?sidebar.offsetWidth:300;
-  const vw=Math.min(window.innerWidth,1400);
-  const available=Math.max(300, vw - sidebarW - 4);
-  const sz=Math.min(available, 900);
-  canvas.width=sz;canvas.height=sz;
-  canvas.style.width=sz+'px';canvas.style.height=sz+'px';
+  // Use the canvas parent's actual rendered width — most reliable
+  const area = canvas.parentElement;
+  const sz = Math.min(Math.max(300, area.clientWidth - 2), 1000);
+  canvas.width=sz; canvas.height=sz;
+  canvas.style.width=sz+'px'; canvas.style.height=sz+'px';
   render();
 }
 let zoom=1,panX=0,panY=0;
@@ -920,10 +995,25 @@ canvas.addEventListener('mouseup',e=>{
     canvas.style.cursor='crosshair';
 
     if(!dragMoved){
-      // Pure click — single cell at mousedown position (dragStart already set)
-      dragEnd={col:dragStart.col, row:dragStart.row};
+      // Single click — size by pixelCount
+      const[bw,bh]=blockDims();
+      dragEnd={
+        col:Math.min(dragStart.col+bw-1, GRID-1),
+        row:Math.min(dragStart.row+bh-1, GRID-1)
+      };
+      // Profile popup only in 1×1 mode
+      if(bw===1&&bh===1){
+        const clickKey=spaceKey(dragStart.col,dragStart.row);
+        const clickData=claimedSpaces[clickKey];
+        if(clickData&&clickData.owner&&clickData.owner!==shortAddr()){
+          const{px,py}=evtPos(e);
+          showProfilePopup(clickData,px,py);
+        } else { hideProfilePopup(); }
+      } else { hideProfilePopup(); }
+    } else {
+      hideProfilePopup();
     }
-    // dragStart/dragEnd are already set from mousedown/mousemove
+
     resolveSelection();
     refreshSidebar();
     render();
@@ -1009,18 +1099,21 @@ function clearSelection(){
   const pt=document.createElement('span');
   pt.textContent='Click or drag on the wall';prev.appendChild(pt);
   document.getElementById('claimBtn').disabled=true;
-  document.getElementById('verifyXBtn').disabled=true;
+  document.getElementById('verifyXBtn').disabled=!walletConnected;
   updateSelInfo();render();
 }
 
 
-// ── PIXEL COUNT QUICK BUTTONS (still work for auto-sizing) ─
+// ── PIXEL COUNT QUICK BUTTONS ──────────────────────────────
 let pixelCount=1;
 function blockDims(){const w=Math.ceil(Math.sqrt(pixelCount)),h=Math.ceil(pixelCount/w);return[w,h];}
+
 function setCount(n,btn){
-  pixelCount=n;document.getElementById('pixelCount').value=n;
+  pixelCount=n;
+  document.getElementById('pixelCount').value=n;
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');updateSelInfo();
+  if(btn) btn.classList.add('active');
+  updateSelInfo();
 }
 function onCountChange(v){
   pixelCount=Math.max(1,Math.min(10000,parseInt(v)||1));
@@ -1173,11 +1266,8 @@ function refreshSidebar(){
     document.getElementById('claimBtn').textContent=`⚡ BUY ${sale} FOR SALE`;
   }
 
-  // Verify X — only for single owned-by-me cell
-  const singleKey=singleClick?spaceKey(dragStart.col,dragStart.row):null;
-  const singleData=singleKey?claimedSpaces[singleKey]:null;
-  document.getElementById('verifyXBtn').disabled=
-    !(walletConnected&&singleData&&singleData.owner===shortAddr());
+  // Verify X — any connected wallet can verify
+  document.getElementById('verifyXBtn').disabled=!walletConnected;
 
   updateSelInfo();
 }
@@ -1231,9 +1321,12 @@ async function claimSpace(){
 function switchTab(name,btn){
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
-  if(name==='mywall')renderMySpaces();
-  if(name==='boost'){renderActiveBoosts();
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='mywall') renderMySpaces();
+  if(name==='invite') renderInviteTab();
+  if(name==='boost'){
+    renderActiveBoosts();
     const _bk=dragStart?spaceKey(dragStart.col,dragStart.row):null;
     if(_bk&&claimedSpaces[_bk]?.owner===shortAddr()){
       document.getElementById('boostSpaceInfo').textContent='Space ('+dragStart.col+', '+dragStart.row+') selected — choose a boost tier below.';
@@ -1241,7 +1334,8 @@ function switchTab(name,btn){
     } else {
       document.getElementById('boostSpaceInfo').textContent='Select an owned space on the wall first, then pick a boost tier.';
       document.getElementById('boostSpaceInfo').style.color='var(--cyan)';
-    }}
+    }
+  }
 }
 function renderMySpaces(){
   const grid=document.getElementById('mySpacesGrid'),summary=document.getElementById('myWallSummary');
@@ -1297,12 +1391,25 @@ function saveEdit(){
 function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p;return .50;}
 
 // ── X VERIFY ─────────────────────────────────────────────
-function verifyX(){if(!walletConnected){showToast('Connect wallet first!');return;}document.getElementById('xModal').classList.add('open');}
+function verifyX(){
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  // Pre-fill selected space if any
+  const spaceInfo=dragStart?dragStart.col+','+dragStart.row:null;
+  document.getElementById('xModal').classList.add('open');
+  document.getElementById('xVerifySpace').textContent=
+    spaceInfo&&claimedSpaces[spaceInfo]?.owner===shortAddr()
+      ?'Your space ('+dragStart.col+','+dragStart.row+') will be linked.'
+      :'Links to your wallet profile. You can link a space later.';
+}
 function doXOAuth(){
   if(!walletConnected){showToast('Connect wallet first!');return;}
+  const spaceKey2=dragStart&&claimedSpaces[dragStart.col+','+dragStart.row]?.owner===shortAddr()
+    ?(dragStart.col+','+dragStart.row):null;
+  const ref=new URLSearchParams(window.location.search).get('ref')||localStorage.getItem('pw_referrer')||'';
   const state=encodeURIComponent(JSON.stringify({
     wallet:walletAddress,
-    space:dragStart?(dragStart.col+','+dragStart.row):null,
+    space:spaceKey2,
+    ref,
     returnUrl:window.location.href
   }));
   window.location.href='/api/auth/twitter/login?state='+state;
@@ -1479,11 +1586,311 @@ function renderActiveBoosts(){
   }).join('');
 }
 
-// Update switchTab to set boost info text
-const _origSwitchTab = switchTab;
-// (extend existing switchTab inline below)
 
-// ── UTILS ─────────────────────────────────────────────────
+// ── REFERRAL & INVITE SYSTEM ─────────────────────────────
+// Rules:
+//   - Invite link only shown AFTER user owns at least 1 pixel
+//   - A referral only earns reward points if referred user has BOTH:
+//     1. Bought at least 1 pixel
+//     2. Verified their X account
+//   - Raw invitees tracked separately from qualified invitees
+
+// ── 10 WIZARD LEVELS ─────────────────────────────────────
+const WIZARD_LEVELS = [
+  { level:0,  name:'Wanderer',       min:0,   color:'#9d8ccc', desc:'Yet to find your first follower.' },
+  { level:1,  name:'Apprentice',     min:1,   color:'#c0c0c0', desc:'The journey begins.' },
+  { level:2,  name:'Acolyte',        min:3,   color:'#cd7f32', desc:'Others sense your power.' },
+  { level:3,  name:'Conjurer',       min:7,   color:'#4ade80', desc:'You bend reality to your will.' },
+  { level:4,  name:'Illusionist',    min:15,  color:'#22d3ee', desc:'The wall whispers your name.' },
+  { level:5,  name:'Enchanter',      min:25,  color:'#8b5cf6', desc:'Your spell reaches far.' },
+  { level:6,  name:'Warlock',        min:40,  color:'#e879f9', desc:'Dark knowledge, bright future.' },
+  { level:7,  name:'Sorcerer',       min:60,  color:'#f97316', desc:'The pixels bow to you.' },
+  { level:8,  name:'High Mage',      min:85,  color:'#fbbf24', desc:'Few have walked this path.' },
+  { level:9,  name:'Archmage',       min:120, color:'#ef4444', desc:'Legends speak your name.' },
+  { level:10, name:'The Eternal',    min:200, color:'linear-gradient(135deg,#fbbf24,#e879f9,#22d3ee)', desc:'The wall is yours.' },
+];
+
+function getLevelData(qualifiedCount){
+  let current=WIZARD_LEVELS[0];
+  let next=WIZARD_LEVELS[1];
+  for(let i=WIZARD_LEVELS.length-1;i>=0;i--){
+    if(qualifiedCount>=WIZARD_LEVELS[i].min){
+      current=WIZARD_LEVELS[i];
+      next=WIZARD_LEVELS[i+1]||null;
+      break;
+    }
+  }
+  return{current,next};
+}
+
+function getRefCode(wallet){
+  return wallet?wallet.slice(0,8)+wallet.slice(-4):null;
+}
+
+function userOwnedPixels(){
+  // Check if current wallet owns any pixels
+  return Object.values(claimedSpaces).some(d=>d.owner===shortAddr());
+}
+
+function getMyInviteLink(){
+  if(!walletAddress||!userOwnedPixels()) return null;
+  return window.location.origin+'?ref='+getRefCode(walletAddress);
+}
+
+function loadReferralData(){
+  if(!walletAddress) return{inviter:null,rawInvitees:[],qualifiedInvitees:[]};
+  try{
+    const raw=localStorage.getItem('pw_ref_'+walletAddress);
+    return raw?JSON.parse(raw):{inviter:null,rawInvitees:[],qualifiedInvitees:[]};
+  }catch(e){return{inviter:null,rawInvitees:[],qualifiedInvitees:[]};}
+}
+
+function saveReferralData(data){
+  if(!walletAddress) return;
+  localStorage.setItem('pw_ref_'+walletAddress,JSON.stringify(data));
+}
+
+function recordInvitee(inviterCode,newWallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  if(!all[inviterCode]) all[inviterCode]=[];
+  if(!all[inviterCode].find(e=>e.wallet===newWallet)){
+    all[inviterCode].push({
+      wallet:newWallet,
+      connectedAt:Date.now(),
+      hasPurchased:false,   // updated when they buy a pixel
+      hasVerifiedX:false,   // updated when they verify X
+      qualified:false       // true when BOTH above are true
+    });
+    localStorage.setItem('pw_all_invites',JSON.stringify(all));
+  }
+}
+
+function getInviteesForMe(){
+  if(!walletAddress) return[];
+  const code=getRefCode(walletAddress);
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  return all[code]||[];
+}
+
+function qualifiedInviteCount(){
+  return getInviteesForMe().filter(e=>e.qualified).length;
+}
+
+// Called after someone buys a pixel — mark them as having purchased
+function markInviteePurchased(wallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  for(const code in all){
+    const idx=all[code].findIndex(e=>e.wallet===wallet);
+    if(idx>=0){
+      all[code][idx].hasPurchased=true;
+      all[code][idx].qualified=all[code][idx].hasPurchased&&all[code][idx].hasVerifiedX;
+      localStorage.setItem('pw_all_invites',JSON.stringify(all));
+      return;
+    }
+  }
+}
+
+// Called after someone verifies X
+function markInviteeVerified(wallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  for(const code in all){
+    const idx=all[code].findIndex(e=>e.wallet===wallet);
+    if(idx>=0){
+      all[code][idx].hasVerifiedX=true;
+      all[code][idx].qualified=all[code][idx].hasPurchased&&all[code][idx].hasVerifiedX;
+      localStorage.setItem('pw_all_invites',JSON.stringify(all));
+      return;
+    }
+  }
+}
+
+function renderInviteTab(){
+  const hasPurchased=userOwnedPixels();
+  const link=getMyInviteLink();
+  const data=loadReferralData();
+  const allInvitees=getInviteesForMe();
+  const qualified=allInvitees.filter(e=>e.qualified).length;
+  const pending=allInvitees.filter(e=>!e.qualified).length;
+  const{current,next}=getLevelData(qualified);
+
+  // ── Link box ────────────────────────────────────────────
+  const linkBox=document.getElementById('inviteLinkBox');
+  if(!walletConnected){
+    linkBox.textContent='Connect your wallet first.';
+    linkBox.style.color='var(--muted)';
+  } else if(!hasPurchased){
+    linkBox.textContent='Buy your first pixel to unlock your invite link.';
+    linkBox.style.color='var(--gold)';
+  } else {
+    linkBox.textContent=link;
+    linkBox.style.color='var(--cyan)';
+  }
+
+  // ── Level badge ─────────────────────────────────────────
+  const levelEl=document.getElementById('inviteLevel');
+  const isGrad=current.color.startsWith('linear');
+  levelEl.textContent=current.level;
+  levelEl.style.background=isGrad?current.color:'none';
+  levelEl.style.webkitBackgroundClip=isGrad?'text':'';
+  levelEl.style.webkitTextFillColor=isGrad?'transparent':'';
+  levelEl.style.color=isGrad?'transparent':current.color;
+
+  document.getElementById('inviteCount').textContent=qualified;
+  const pendingEl=document.getElementById('invitePending');
+  if(pendingEl) pendingEl.textContent=pending;
+  document.getElementById('inviteChain').textContent=
+    data.inviter?data.inviter.slice(0,6)+'...':'Direct';
+
+  // ── Level name + desc ───────────────────────────────────
+  const nameEl=document.getElementById('inviteLevelName');
+  if(nameEl){
+    const isGrad2=current.color.startsWith('linear');
+    nameEl.textContent=current.name;
+    if(isGrad2){
+      nameEl.style.background=current.color;
+      nameEl.style.webkitBackgroundClip='text';
+      nameEl.style.webkitTextFillColor='transparent';
+    } else {
+      nameEl.style.color=current.color;
+    }
+  }
+  const descEl=document.getElementById('inviteLevelDesc');
+  if(descEl) descEl.textContent=current.desc;
+
+  // ── Next level progress ─────────────────────────────────
+  const progressEl=document.getElementById('inviteProgress');
+  if(progressEl){
+    if(!next){
+      progressEl.textContent='MAX LEVEL REACHED — THE WALL IS YOURS.';
+      progressEl.style.color=current.color;
+    } else {
+      const needed=next.min-qualified;
+      progressEl.textContent=`${needed} more qualified invite${needed!==1?'s':''} to reach ${next.name}`;
+    }
+  }
+
+  // ── Invitee list ────────────────────────────────────────
+  const list=document.getElementById('inviteList');
+  if(!allInvitees.length){
+    list.innerHTML='<div style="color:var(--muted);">No invites yet.</div>';
+    return;
+  }
+  list.innerHTML=allInvitees.map((e,i)=>{
+    const q=e.qualified;
+    const p=e.hasPurchased;
+    const v=e.hasVerifiedX;
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(91,33,182,.2);">
+      <div>
+        <div style="font-size:6px;color:${q?'var(--green)':'var(--muted)'};">#${i+1} ${e.wallet.slice(0,6)}...${e.wallet.slice(-4)}</div>
+        <div style="font-size:5px;color:var(--muted);margin-top:2px;">${p?'✦ pixel':'○ pixel'} · ${v?'✦ X':'○ X'}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:${q?'var(--green)':'var(--gold)'};">${q?'QUALIFIED':'PENDING'}</div>
+        <div style="font-size:10px;color:var(--muted);">${timeSince(e.connectedAt)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function timeSince(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function copyInviteLink(){
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  if(!userOwnedPixels()){showToast('Buy your first pixel to unlock your invite link!');return;}
+  const link=getMyInviteLink();
+  navigator.clipboard.writeText(link)
+    .then(()=>showToast('✦ Invite link copied!'))
+    .catch(()=>showToast('Link: '+link));
+}
+
+function shareOnX(){
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  if(!userOwnedPixels()){showToast('Buy your first pixel to unlock sharing!');return;}
+  const link=getMyInviteLink();
+  const q=qualifiedInviteCount();
+  const{current}=getLevelData(q);
+  const text=encodeURIComponent(
+    'I just claimed my eternal space on the blockchain 🧙\n\n'+
+    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwalls_xyz\n\n':'')+
+    'Pixelwalls — 1,000,000 permanent pixels on Solana.\nClaim yours before the price rises 👇\n\n'+
+    link+'\n\n#Solana #Pixelwalls #PIXEL'
+  );
+  window.open('https://twitter.com/intent/tweet?text='+text,'_blank');
+}
+
+function processReferralOnConnect(wallet){
+  const params=new URLSearchParams(window.location.search);
+  const refCode=params.get('ref')||localStorage.getItem('pw_referrer');
+  if(refCode&&refCode!==getRefCode(wallet)){
+    recordInvitee(refCode,wallet);
+    localStorage.setItem('pw_referrer',refCode);
+    const data=loadReferralData();
+    if(!data.inviter){data.inviter=refCode;saveReferralData(data);}
+    showToast('✦ Joined via invite! Your supporter gets credit when you buy + verify.');
+  }
+}
+
+
+// ── PROFILE POPUP ──────────────────────────────────────────
+let profilePopupEl=null;
+
+function showProfilePopup(spaceData, canvasX, canvasY){
+  hideProfilePopup();
+  const popup=document.createElement('div');
+  popup.className='profile-popup';
+  popup.id='profilePopup';
+
+  const short=spaceData.owner||'Unknown';
+  const isX=spaceData.xVerified&&spaceData.xHandle;
+  const isMine=spaceData.owner===shortAddr();
+  const invitees=spaceData.owner?getInviteesForMe():[];
+
+  popup.innerHTML=`
+    ${spaceData.xAvatar
+      ?`<img class="profile-popup-avatar" src="${spaceData.xAvatar}" onerror="this.style.display='none'"/>`
+      :`<div class="profile-popup-avatar-placeholder">🧙</div>`}
+    <div class="profile-popup-handle">${isX?'@'+spaceData.xHandle:'𝕏 Not verified'}</div>
+    <div class="profile-popup-wallet">${short}</div>
+    <div class="profile-popup-meta">
+      Space: <span>(${spaceData.col}, ${spaceData.row})</span><br/>
+      Size: <span>${spaceData.w||1}×${spaceData.h||1}</span><br/>
+      ${spaceData.listPrice?'<span style="color:var(--cyan);">FOR SALE: '+spaceData.listPrice+' SOL</span>':''}
+      ${isX?'':''}
+    </div>
+    <div class="profile-popup-actions">
+      ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏 VISIT</button>`:''}
+      ${spaceData.url?`<button class="profile-popup-btn" style="background:rgba(139,92,246,.2);border:1px solid var(--lav);color:var(--lav);" onclick="window.open('${spaceData.url}','_blank')">LINK</button>`:''}
+      ${spaceData.listPrice?`<button class="profile-popup-btn" style="background:rgba(34,211,238,.2);border:1px solid var(--cyan);color:var(--cyan);" onclick="hideProfilePopup();document.getElementById('claimBtn').click()">BUY</button>`:''}
+      <button class="profile-popup-btn" style="background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);" onclick="hideProfilePopup()">✕</button>
+    </div>`;
+
+  // Position near canvas click, but keep on screen
+  const rect=canvas.getBoundingClientRect();
+  let left=rect.left+canvasX+10;
+  let top =rect.top+canvasY-10;
+  if(left+240>window.innerWidth) left=left-260;
+  if(top+200>window.innerHeight) top=top-160;
+  popup.style.left=Math.max(8,left)+'px';
+  popup.style.top =Math.max(8,top)+'px';
+
+  document.body.appendChild(popup);
+  profilePopupEl=popup;
+
+  // Auto-hide after 6 seconds
+  setTimeout(hideProfilePopup,6000);
+}
+
+function hideProfilePopup(){
+  if(profilePopupEl){profilePopupEl.remove();profilePopupEl=null;}
+}
+
+
 function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
@@ -1519,6 +1926,8 @@ window.addEventListener('load',async()=>{
     } else if(handle){
       showToast('✦ @'+handle+' verified! Select your space on the wall to link it.');
     }
+    // Credit referrer — mark this wallet as X-verified
+    if(wallet) markInviteeVerified(wallet);
     window.history.replaceState({},'',window.location.pathname);
   }
   if(params.get('xauth')==='error'){
