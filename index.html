@@ -66,16 +66,16 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .wall-section{position:relative;z-index:1;padding:44px 0;background:rgba(17,13,34,.3);}
 .s-label{text-align:center;font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:12px;}
 .s-title{text-align:center;font-size:clamp(13px,2.5vw,18px);margin-bottom:28px;line-height:1.6;}
-.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 0 14px;justify-content:center;}
+.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 0 14px;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
 .ctrl-label{font-size:7px;color:var(--muted);}
 .ctrl-input{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.5);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;padding:7px 9px;width:76px;outline:none;text-align:center;}
 .ctrl-input:focus{border-color:var(--lav);}
 .qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:6px 8px;cursor:pointer;transition:all .2s;}
 .qbtn:hover,.qbtn.active{background:rgba(91,33,182,.4);border-color:var(--lav);color:var(--white);}
-.zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;}
+.zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
 .zoom-hint span{color:var(--lav);}
-.wall-wrap{display:flex;gap:0;padding:0;}
-.canvas-area{position:relative;flex:1;min-width:0;}
+.wall-wrap{display:flex;gap:0;padding:0;max-width:1400px;margin:0 auto;width:100%;}
+.canvas-area{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;}
 #wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
 .minimap-wrap{position:absolute;bottom:10px;left:10px;background:rgba(10,6,18,.88);border:1px solid rgba(91,33,182,.5);padding:4px;}
 #miniMap{display:block;image-rendering:pixelated;cursor:pointer;}
@@ -324,7 +324,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <button class="qbtn" onclick="resetZoom()">FIT</button>
   </div>
   <div class="zoom-hint">
-    <span>🖱 Scroll=zoom · Drag=pan · Click=select</span>
+    <span>🖱 Scroll=zoom · Alt+Drag=pan · Click or Drag=select pixels</span>
     <span id="zoomLabel">Zoom: 1×</span>
     <span id="cursorCoord" style="color:var(--cyan);">Hover to see coords</span>
     <span id="selInfo" style="color:var(--pink);"></span>
@@ -643,7 +643,7 @@ async function doConnect(w){
     const btn=document.getElementById('walletBtn');
     btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
     closePicker();loadMySpaces();showToast('✦ '+w.name+' connected: '+s);
-    if(sel.col>=0)refreshSidebar();
+    if(dragStart)refreshSidebar();
   }catch(e){showToast(e.code===4001?'Cancelled.':(e.message||'Error'));}
 }
 function disconnectWallet(){
@@ -703,8 +703,15 @@ function loadMySpaces(){loadFromStorage();renderMySpaces();}
 const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
 const miniMap=document.getElementById('miniMap'),mctx=miniMap.getContext('2d');
 function resizeCanvas(){
-  const w=canvas.parentElement.clientWidth-2,sz=Math.min(w,900);
-  canvas.width=sz;canvas.height=sz;canvas.style.width=sz+'px';canvas.style.height=sz+'px';render();
+  // Measure available width: viewport minus sidebar minus any scrollbar
+  const sidebar=document.querySelector('.sidebar');
+  const sidebarW=sidebar?sidebar.offsetWidth:300;
+  const vw=Math.min(window.innerWidth,1400);
+  const available=Math.max(300, vw - sidebarW - 4);
+  const sz=Math.min(available, 900);
+  canvas.width=sz;canvas.height=sz;
+  canvas.style.width=sz+'px';canvas.style.height=sz+'px';
+  render();
 }
 let zoom=1,panX=0,panY=0;
 const MINZ=1,MAXZ=80;
@@ -758,21 +765,14 @@ function render(){
     ctx.fillStyle='rgba(29,161,242,.7)';
     for(const k in claimedSpaces){if(claimedSpaces[k].xVerified){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.fillRect(p.x,p.y,Math.max(2,s*.4),Math.max(2,s*.4));}}
   }
-  // Hover
-  if(hoverPos.col>=0&&!isPanning){
-    const[bw,bh]=blockDims(),sc2=Math.min(hoverPos.col,GRID-bw),sr2=Math.min(hoverPos.row,GRID-bh);
-    const p=g2c(sc2,sr2);
-    ctx.fillStyle='rgba(139,92,246,.2)';ctx.fillRect(p.x,p.y,s*bw,s*bh);
-    ctx.strokeStyle='rgba(139,92,246,.6)';ctx.lineWidth=1;ctx.strokeRect(p.x,p.y,s*bw,s*bh);
+  // Hover preview (when not dragging)
+  if(hoverPos.col>=0&&!isPanning&&!isDragging){
+    const p=g2c(hoverPos.col,hoverPos.row);
+    ctx.fillStyle='rgba(139,92,246,.18)';ctx.fillRect(p.x,p.y,s,s);
+    ctx.strokeStyle='rgba(139,92,246,.5)';ctx.lineWidth=1;ctx.strokeRect(p.x,p.y,s,s);
   }
-  // Selection
-  if(sel.col>=0){
-    const[bw,bh]=blockDims(),sc2=Math.min(sel.col,GRID-bw),sr2=Math.min(sel.row,GRID-bh);
-    const p=g2c(sc2,sr2);
-    ctx.strokeStyle='#fbbf24';ctx.lineWidth=Math.max(1.5,s*.12);
-    ctx.strokeRect(p.x+1,p.y+1,s*bw-2,s*bh-2);
-    ctx.fillStyle='rgba(251,191,36,.1)';ctx.fillRect(p.x,p.y,s*bw,s*bh);
-  }
+  // Drag-select overlay (colour-coded)
+  renderSelection();
   // Boost effects
   for(const key in boostedSpaces){
     const d=claimedSpaces[key]; if(!d) continue;
@@ -827,102 +827,366 @@ function render(){
 }
 
 // ── CANVAS EVENTS ─────────────────────────────────────────
-let sel={col:-1,row:-1},hoverPos={col:-1,row:-1};
-let isPanning=false,panStart=null,panStartXY=null;
-function evtPos(e){const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width,sy=canvas.height/r.height;return{px:(e.clientX-r.left)*sx,py:(e.clientY-r.top)*sy};}
+// ── INTERACTION STATE ──────────────────────────────────────
+let hoverPos   = {col:-1, row:-1};
+let isPanning  = false, panStart=null, panXY=null;
+let isDragging = false;
+let dragStart  = null;   // {col,row} — grid cell where drag began
+let dragEnd    = null;   // {col,row} — grid cell where drag currently ends
+let dragStartPx= null;   // {x,y}    — raw canvas px where drag began (for threshold)
+let dragMoved  = false;
 
-canvas.addEventListener('wheel',e=>{e.preventDefault();const{px,py}=evtPos(e);zoomBy(e.deltaY<0?1.25:.8,px,py);},{passive:false});
-canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;isPanning=true;panStart={panX,panY};panStartXY={x:e.clientX,y:e.clientY};canvas.style.cursor='grabbing';});
-canvas.addEventListener('mousemove',e=>{
-  const{px,py}=evtPos(e);const{col,row}=c2g(px,py);
-  const bc=Math.max(0,Math.min(col,GRID-1)),br=Math.max(0,Math.min(row,GRID-1));
-  document.getElementById('cursorCoord').textContent=`(${bc}, ${br})`;
-  if(isPanning){
-    const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width,sy=canvas.height/r.height;
-    const dx=(e.clientX-panStartXY.x)*sx,dy=(e.clientY-panStartXY.y)*sy,s=cs();
-    panX=panStart.panX-dx/s;panY=panStart.panY-dy/s;clampPan();render();return;
+// Resolved selection arrays (set by resolveSelection)
+let selAvailable = [];
+let selForSale   = [];
+let selBlocked   = [];
+
+function clampCol(v){return Math.max(0,Math.min(v,GRID-1));}
+function clampRow(v){return Math.max(0,Math.min(v,GRID-1));}
+function evtPos(e){
+  const r=canvas.getBoundingClientRect();
+  return{px:(e.clientX-r.left)*(canvas.width/r.width), py:(e.clientY-r.top)*(canvas.height/r.height)};
+}
+
+// ── WHEEL ZOOM ────────────────────────────────────────────
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const{px,py}=evtPos(e);
+  zoomBy(e.deltaY<0?1.25:.8,px,py);
+},{passive:false});
+
+// ── MOUSE DOWN ────────────────────────────────────────────
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  const{px,py}=evtPos(e);
+  const{col,row}=c2g(px,py);
+
+  if(e.altKey){
+    // Alt+drag = pan
+    isPanning=true;
+    panStart={panX,panY};
+    panXY={x:e.clientX,y:e.clientY};
+    canvas.style.cursor='grabbing';
+  } else {
+    // Start drag-select
+    isDragging=true;
+    dragMoved=false;
+    dragStartPx={x:e.clientX,y:e.clientY};
+    dragStart={col:clampCol(col), row:clampRow(row)};
+    dragEnd  ={col:clampCol(col), row:clampRow(row)};
+    canvas.style.cursor='crosshair';
   }
-  hoverPos={col:bc,row:br};render();
-});
-canvas.addEventListener('mouseup',e=>{
-  if(!isPanning)return;
-  const moved=Math.abs(e.clientX-panStartXY.x)+Math.abs(e.clientY-panStartXY.y);
-  isPanning=false;canvas.style.cursor='crosshair';
-  if(moved<5){const{px,py}=evtPos(e);const{col,row}=c2g(px,py);selectSpace(col,row);}
-});
-canvas.addEventListener('mouseleave',()=>{isPanning=false;hoverPos={col:-1,row:-1};canvas.style.cursor='crosshair';document.getElementById('cursorCoord').textContent='Hover to see coords';render();});
-let ltd=null;
-canvas.addEventListener('touchstart',e=>{if(e.touches.length===2)ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
-canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&ltd){e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);zoomBy(d/ltd);ltd=d;}},{passive:false});
-canvas.addEventListener('touchend',()=>{ltd=null;});
-miniMap.addEventListener('click',e=>{
-  const r=miniMap.getBoundingClientRect(),mx=(e.clientX-r.left)/108,my=(e.clientY-r.top)/108,v=GRID/zoom;
-  panX=mx*GRID-v/2;panY=my*GRID-v/2;clampPan();render();
 });
 
-// ── PIXEL COUNT ───────────────────────────────────────────
+// ── MOUSE MOVE ────────────────────────────────────────────
+canvas.addEventListener('mousemove',e=>{
+  const{px,py}=evtPos(e);
+  const{col,row}=c2g(px,py);
+  const gc=clampCol(col), gr=clampRow(row);
+  document.getElementById('cursorCoord').textContent=`(${gc}, ${gr})`;
+
+  if(isPanning && panXY){
+    const r2=canvas.getBoundingClientRect();
+    const sx=canvas.width/r2.width, sy=canvas.height/r2.height;
+    const dx=(e.clientX-panXY.x)*sx, dy=(e.clientY-panXY.y)*sy, s=cs();
+    panX=panStart.panX-dx/s;
+    panY=panStart.panY-dy/s;
+    clampPan();render();return;
+  }
+
+  if(isDragging && dragStartPx){
+    // Update drag end
+    dragEnd={col:gc, row:gr};
+    // Threshold: 4px movement = real drag
+    const dx=Math.abs(e.clientX-dragStartPx.x);
+    const dy=Math.abs(e.clientY-dragStartPx.y);
+    if(dx>4||dy>4) dragMoved=true;
+    resolveSelection();render();return;
+  }
+
+  hoverPos={col:gc, row:gr};render();
+});
+
+// ── MOUSE UP ──────────────────────────────────────────────
+canvas.addEventListener('mouseup',e=>{
+  if(isPanning){
+    isPanning=false;
+    canvas.style.cursor='crosshair';
+    return;
+  }
+
+  if(isDragging){
+    isDragging=false;
+    canvas.style.cursor='crosshair';
+
+    if(!dragMoved){
+      // Pure click — single cell at mousedown position (dragStart already set)
+      dragEnd={col:dragStart.col, row:dragStart.row};
+    }
+    // dragStart/dragEnd are already set from mousedown/mousemove
+    resolveSelection();
+    refreshSidebar();
+    render();
+  }
+});
+
+// ── MOUSE LEAVE ───────────────────────────────────────────
+canvas.addEventListener('mouseleave',()=>{
+  isPanning=false;isDragging=false;
+  hoverPos={col:-1,row:-1};
+  canvas.style.cursor='crosshair';
+  document.getElementById('cursorCoord').textContent='Hover to see coords';
+  render();
+});
+
+// ── TOUCH PINCH ZOOM ──────────────────────────────────────
+let ltd=null;
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===2)
+    ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&ltd){
+    e.preventDefault();
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    zoomBy(d/ltd);ltd=d;
+  }
+},{passive:false});
+canvas.addEventListener('touchend',()=>{ltd=null;});
+
+// ── MINIMAP CLICK ─────────────────────────────────────────
+miniMap.addEventListener('click',e=>{
+  const r=miniMap.getBoundingClientRect();
+  const mx=(e.clientX-r.left)/108, my=(e.clientY-r.top)/108, v=GRID/zoom;
+  panX=mx*GRID-v/2; panY=my*GRID-v/2; clampPan(); render();
+});
+
+// ── RESOLVE SELECTION ─────────────────────────────────────
+// Classifies every cell in dragStart→dragEnd as available/forSale/blocked
+function resolveSelection(){
+  selAvailable=[]; selForSale=[]; selBlocked=[];
+  if(!dragStart||!dragEnd) return;
+  const c1=Math.min(dragStart.col,dragEnd.col), c2=Math.max(dragStart.col,dragEnd.col);
+  const r1=Math.min(dragStart.row,dragEnd.row), r2=Math.max(dragStart.row,dragEnd.row);
+  for(let r=r1;r<=r2;r++){
+    for(let c=c1;c<=c2;c++){
+      const key=spaceKey(c,r);
+      const data=claimedSpaces[key];
+      if(!data)                          selAvailable.push(key);
+      else if(data.listPrice)            selForSale.push(key);
+      else                               selBlocked.push(key);
+    }
+  }
+}
+
+// ── GET DRAG RECT ─────────────────────────────────────────
+function getSelRect(){
+  if(!dragStart||!dragEnd) return null;
+  return{
+    c1:Math.min(dragStart.col,dragEnd.col), c2:Math.max(dragStart.col,dragEnd.col),
+    r1:Math.min(dragStart.row,dragEnd.row), r2:Math.max(dragStart.row,dragEnd.row),
+  };
+}
+
+function selPixelCount(){return selAvailable.length+selForSale.length;}
+
+// ── SELECT A SINGLE SPACE (called from outside) ───────────
+function selectSpace(col,row){
+  dragStart={col:clampCol(col),row:clampRow(row)};
+  dragEnd  ={col:clampCol(col),row:clampRow(row)};
+  resolveSelection();refreshSidebar();render();
+}
+
+// ── CLEAR SELECTION ───────────────────────────────────────
+function clearSelection(){
+  dragStart=null;dragEnd=null;dragMoved=false;
+  selAvailable=[];selForSale=[];selBlocked=[];
+  ['infoCoord','infoSize','infoPrice'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('infoStatus').textContent='—';
+  document.getElementById('infoStatus').style.color='';
+  const prev=document.getElementById('spacePreview');
+  prev.innerHTML='';prev.style.background='';
+  const pt=document.createElement('span');
+  pt.textContent='Click or drag on the wall';prev.appendChild(pt);
+  document.getElementById('claimBtn').disabled=true;
+  document.getElementById('verifyXBtn').disabled=true;
+  updateSelInfo();render();
+}
+
+
+// ── PIXEL COUNT QUICK BUTTONS (still work for auto-sizing) ─
 let pixelCount=1;
 function blockDims(){const w=Math.ceil(Math.sqrt(pixelCount)),h=Math.ceil(pixelCount/w);return[w,h];}
 function setCount(n,btn){
   pixelCount=n;document.getElementById('pixelCount').value=n;
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');updateSelInfo();if(sel.col>=0)refreshSidebar();
+  if(btn)btn.classList.add('active');updateSelInfo();
 }
 function onCountChange(v){
   pixelCount=Math.max(1,Math.min(10000,parseInt(v)||1));
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
-  updateSelInfo();if(sel.col>=0)refreshSidebar();
+  updateSelInfo();
 }
 function updateSelInfo(){
-  const[bw,bh]=blockDims(),price=+(getCurrentPrice()*pixelCount).toFixed(4);
-  document.getElementById('selInfo').textContent=`${pixelCount}px (${bw}×${bh}) = ${price} SOL`;
+  const total=selPixelCount();
+  if(total>0){
+    const price=+(getCurrentPrice()*selAvailable.length).toFixed(4);
+    const salePrice=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    let txt=`${total}px`;
+    if(selBlocked.length) txt+=` · ${selBlocked.length} blocked`;
+    document.getElementById('selInfo').textContent=txt;
+  } else {
+    const[bw,bh]=blockDims();
+    document.getElementById('selInfo').textContent=`${pixelCount}px (${bw}×${bh}) · drag to select`;
+  }
 }
 
-// ── SELECTION ─────────────────────────────────────────────
-function selectSpace(col,row){
-  col=Math.max(0,Math.min(col,GRID-1));row=Math.max(0,Math.min(row,GRID-1));
-  const[bw,bh]=blockDims();
-  sel={col:Math.min(col,GRID-bw),row:Math.min(row,GRID-bh)};
-  refreshSidebar();render();
+// ── SELECTION in render ───────────────────────────────────
+function renderSelection(){
+  if(!dragStart) return;
+  const s=cs();
+
+  // Draw each cell in drag rectangle with colour coding
+  const c1=Math.min(dragStart.col,dragEnd?.col??dragStart.col);
+  const c2=Math.max(dragStart.col,dragEnd?.col??dragStart.col);
+  const r1=Math.min(dragStart.row,dragEnd?.row??dragStart.row);
+  const r2=Math.max(dragStart.row,dragEnd?.row??dragStart.row);
+
+  for(let r=r1;r<=r2;r++){
+    for(let c=c1;c<=c2;c++){
+      const p=g2c(c,r);
+      if(p.x+s<0||p.y+s<0||p.x>canvas.width||p.y>canvas.height) continue;
+      const key=spaceKey(c,r);
+      const data=claimedSpaces[key];
+      if(!data){
+        // Available — gold tint
+        ctx.fillStyle='rgba(251,191,36,.25)';ctx.fillRect(p.x,p.y,s,s);
+      } else if(data.listPrice){
+        // For sale — cyan tint
+        ctx.fillStyle='rgba(34,211,238,.3)';ctx.fillRect(p.x,p.y,s,s);
+      } else {
+        // Blocked — red X overlay
+        ctx.fillStyle='rgba(239,68,68,.35)';ctx.fillRect(p.x,p.y,s,s);
+        if(s>=4){
+          ctx.strokeStyle='rgba(239,68,68,.7)';ctx.lineWidth=Math.max(.5,s*.1);
+          ctx.beginPath();ctx.moveTo(p.x+2,p.y+2);ctx.lineTo(p.x+s-2,p.y+s-2);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(p.x+s-2,p.y+2);ctx.lineTo(p.x+2,p.y+s-2);ctx.stroke();
+        }
+      }
+    }
+  }
+
+  // Outer bounding rectangle stroke
+  const p1=g2c(c1,r1);
+  const totalW=(c2-c1+1)*s, totalH=(r2-r1+1)*s;
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=Math.max(1.5,s*.08);
+  ctx.strokeRect(p1.x+.5,p1.y+.5,totalW-1,totalH-1);
+
+  // Drag-live label — show count while dragging
+  if(isDragging&&dragMoved){
+    const total=(c2-c1+1)*(r2-r1+1);
+    const avail=selAvailable.length, sale=selForSale.length, block=selBlocked.length;
+    const label=`${avail+sale} buyable · ${block} skipped`;
+    const lx=p1.x+4, ly=p1.y-8;
+    ctx.fillStyle='rgba(10,6,18,.85)';
+    ctx.fillRect(lx-2,ly-12,label.length*5.5+4,16);
+    ctx.fillStyle='#fbbf24';
+    ctx.font=`bold ${Math.max(9,Math.min(12,s*1.2))}px monospace`;
+    ctx.fillText(label,lx,ly);
+  }
 }
+
+
+
 
 function refreshSidebar(){
-  const[bw,bh]=blockDims(),sc=Math.min(sel.col,GRID-bw),sr=Math.min(sel.row,GRID-bh);
-  const key=spaceKey(sc,sr),data=claimedSpaces[key];
-  const total=+(getCurrentPrice()*pixelCount).toFixed(4);
-  document.getElementById('infoCoord').textContent=`(${sc}, ${sr})`;
-  document.getElementById('infoSize').textContent=`${bw}×${bh} = ${pixelCount} pixel${pixelCount>1?'s':''}`;
-  const prev=document.getElementById('spacePreview');prev.innerHTML='';
-  if(data){
-    if(data.imageDataUrl){const img=document.createElement('img');img.src=data.imageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
-    else{prev.style.background=data.color||'#3730a3';const pt=document.createElement('span');pt.textContent=data.xVerified?'✦ X VERIFIED':'';prev.appendChild(pt);}
-    document.getElementById('infoStatus').textContent=data.listPrice?'FOR SALE':'OWNED';
-    document.getElementById('infoStatus').style.color=data.listPrice?'#22d3ee':'#e879f9';
-    document.getElementById('infoPrice').textContent=(data.listPrice||data.price||total)+' SOL';
-    document.getElementById('claimBtn').textContent=data.listPrice?'⚡ BUY FOR '+data.listPrice+' SOL':'🔒 ALREADY OWNED';
-    document.getElementById('claimBtn').disabled=!data.listPrice;
-  }else{
-    prev.style.background='';
-    const pt=document.createElement('span');pt.textContent='YOUR SPACE';prev.appendChild(pt);
-    if(pendingImageDataUrl){const img=document.createElement('img');img.src=pendingImageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;';prev.style.position='relative';prev.appendChild(img);}
-    else prev.style.background=document.getElementById('colorPicker').value;
-    document.getElementById('infoStatus').textContent='AVAILABLE';
-    document.getElementById('infoStatus').style.color='#4ade80';
-    document.getElementById('infoPrice').textContent=total+' SOL ≈ $'+(total*SOL_USD).toFixed(2);
-    document.getElementById('claimBtn').textContent=`🔮 CLAIM ${pixelCount} PIXEL${pixelCount>1?'S':''} (${total} SOL)`;
-    document.getElementById('claimBtn').disabled=false;
+  const avail=selAvailable.length,sale=selForSale.length,blocked=selBlocked.length;
+  const total=avail+sale;
+
+  if(!dragStart){
+    document.getElementById('infoCoord').textContent='—';
+    document.getElementById('infoSize').textContent='—';
+    document.getElementById('infoStatus').textContent='—';
+    document.getElementById('infoStatus').style.color='';
+    document.getElementById('infoPrice').textContent='—';
+    document.getElementById('claimBtn').disabled=true;
+    return;
   }
-  document.getElementById('verifyXBtn').disabled=!(walletConnected&&data&&data.owner===shortAddr());
+
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1,h=rect.r2-rect.r1+1;
+  const singleClick=dragStart.col===(dragEnd?.col??dragStart.col)&&dragStart.row===(dragEnd?.row??dragStart.row);
+
+  document.getElementById('infoCoord').textContent=singleClick
+    ?`(${dragStart.col}, ${dragStart.row})`
+    :`(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})`;
+
+  document.getElementById('infoSize').textContent=
+    `${w}×${h} = ${w*h}px · ${total} buyable${blocked?' · '+blocked+' skipped':''}`;
+
+  // Preview
+  const prev=document.getElementById('spacePreview');
+  prev.innerHTML='';prev.style.background='';
+  const firstKey=selAvailable[0]||selForSale[0];
+  if(firstKey){
+    const d=claimedSpaces[firstKey];
+    if(d?.imageDataUrl){const img=document.createElement('img');img.src=d.imageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
+    else if(d?.color)prev.style.background=d.color;
+    else prev.style.background=document.getElementById('colorPicker').value;
+  } else if(total===0&&blocked>0){
+    prev.style.background='rgba(239,68,68,.15)';
+    const sp=document.createElement('span');sp.textContent='ALL OWNED';sp.style.color='#ef4444';prev.appendChild(sp);
+  } else {
+    if(pendingImageDataUrl){const img=document.createElement('img');img.src=pendingImageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
+    else prev.style.background=document.getElementById('colorPicker').value;
+    const sp=document.createElement('span');sp.textContent='YOUR SPACE';prev.appendChild(sp);
+  }
+
+  // Status + button
+  if(total===0&&blocked>0){
+    document.getElementById('infoStatus').textContent='ALL BLOCKED';
+    document.getElementById('infoStatus').style.color='var(--red)';
+    document.getElementById('infoPrice').textContent='—';
+    document.getElementById('claimBtn').disabled=true;
+    document.getElementById('claimBtn').textContent='🔒 ALL PIXELS OWNED';
+  } else if(avail>0&&sale>0){
+    document.getElementById('infoStatus').textContent=`${avail} AVAILABLE · ${sale} FOR SALE${blocked?' · '+blocked+' SKIPPED':''}`;
+    document.getElementById('infoStatus').style.color='var(--green)';
+    const p=+(getCurrentPrice()*avail).toFixed(4);
+    const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    document.getElementById('infoPrice').textContent=`${p} SOL + ${sp} SOL sale`;
+    document.getElementById('claimBtn').disabled=false;
+    document.getElementById('claimBtn').textContent=`🔮 BUY ${total} PIXELS`;
+  } else if(avail>0){
+    document.getElementById('infoStatus').textContent=avail===1?'AVAILABLE':`${avail} AVAILABLE${blocked?' · '+blocked+' SKIPPED':''}`;
+    document.getElementById('infoStatus').style.color='var(--green)';
+    const p=+(getCurrentPrice()*avail).toFixed(4);
+    document.getElementById('infoPrice').textContent=p+' SOL ≈ $'+(p*SOL_USD).toFixed(2);
+    document.getElementById('claimBtn').disabled=false;
+    document.getElementById('claimBtn').textContent=`🔮 BUY ${avail} PIXEL${avail>1?'S':''}${blocked?' (SKIP '+blocked+')':''}`;
+  } else if(sale>0){
+    const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    document.getElementById('infoStatus').textContent=`${sale} FOR SALE`;
+    document.getElementById('infoStatus').style.color='#22d3ee';
+    document.getElementById('infoPrice').textContent=sp+' SOL';
+    document.getElementById('claimBtn').disabled=false;
+    document.getElementById('claimBtn').textContent=`⚡ BUY ${sale} FOR SALE`;
+  }
+
+  // Verify X — only for single owned-by-me cell
+  const singleKey=singleClick?spaceKey(dragStart.col,dragStart.row):null;
+  const singleData=singleKey?claimedSpaces[singleKey]:null;
+  document.getElementById('verifyXBtn').disabled=
+    !(walletConnected&&singleData&&singleData.owner===shortAddr());
+
+  updateSelInfo();
 }
 
-function clearSelection(){
-  sel={col:-1,row:-1};
-  ['infoCoord','infoSize','infoPrice'].forEach(id=>document.getElementById(id).textContent='—');
-  document.getElementById('infoStatus').textContent='—';document.getElementById('infoStatus').style.color='';
-  const prev=document.getElementById('spacePreview');prev.innerHTML='';prev.style.background='';
-  const pt=document.createElement('span');pt.id='previewText';pt.textContent='Click the wall to select';prev.appendChild(pt);
-  document.getElementById('claimBtn').disabled=true;document.getElementById('verifyXBtn').disabled=true;render();
-}
+
+
+
+
+
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────
 let pendingImageDataUrl=null;
@@ -934,24 +1198,32 @@ function handleImageUpload(e){
     const prev=document.getElementById('uploadPreview');
     prev.src=pendingImageDataUrl;prev.style.display='block';
     document.getElementById('uploadText').style.display='none';
-    if(sel.col>=0)refreshSidebar();
+    if(dragStart)refreshSidebar();
   };
   reader.readAsDataURL(file);
 }
 
 // ── CLAIM ─────────────────────────────────────────────────
 async function claimSpace(){
-  if(sel.col<0){showToast('Select a space first!');return;}
+  if(!dragStart){showToast('Click or drag on the wall to select pixels first!');return;}
   if(!walletConnected){showToast('Connecting wallet...');await connectWallet();return;}
-  const[bw,bh]=blockDims();
-  const sc=Math.min(sel.col,GRID-bw),sr=Math.min(sel.row,GRID-bh);
-  const key=spaceKey(sc,sr);
-  if(claimedSpaces[key]&&!claimedSpaces[key].listPrice){showToast('This space is already owned!');return;}
-  const price=+(getCurrentPrice()*pixelCount).toFixed(4);
+
+  const avail=selAvailable.length, sale=selForSale.length, total=avail+sale;
+  if(total===0){showToast('No buyable pixels in selection — all are owned and not for sale.');return;}
+
+  const priceEach=getCurrentPrice();
+  const costAvail=+(priceEach*avail).toFixed(4);
+  const costSale=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+  const totalCost=(parseFloat(costAvail)+parseFloat(costSale)).toFixed(4);
+  const rect=getSelRect();
+  const blocked=selBlocked.length;
+
   document.getElementById('claimBody').innerHTML=
-    `Claiming <span style="color:var(--cyan)">(${sc}, ${sr})</span> — <span style="color:var(--lav)">${bw}×${bh}</span> = <span style="color:var(--green)">${pixelCount} pixel${pixelCount>1?'s':''}</span>`;
-  document.getElementById('claimPrice').textContent=price+' SOL';
-  document.getElementById('claimUsd').textContent='≈ $'+(price*SOL_USD).toFixed(2)+' USD';
+    `Buying <span style="color:var(--green)">${total} pixel${total>1?'s':''}</span> in `+
+    `<span style="color:var(--cyan)">(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})</span>`+
+    (blocked?`<br/><span style="color:#ef4444;font-size:14px;">${blocked} owned pixel${blocked>1?'s':''} skipped automatically</span>`:'');
+  document.getElementById('claimPrice').textContent=totalCost+' SOL';
+  document.getElementById('claimUsd').textContent='≈ $'+(totalCost*SOL_USD).toFixed(2)+' USD · 90% treasury · 10% agent';
   document.getElementById('claimModal').classList.add('open');
 }
 
@@ -962,8 +1234,9 @@ function switchTab(name,btn){
   btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');
   if(name==='mywall')renderMySpaces();
   if(name==='boost'){renderActiveBoosts();
-    if(sel.col>=0&&claimedSpaces[spaceKey(sel.col,sel.row)]?.owner===shortAddr()){
-      document.getElementById('boostSpaceInfo').textContent='Space ('+sel.col+', '+sel.row+') selected — choose a boost tier below.';
+    const _bk=dragStart?spaceKey(dragStart.col,dragStart.row):null;
+    if(_bk&&claimedSpaces[_bk]?.owner===shortAddr()){
+      document.getElementById('boostSpaceInfo').textContent='Space ('+dragStart.col+', '+dragStart.row+') selected — choose a boost tier below.';
       document.getElementById('boostSpaceInfo').style.color='var(--green)';
     } else {
       document.getElementById('boostSpaceInfo').textContent='Select an owned space on the wall first, then pick a boost tier.';
@@ -1026,10 +1299,14 @@ function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p
 // ── X VERIFY ─────────────────────────────────────────────
 function verifyX(){if(!walletConnected){showToast('Connect wallet first!');return;}document.getElementById('xModal').classList.add('open');}
 function doXOAuth(){
-  // X verification backend coming soon — follow @pixel_walls for launch
-  window.open('https://twitter.com/intent/follow?screen_name=pixel_walls','_blank');
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  const state=encodeURIComponent(JSON.stringify({
+    wallet:walletAddress,
+    space:dragStart?(dragStart.col+','+dragStart.row):null,
+    returnUrl:window.location.href
+  }));
+  window.location.href='/api/auth/twitter/login?state='+state;
   closeModal('xModal');
-  showToast('𝕏 Follow @pixel_walls — X verification activates at contract launch!');
 }
 
 // ── TOKEN DATA — DexScreener primary, pump.fun fallback ──
@@ -1135,9 +1412,9 @@ let boostedSpaces = {};
 
 function selectBoost(tier){
   if(!walletConnected){ showToast('Connect wallet first!'); switchTab('select', document.querySelector('.stab')); return; }
-  if(sel.col < 0){ showToast('Select your space on the wall first, then boost!'); return; }
+  if(!dragStart){ showToast('Select your space on the wall first, then boost!'); return; }
 
-  const key = spaceKey(sel.col, sel.row);
+  const key = spaceKey(dragStart.col, dragStart.row);
   const data = claimedSpaces[key];
   if(!data || data.owner !== shortAddr()){ showToast('You can only boost spaces you own!'); return; }
 
@@ -1214,13 +1491,42 @@ function initStars(){const s=document.getElementById('stars');for(let i=0;i<100;
 
 // Color picker live preview
 document.getElementById('colorPicker').addEventListener('input',function(){
-  if(sel.col>=0&&!claimedSpaces[spaceKey(sel.col,sel.row)]&&!pendingImageDataUrl){
+  if(dragStart&&!claimedSpaces[spaceKey(dragStart.col,dragStart.row)]&&!pendingImageDataUrl){
     const prev=document.getElementById('spacePreview');prev.style.background=this.value;
   }
 });
 
 // ── INIT ─────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
+  // Handle X OAuth callback (?xauth=success&wallet=...&handle=...&space=...)
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('xauth')==='success'){
+    const handle=params.get('handle');
+    const name=params.get('name');
+    const avatar=params.get('avatar');
+    const wallet=params.get('wallet');
+    const space=params.get('space');
+    if(handle&&space&&claimedSpaces[space]){
+      claimedSpaces[space].xVerified=true;
+      claimedSpaces[space].xHandle=handle;
+      claimedSpaces[space].xName=name||handle;
+      if(avatar) claimedSpaces[space].xAvatar=avatar;
+      // Pre-load avatar image
+      if(avatar){ const img=new Image();img.src=avatar;imgCache[avatar]=img; }
+      saveToStorage();
+      paintAll();render();
+      showToast('✦ X verified! @'+handle+' linked to your space.');
+    } else if(handle){
+      showToast('✦ @'+handle+' verified! Select your space on the wall to link it.');
+    }
+    window.history.replaceState({},'',window.location.pathname);
+  }
+  if(params.get('xauth')==='error'){
+    const reason=params.get('reason')||'unknown';
+    showToast('X verification failed ('+reason+') — please try again.');
+    window.history.replaceState({},'',window.location.pathname);
+  }
+
   initStars();resizeCanvas();window.addEventListener('resize',resizeCanvas);
   initOff();render();
   await tryAutoReconnect();await fetchTokenData();
