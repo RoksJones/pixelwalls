@@ -1,4 +1,8 @@
 {
+  "functions": {
+    "api/xlogin.js":   { "memory": 256, "maxDuration": 10 },
+    "api/xcallback.js":{ "memory": 256, "maxDuration": 10 }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -12,9 +16,7 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

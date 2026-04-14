@@ -241,6 +241,24 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 .invite-stat .n{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
 .invite-stat .l{font-size:5px;color:var(--muted);letter-spacing:.5px;}
 
+
+/* ── WIZARD HALL OF FAME ─────────────────────────────────────────── */
+.wizard-hall{position:relative;z-index:1;padding:52px 28px;background:rgba(10,6,18,.6);}
+.wizard-hall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:1100px;margin:0 auto;}
+.wizard-card{background:rgba(17,13,34,.9);border:2px solid;padding:18px 16px;position:relative;overflow:hidden;transition:all .3s;cursor:pointer;}
+.wizard-card::before{content:'';position:absolute;inset:-1px;z-index:-1;background:linear-gradient(135deg,#e879f9,#22d3ee,#fbbf24,#e879f9);background-size:300% 300%;animation:bspin 3s linear infinite;border-radius:inherit;}
+.wizard-card:hover{transform:translateY(-3px);box-shadow:0 0 40px rgba(232,121,249,.4);}
+.wiz-rank{position:absolute;top:8px;right:10px;font-size:6px;color:rgba(232,121,249,.6);letter-spacing:2px;}
+.wiz-pixel-preview{width:56px;height:56px;border:2px solid #e879f9;flex-shrink:0;overflow:hidden;image-rendering:pixelated;animation:boost-rainbow 3s linear infinite;}
+@keyframes boost-rainbow{0%{filter:hue-rotate(0deg) brightness(1.2)}100%{filter:hue-rotate(360deg) brightness(1.2)}}
+.wiz-info{flex:1;min-width:0;}
+.wiz-name{font-size:8px;color:#e879f9;margin-bottom:5px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wiz-handle{font-family:'VT323',monospace;font-size:16px;color:var(--cyan);margin-bottom:3px;}
+.wiz-coord{font-family:'VT323',monospace;font-size:14px;color:var(--muted);}
+.wiz-clicks{font-family:'VT323',monospace;font-size:14px;color:var(--gold);}
+.wiz-badge{display:inline-block;background:rgba(232,121,249,.15);border:1px solid rgba(232,121,249,.4);color:#e879f9;font-size:5px;padding:2px 8px;letter-spacing:2px;margin-top:5px;}
+.wiz-empty{text-align:center;font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:40px;grid-column:1/-1;line-height:2;}
+
 @media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
@@ -268,6 +286,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <li><a href="#token">$PIXEL</a></li>
     <li><a href="#how">HOW IT WORKS</a></li>
     <li><a href="#lore">LORE</a></li>
+    <li><a href="#hall" style="color:#e879f9;">🔮 HALL OF FAME</a></li>
   </ul>
   <div class="nav-right">
     <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
@@ -601,6 +620,23 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div class="step-item"><div class="step-num">3</div><div class="step-name">UPLOAD IMAGE</div><div class="step-desc">Upload your logo or art. It fills your claimed area permanently.</div></div>
     <div class="step-item"><div class="step-num">4</div><div class="step-name">PAY IN SOL</div><div class="step-desc">Approve in your wallet. 0.01 SOL per pixel to start. 90% to treasury, 10% to agent.</div></div>
     <div class="step-item"><div class="step-num">5</div><div class="step-name">OWN FOREVER</div><div class="step-desc">Your NFT. Edit it, flex it, or resell. Yours forever.</div></div>
+  </div>
+</section>
+
+
+<!-- WIZARD HALL OF FAME -->
+<section class="wizard-hall" id="hall">
+  <p class="s-label">✦ THE ARCHMAGE NOTICES ✦</p>
+  <h2 class="s-title" style="background:linear-gradient(135deg,#e879f9,#fbbf24,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+    WIZARD BOOST — HALL OF FAME
+  </h2>
+  <p style="text-align:center;font-family:'VT323',monospace;font-size:18px;color:var(--muted);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7;">
+    These pixels hold the <em style="color:#e879f9;font-style:normal;">Wizard Boost</em> — 1M $PIXEL burned for permanent legend status. Ranked by engagement. The boost lives in the pixel forever.
+  </p>
+  <div class="wizard-hall-grid" id="wizardHallGrid">
+    <div class="wiz-empty">No Wizard Boosts yet.<br/>Be the first legend on the wall.<br/><br/>
+      <button class="aBtn aBtn-primary" style="max-width:260px;margin:0 auto;" onclick="switchTab('boost',document.querySelectorAll('.stab')[2]);document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ APPLY WIZARD BOOST</button>
+    </div>
   </div>
 </section>
 
@@ -1082,6 +1118,9 @@ function selPixelCount(){return selAvailable.length+selForSale.length;}
 
 // ── SELECT A SINGLE SPACE (called from outside) ───────────
 function selectSpace(col,row){
+  // Record wizard click if this pixel has wizard boost
+  const ck=spaceKey(Math.max(0,Math.min(col,GRID-1)),Math.max(0,Math.min(row,GRID-1)));
+  if(boostedSpaces[ck]?.tier==='wizard') recordWizardClick(ck);
   dragStart={col:clampCol(col),row:clampRow(row)};
   dragEnd  ={col:clampCol(col),row:clampRow(row)};
   resolveSelection();refreshSidebar();render();
@@ -1100,7 +1139,8 @@ function clearSelection(){
   pt.textContent='Click or drag on the wall';prev.appendChild(pt);
   document.getElementById('claimBtn').disabled=true;
   document.getElementById('verifyXBtn').disabled=!walletConnected;
-  updateSelInfo();render();
+  updateSelInfo();
+  renderWizardHall();render();
 }
 
 
@@ -1114,11 +1154,13 @@ function setCount(n,btn){
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   updateSelInfo();
+  renderWizardHall();
 }
 function onCountChange(v){
   pixelCount=Math.max(1,Math.min(10000,parseInt(v)||1));
   document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
   updateSelInfo();
+  renderWizardHall();
 }
 function updateSelInfo(){
   const total=selPixelCount();
@@ -1270,6 +1312,7 @@ function refreshSidebar(){
   document.getElementById('verifyXBtn').disabled=!walletConnected;
 
   updateSelInfo();
+  renderWizardHall();
 }
 
 
@@ -1548,7 +1591,7 @@ function showBoostConfirmModal(tierId, tier, key){
       ${tierId==='bronze'?'✦ Glowing border — visible at all zoom levels':
         tierId==='silver'?'✦ Pulsing glow<br/>✦ 2× size on minimap':
         tierId==='gold'?'✦ Animated gold shimmer<br/>✦ Permanently featured in activity feed':
-        '✦ Rainbow animation<br/>✦ Giant border<br/>✦ Pinned to homepage forever<br/>✦ The Archmage himself notices'}
+        '✦ Rainbow animation + giant border<br/>✦ Permanent — lives in this pixel forever<br/>✦ Hall of Fame listing on homepage<br/>✦ Ranked by click engagement<br/>✦ New owner inherits the legend status<br/>✦ The Archmage himself notices'}
     </div>
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.8;">
       ✦ Smart contract deploying imminently<br/>
@@ -1568,6 +1611,10 @@ function applyBoost(tierId, key){
   renderActiveBoosts();
   render();
   showToast(`⚡ ${tier.name} Boost applied! Effect active on the wall.`);
+  // Wizard boost → register in Hall of Fame permanently
+  if(tierId === 'wizard'){
+    registerWizardBoost(key);
+  }
 }
 
 function renderActiveBoosts(){
@@ -1891,6 +1938,83 @@ function hideProfilePopup(){
 }
 
 
+// ── WIZARD HALL OF FAME ──────────────────────────────────────────
+function getWizardSpaces(){try{return JSON.parse(localStorage.getItem('pw_wizards')||'{}');}catch(e){return {};}}
+function saveWizardSpaces(d){try{localStorage.setItem('pw_wizards',JSON.stringify(d));}catch(e){}}
+
+function registerWizardBoost(key){
+  const d=claimedSpaces[key]; if(!d) return;
+  const wizards=getWizardSpaces();
+  if(!wizards[key]){
+    wizards[key]={
+      col:d.col, row:d.row, owner:d.owner,
+      handle:d.xHandle||'', name:d.xHandle||shortAddr(),
+      avatar:d.xAvatar||'', color:d.color||'#8b5cf6',
+      clicks:0, boostedAt:Date.now(),
+    };
+    saveWizardSpaces(wizards);
+    renderWizardHall();
+    showToast('🔮 Wizard Boost registered in the Hall of Fame!');
+  }
+}
+
+function recordWizardClick(key){
+  const wizards=getWizardSpaces();
+  if(wizards[key]){
+    wizards[key].clicks=(wizards[key].clicks||0)+1;
+    const d=claimedSpaces[key];
+    if(d){wizards[key].owner=d.owner;wizards[key].handle=d.xHandle||'';
+      wizards[key].name=d.xHandle||d.owner?.slice(0,8)+'...';
+      wizards[key].color=d.color||wizards[key].color;
+      wizards[key].avatar=d.xAvatar||wizards[key].avatar;}
+    saveWizardSpaces(wizards);
+    renderWizardHall();
+  }
+}
+
+function renderWizardHall(){
+  const grid=document.getElementById('wizardHallGrid'); if(!grid) return;
+  const wizards=getWizardSpaces();
+  const entries=Object.entries(wizards).sort((a,b)=>(b[1].clicks||0)-(a[1].clicks||0));
+  if(!entries.length){
+    grid.innerHTML=`<div class="wiz-empty">No Wizard Boosts yet — be the first legend on the wall.<br/><br/>
+      <button class="aBtn aBtn-primary" style="max-width:260px;margin:0 auto;" onclick="document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ APPLY WIZARD BOOST</button></div>`;
+    return;
+  }
+  const medals=['👑','⚔️','🔮'];
+  grid.innerHTML=entries.map(([key,w],i)=>{
+    const name=w.handle?'@'+w.handle:(w.owner||'').slice(0,8)+'...';
+    const crown=i<3?medals[i]+' ':'';
+    return `<div class="wizard-card" style="border-color:#e879f9;" onclick="jumpToWizard('${key}')">
+      <div class="wiz-rank">#${i+1}${i<3?' LEGEND':''}</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="wiz-pixel-preview" style="background:${w.color||'#8b5cf6'};">
+          ${w.avatar?`<img src="${w.avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"/>`:''}
+        </div>
+        <div class="wiz-info">
+          <div class="wiz-name">${crown}${name}</div>
+          <div class="wiz-handle">(${w.col}, ${w.row})</div>
+          <div class="wiz-clicks">⚡ ${(w.clicks||0).toLocaleString()} clicks</div>
+          <div class="wiz-badge">✦ WIZARD ETERNAL ✦</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function jumpToWizard(key){
+  const wizards=getWizardSpaces();
+  const w=wizards[key]||claimedSpaces[key]; if(!w) return;
+  recordWizardClick(key);
+  sel={col:w.col,row:w.row};
+  const v=GRID/zoom;
+  panX=Math.max(0,w.col-v/2); panY=Math.max(0,w.row-v/2); clampPan();
+  render(); if(sel.col>=0) refreshSidebar();
+  document.getElementById('wall').scrollIntoView({behavior:'smooth'});
+  showToast('🔮 Jumped to Wizard pixel ('+w.col+','+w.row+')');
+}
+// ── END WIZARD HALL ───────────────────────────────────────────────
+
 function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
@@ -1940,6 +2064,7 @@ window.addEventListener('load',async()=>{
   initOff();render();
   await tryAutoReconnect();await fetchTokenData();
   setInterval(fetchTokenData,30000);updateSelInfo();
+  renderWizardHall();
   document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 });
 </script>
