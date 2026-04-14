@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" style=""><head>
+    <meta charset="UTF-8">
+    <title>Pixelwalls White Paper</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+      :root {
+        --font-family: 'Times New Roman', Times, serif;
+        --h1-color: #000000;
+        --h2-color: #111111;
+        --h3-color: #222222;
+        --text-color: #000000;
+        --bg-color: #ffffff;
+        --border-color: #000000;
+      }
+      body {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 32px 80px;
+        position: relative;
+        box-sizing: border-box;
+        font-family: var(--font-family);
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        line-height: 1.6;
+        text-align: justify;
+        font-size: 11pt;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--h1-color);
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        text-align: left;
+      }
+      h1 {
+        font-size: 24pt;
+        text-align: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+      }
+      h2 {
+        font-size: 16pt;
+        border-bottom: 1px solid #cccccc;
+        padding-bottom: 4px;
+      }
+      h3 {
+        font-size: 13pt;
+      }
+      p {
+        margin-bottom: 1em;
+        text-indent: 0;
+      }
+      ul,
+      ol {
+        margin-bottom: 1em;
+        padding-left: 40px;
+        text-align: left;
+      }
+      li {
+        margin-bottom: 0.5em;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5em;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+      }
+      th,
+      td {
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      a {
+        color: #000000;
+        text-decoration: none;
+        border-bottom: 1px dotted #000000;
+      }
+      .toc {
+        background-color: #fcfcfc;
+        border: 1px solid #dddddd;
+        padding: 20px;
+        margin-bottom: 2em;
+      }
+      .toc h2 {
+        margin-top: 0;
+        border-bottom: none;
+        text-align: center;
+        font-size: 14pt;
+      }
+      .toc ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      .toc li {
+        margin-bottom: 0.25em;
+      }
+      .disclaimer {
+        margin-top: 3em;
+        padding: 15px;
+        border: 1px solid #000000;
+        font-size: 9pt;
+        font-style: italic;
+        text-align: center;
+      }
+      .center {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body style="">
+    <h1>PIXELWALLS: WHITE PAPER</h1>
+
+    <div class="toc">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#executive-summary">1. Executive Summary</a></li>
+        <li><a href="#introduction">2. Introduction &amp; Problem Statement</a></li>
+        <li><a href="#vision">3. Vision</a></li>
+        <li><a href="#why-solana">4. Why Solana</a></li>
+        <li><a href="#technical-architecture">5. Technical Architecture</a></li>
+        <li><a href="#pixel-claiming">6. Pixel Claiming &amp; Economics</a></li>
+        <li><a href="#nft-integration">7. NFT Integration</a></li>
+        <li><a href="#clustering-system">8. Clustering System</a></li>
+        <li><a href="#secondary-market">9. Secondary Market &amp; Royalties</a></li>
+        <li><a href="#social-features">10. Social &amp; Utility Features</a></li>
+        <li><a href="#governance-security">11. Governance &amp; Security</a></li>
+        <li><a href="#phase-2">12. Phase 2 – Web3 Tools Portal</a></li>
+        <li><a href="#roadmap">13. Roadmap</a></li>
+        <li><a href="#risks">14. Risks &amp; Limitations</a></li>
+        <li><a href="#conclusion">15. Conclusion</a></li>
+        <li><a href="#disclaimer">16. Disclaimer</a></li>
+      </ul>
+    </div>
+
+    <h2 id="executive-summary">1. Executive Summary</h2>
+    <p>
+      Pixelwalls is a decentralized, on-chain 1000×1000 digital canvas built on the Solana blockchain. The platform
+      consists of exactly 1,000,000 unique, ownable pixels. Each pixel is minted as a non-fungible token (NFT) and lives
+      permanently as a Program-Derived Account (PDA) on-chain.
+    </p>
+    <p>
+      Users claim pixels through a transparent, step-function bonding-curve pricing model that begins at 0.01 SOL and
+      incrementally rises to 0.50 SOL. Once claimed, individual pixels can be freely traded, visually updated,
+      transferred, or merged into larger composite assets known as Cluster NFTs (ranging from 2×2 up to 10×10 coordinate
+      blocks).
+    </p>
+    <p><strong>Key Innovations:</strong></p>
+    <ul>
+      <li>
+        <strong>Permanent Coordinate Reservation:</strong> Achieved via a specialized
+        <code>clustered = true</code> flag, ensuring original pixel accounts remain alive to permanently prevent
+        re-claiming.
+      </li>
+      <li>
+        <strong>Sustainable Treasury Split:</strong> A 90/10 primary sale revenue split between the project treasury and
+        the agent wallet.
+      </li>
+      <li>
+        <strong>Embedded Royalties:</strong> A strict 5% royalty on all secondary market sales to fund ongoing platform
+        development.
+      </li>
+      <li><strong>Social Verification:</strong> On-chain X (Twitter) handle verification and tiered social boosts.</li>
+      <li>
+        <strong>Immutable Provenance:</strong> Full on-chain transaction and ownership history recorded via verifiable
+        events.
+      </li>
+    </ul>
+    <p>
+      Ultimately, Pixelwalls transforms a simple conceptual grid into a living, tradable, community-owned digital
+      real-estate and art platform.
+    </p>
+
+    <h2 id="introduction">2. Introduction &amp; Problem Statement</h2>
+    <p>
+      The markets for digital art and virtual land have experienced explosive growth over recent years. However, the
+      foundational architecture of most existing digital canvas platforms suffers from significant shortcomings:
+    </p>
+    <ul>
+      <li>
+        <strong>Centralized Control:</strong> Projects often rely on centralized servers to render, host, or validate
+        state, undermining true digital ownership.
+      </li>
+      <li>
+        <strong>Temporary or Off-Chain Metadata:</strong> Many assets point to external, off-chain data sources that are
+        susceptible to link rot or manipulation.
+      </li>
+      <li>
+        <strong>High Frictional Costs:</strong> Platforms built on legacy blockchains frequently price out users through
+        prohibitive gas fees and poor user experiences (UX).
+      </li>
+      <li>
+        <strong>Lack of Scarcity and Permanence:</strong> Individual pixels or plots are rarely guaranteed persistent
+        existence or absolute scarcity.
+      </li>
+    </ul>
+    <p>
+      Pixelwalls systematically resolves these issues by anchoring every single pixel on-chain as its own distinct PDA,
+      enforcing immutable ownership and coordinate scarcity forever. The 1,000,000 pixel limit is strictly hard-coded
+      into the protocol—once the grid is fully claimed, no additional pixels can ever be created.
+    </p>
+
+    <h2 id="vision">3. Vision</h2>
+    <p>
+      The guiding vision of Pixelwalls is to establish the most permanent, tradable, and socially verifiable pixel
+      canvas on Solana. We aim to create a digital "Times Square billboard" where every pixel carries real economic
+      value, unquestionable provenance, and robust community utility.
+    </p>
+    <p>
+      In the Pixelwalls ecosystem, owning a pixel extends beyond simple art collection; it represents fractional digital
+      real estate equipped with built-in social verification features, complex clustering mechanics, and gateway utility
+      to future expansions (such as the Phase 2 Web3 Tools portal).
+    </p>
+
+    <h2 id="why-solana">4. Why Solana</h2>
+    <p>
+      Solana was chosen as the foundational layer for Pixelwalls due to its high throughput, exceptionally low
+      transaction fees, and rapid finality. An interactive digital canvas requires frequent state updates—such as
+      claiming pixels, updating colors, or merging coordinates—which would be economically unviable on slower or more
+      expensive networks. Solana provides the necessary infrastructure to deliver a seamless, high-frequency on-chain
+      user experience without compromising the core tenets of decentralization or security.
+    </p>
+
+    <h2 id="technical-architecture">5. Technical Architecture</h2>
+    <p>
+      The Pixelwalls protocol is a suite of smart contracts rigorously engineered to ensure state integrity and
+      permanence.
+    </p>
+    <ul>
+      <li><strong>Blockchain:</strong> Solana</li>
+      <li><strong>Framework:</strong> Anchor (Rust)</li>
+      <li><strong>Program ID:</strong> [To be set after first build; see deployment steps in contract]</li>
+    </ul>
+    <p><strong>Core Program-Derived Accounts (PDAs):</strong></p>
+    <ul>
+      <li>
+        <strong>WallState:</strong> The global configuration account. It tracks total claimed pixels, manages the
+        emergency pause switch, and identifies the program authority.
+      </li>
+      <li>
+        <strong>PixelSpace:</strong> Created once per coordinate (column, row). It stores the owner, color hex code,
+        URL, NFT mint address, associated X (Twitter) data, boost tier, and the critical <code>clustered</code> flag.
+      </li>
+      <li>
+        <strong>ClusterSpace:</strong> Generated for every merged rectangular block (seeded by the top-left corner
+        coordinate).
+      </li>
+    </ul>
+    <p>
+      All PixelSpace and ClusterSpace accounts are designed as rent-bearing accounts that remain perpetually alive, even
+      after being clustered. This intentional design choice acts as a mechanism to “burn” economic value and permanently
+      reserve the global coordinates against future tampering or deletion.
+    </p>
+
+    <h2 id="pixel-claiming">6. Pixel Claiming &amp; Economics</h2>
+    <p>
+      Pixelwalls utilizes a predictable step-function bonding curve to price unclaimed pixels, rewarding early
+      participants while ensuring a sustainable capital influx as the canvas fills.
+    </p>
+
+    <h3>Bonding Curve Pricing Tiers</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Pixels Claimed Range</th>
+          <th>Price per Pixel (SOL)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0 – 99,999</td>
+          <td>0.01 SOL</td>
+        </tr>
+        <tr>
+          <td>100,000 – 299,999</td>
+          <td>0.03 SOL</td>
+        </tr>
+        <tr>
+          <td>300,000 – 599,999</td>
+          <td>0.07 SOL</td>
+        </tr>
+        <tr>
+          <td>600,000 – 899,999</td>
+          <td>0.15 SOL</td>
+        </tr>
+        <tr>
+          <td>900,000 – 1,000,000</td>
+          <td>0.50 SOL</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><strong>Primary Sale Revenue Split:</strong></p>
+    <ul>
+      <li><strong>90%</strong> is directed to the project Treasury (compiled with a hard-coded pubkey).</li>
+      <li><strong>10%</strong> is directed to the operational Agent wallet (compiled with a hard-coded pubkey).</li>
+    </ul>
+    <p>The maximum protocol supply is rigorously capped at 1,000,000 pixels, enforced natively on-chain.</p>
+
+    <h2 id="nft-integration">7. NFT Integration</h2>
+    <p>Every claimed pixel automatically serves as the foundation for a standard Metaplex NFT.</p>
+    <ul>
+      <li>
+        The associated NFT is minted via project infrastructure (backend) and orchestrates the recording of the mint
+        address directly onto the blockchain using a `record_nft_mint` instruction.
+      </li>
+      <li>
+        The NFT mint address is stored immutably in the PDA as a write-once operation, cementing the bond between the
+        coordinate state and the tradable token.
+      </li>
+      <li>
+        When users execute a merge operation, the protocol produces a single, unified Cluster NFT representing the
+        aggregated coordinates.
+      </li>
+    </ul>
+
+    <h2 id="clustering-system">8. Clustering System</h2>
+    <p>The clustering system represents Pixelwalls' core innovation, enabling composable digital real estate.</p>
+    <p>
+      Owners have the capability to merge any contiguous rectangular block of pixels they control—ranging from a minimum
+      of 2×2 up to a maximum of 10×10 per transaction—into a unified ClusterSpace PDA and its corresponding Cluster NFT.
+    </p>
+    <p><strong>Design Philosophy &amp; Mechanics:</strong></p>
+    <ul>
+      <li>
+        Upon merging, the individual <code>PixelSpace</code> accounts are not destroyed. Instead, they remain alive
+        on-chain but are permanently flagged with <code>clustered = true</code>.
+      </li>
+      <li>This mechanic definitively reserves the coordinates, burning the rent-exemption SOL economically.</li>
+      <li>
+        All standard mutations (e.g., color or metadata updates) on the individual underlying pixels are strictly
+        blocked once clustered.
+      </li>
+      <li>The newly minted Cluster NFT assumes the role of the primary tradable asset for that block.</li>
+    </ul>
+    <p>
+      This system generates provable scarcity, allowing for large-scale collaborative or artistic macro-works while
+      immutably preserving the original pixel-level ownership history.
+    </p>
+
+    <h2 id="secondary-market">9. Secondary Market &amp; Royalties</h2>
+    <p>Liquidity and trading are central to the digital real estate model.</p>
+    <ul>
+      <li>Both individual Pixels and composite Clusters can be listed for sale in SOL.</li>
+      <li>
+        A strict 5% royalty on every resale is programmatically enforced and automatically routed to the treasury.
+      </li>
+      <li>Direct, peer-to-peer transfers are fully supported without royalty imposition.</li>
+      <li>
+        All secondary market transactions emit comprehensive on-chain events for transparent indexing and analytics.
+      </li>
+    </ul>
+
+    <h2 id="social-features">10. Social &amp; Utility Features</h2>
+    <p>Pixelwalls bridges raw asset ownership with verifiable digital identity.</p>
+    <ul>
+      <li>
+        <strong>X (Twitter) Verification:</strong> An authorized backend orchestrates OAuth verification, allowing users
+        to bind their X handle and avatar to their coordinates. This verified data is secured on-chain.
+      </li>
+      <li>
+        <strong>Boost Tiers (1–4):</strong> Users can upgrade their pixels through tiers (Bronze → Silver → Gold →
+        Wizard). Applied after off-chain $PIXEL payment confirmation, these boosts are currently cosmetic and social,
+        serving to highlight prominent landholders and open avenues for future utility.
+      </li>
+      <li>
+        <strong>Customizable Metadata:</strong> Unless a pixel is locked via clustering, owners can independently update
+        key fields directly on-chain, including Color (standard #rrggbb hex), external URL, and social identity markers.
+      </li>
+    </ul>
+
+    <h2 id="governance-security">11. Governance &amp; Security</h2>
+    <p>Smart contract integrity and risk mitigation are paramount.</p>
+    <ul>
+      <li>
+        <strong>Pause Switch:</strong> An emergency global pause function is available, tightly controlled by the
+        designated authority to protect users during critical events.
+      </li>
+      <li>
+        <strong>Authority Transfer:</strong> The contract supports secure, one-way transfers of authority to new
+        administrative wallets.
+      </li>
+      <li>
+        <strong>Hard-Coded Constraints:</strong> Treasury and Agent revenue routes are validated at compile time against
+        hard-coded public keys, preventing malicious redirection of funds.
+      </li>
+      <li>
+        <strong>Mathematical Safety:</strong> All arithmetic logic utilizes checked operations with strict overflow and
+        underflow protection.
+      </li>
+      <li>
+        <strong>Clustering Validation:</strong> The clustering engine performs rigorous checks, including full PDA
+        derivation verification, strict owner validation, duplicate coordinate protection via BTreeSet, and enforced
+        row-major ordering.
+      </li>
+      <li>
+        <strong>Anchor Best Practices:</strong> The protocol safely manages <code>remaining_accounts</code> mutations
+        using explicit <code>serialize</code> calls on data borrows, ensuring maximum memory reliability.
+      </li>
+    </ul>
+
+    <h2 id="phase-2">12. Phase 2 – Web3 Tools Portal</h2>
+    <p>
+      Pixelwalls is structured to evolve. Owning any Pixelwalls NFT—whether a single pixel or a massive cluster—will
+      eventually serve as the access key to a planned, dedicated Web3 Tools dashboard. There will be no requirement to
+      hold an additional separate token; the underlying pixel ownership natively dictates membership and access
+      privileges within the ecosystem.
+    </p>
+
+    <h2 id="roadmap">13. Roadmap</h2>
+    <p>The strategic deployment and feature expansion for Pixelwalls is planned as follows:</p>
+    <ul>
+      <li>
+        <strong>Q2 2026:</strong> Mainnet smart contract launch, commencement of initial pixel claiming, and release of
+        the basic marketplace infrastructure.
+      </li>
+      <li>
+        <strong>Q3 2026:</strong> Activation of the live clustering system, implementation of on-chain X verification,
+        and rollout of Boost tiers.
+      </li>
+      <li>
+        <strong>Q4 2026:</strong> Advanced secondary market polish, UI upgrades, and deployment of the comprehensive
+        analytics dashboard.
+      </li>
+      <li>
+        <strong>2027:</strong> Launch of the Phase 2 Web3 Tools portal and exploration of a potential governance token
+        ecosystem.
+      </li>
+    </ul>
+
+    <h2 id="risks">14. Risks &amp; Limitations</h2>
+    <p>
+      While Pixelwalls is designed with strict security and permanence in mind, prospective participants must
+      acknowledge inherent operational and market risks:
+    </p>
+    <ul>
+      <li>
+        <strong>Secondary Market Liquidity:</strong> The existence of an asset does not guarantee a buyer. NFT liquidity
+        is highly speculative and is not guaranteed by the protocol.
+      </li>
+      <li>
+        <strong>Infrastructure Dependencies:</strong> The orchestration of NFT mints and the X (Twitter) verification
+        processes are dependent on project-maintained backend infrastructure to record necessary state to the
+        blockchain.
+      </li>
+      <li>
+        <strong>Forward-Looking Utility:</strong> Features described in the Phase 2 Web3 Tools Portal and future
+        governance expansions are roadmap items, not currently live guarantees.
+      </li>
+    </ul>
+
+    <h2 id="conclusion">15. Conclusion</h2>
+    <p>
+      Pixelwalls transcends the scope of a standard pixel art experiment. It establishes a foundation for permanent
+      digital real estate on the Solana network—scarce, unambiguously ownable, continuously tradable, and socially rich.
+      By fusing a strict 1,000,000 pixel cap with on-chain permanence, advanced clustering mechanics, and sustainable
+      royalty economics, Pixelwalls defines a new standard of digital assets designed to be held, displayed, merged, and
+      monetized without expiration.
+    </p>
+    <p class="center" style="font-weight: bold; margin-top: 2em; margin-bottom: 2em">
+      The canvas is finite. The ownership is forever.
+    </p>
+    <p>
+      Ready to claim your piece of the wall?<br>
+      Visit the official frontend: <em>[Link to be announced post-launch]</em><br>
+      Interact directly with the verified smart contract on Solana:<br>
+      <strong>Contract Address:</strong> <em>[Will be published after deployment and verification]</em>
+    </p>
+
+    <div class="disclaimer" id="disclaimer">
+      <p>
+        <strong>Disclaimer:</strong> This white paper is intended for informational purposes only and does not
+        constitute financial, investment, or legal advice. Cryptocurrency and Non-Fungible Token (NFT) investments are
+        highly speculative and involve a substantial degree of risk. Participants should conduct their own due diligence
+        before engaging with the protocol.
+      </p>
+    </div>
+  
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body></html>
