@@ -77,9 +77,6 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .wall-wrap{display:flex;gap:0;padding:0;max-width:1400px;margin:0 auto;width:100%;}
 .canvas-area{position:relative;flex:1;min-width:0;}
 #wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
-.minimap-wrap{position:absolute;bottom:10px;left:10px;background:rgba(10,6,18,.88);border:1px solid rgba(91,33,182,.5);padding:4px;}
-#miniMap{display:block;image-rendering:pixelated;cursor:pointer;}
-.mini-lbl{font-size:5px;color:var(--muted);text-align:center;margin-top:2px;letter-spacing:1px;}
 
 /* SIDEBAR */
 .sidebar{width:300px;flex-shrink:0;background:rgba(17,13,34,.92);border-left:1px solid rgba(91,33,182,.3);display:flex;flex-direction:column;max-height:920px;overflow-y:auto;}
@@ -287,7 +284,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <li><a href="#how">HOW IT WORKS</a></li>
     <li><a href="#lore">LORE</a></li>
     <li><a href="#hall" style="color:#e879f9;">🔮 HALL OF FAME</a></li>
-    <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24; font-weight:bold;">WHITE PAPER</a></li>
+    <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24;font-weight:bold;">WHITE PAPER</a></li>
   </ul>
   <div class="nav-right">
     <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
@@ -380,10 +377,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   <div class="wall-wrap">
     <div class="canvas-area">
       <canvas id="wallCanvas" style="max-width:100%;"></canvas>
-      <div class="minimap-wrap">
-        <canvas id="miniMap" width="108" height="108"></canvas>
-        <div class="mini-lbl">MINIMAP · CLICK TO JUMP</div>
-      </div>
+
     </div>
     <div class="sidebar">
       <div class="sidebar-tabs">
@@ -673,7 +667,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div id="claimBody" style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:10px;"></div>
     <div class="price-showcase"><div class="price-sol" id="claimPrice">—</div><div class="price-usd" id="claimUsd">—</div></div>
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:15px;color:var(--gold);line-height:1.8;">
-      ✦ Smart contract deploying imminently<br/>
+      ✦ Contract LIVE on Solana mainnet<br/>
       ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
       ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for the launch alert
     </div>
@@ -721,6 +715,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 <script>
 // ── CONFIG ────────────────────────────────────────────────
 const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const PROGRAM_ID='CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
 const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
 const AGENT_WALLET='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
 const PUMP_URL='https://pump.fun/coin/'+CA;
@@ -816,7 +811,8 @@ function loadMySpaces(){loadFromStorage();renderMySpaces();}
 
 // ── CANVAS ────────────────────────────────────────────────
 const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
-const miniMap=document.getElementById('miniMap'),mctx=miniMap.getContext('2d');
+// minimap removed
+const miniMap=null,mctx=null;
 function resizeCanvas(){
   // Use the canvas parent's actual rendered width — most reliable
   const area = canvas.parentElement;
@@ -932,10 +928,8 @@ function render(){
   if(Object.keys(boostedSpaces).length>0) requestAnimationFrame(render);
 
   // Minimap
-  mctx.imageSmoothingEnabled=false;
-  mctx.drawImage(off,0,0,GRID,GRID,0,0,108,108);
-  const mv=GRID/zoom,mx=(panX/GRID)*108,my=(panY/GRID)*108,mw=Math.max(2,(mv/GRID)*108),mh=Math.max(2,(mv/GRID)*108);
-  mctx.strokeStyle='#fbbf24';mctx.lineWidth=1.5;mctx.strokeRect(mx,my,mw,mh);
+  // minimap removed
+  // minimap removed
 }
 
 // ── CANVAS EVENTS ─────────────────────────────────────────
@@ -1081,12 +1075,7 @@ canvas.addEventListener('touchmove',e=>{
 },{passive:false});
 canvas.addEventListener('touchend',()=>{ltd=null;});
 
-// ── MINIMAP CLICK ─────────────────────────────────────────
-miniMap.addEventListener('click',e=>{
-  const r=miniMap.getBoundingClientRect();
-  const mx=(e.clientX-r.left)/108, my=(e.clientY-r.top)/108, v=GRID/zoom;
-  panX=mx*GRID-v/2; panY=my*GRID-v/2; clampPan(); render();
-});
+// ── MINIMAP CLICK — removed (minimap disabled) ────────────
 
 // ── RESOLVE SELECTION ─────────────────────────────────────
 // Classifies every cell in dragStart→dragEnd as available/forSale/blocked
@@ -1595,7 +1584,7 @@ function showBoostConfirmModal(tierId, tier, key){
         '✦ Rainbow animation + giant border<br/>✦ Permanent — lives in this pixel forever<br/>✦ Hall of Fame listing on homepage<br/>✦ Ranked by click engagement<br/>✦ New owner inherits the legend status<br/>✦ The Archmage himself notices'}
     </div>
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.8;">
-      ✦ Smart contract deploying imminently<br/>
+      ✦ Contract LIVE on Solana mainnet<br/>
       ✦ Follow <a href="https://twitter.com/pixel_walls" target="_blank" style="color:var(--cyan);">@pixel_walls</a> for launch alert
     </div>
     <button class="aBtn aBtn-primary" onclick="applyBoost('${tierId}','${key}')">⚡ APPLY ${tier.name.toUpperCase()} BOOST</button>
