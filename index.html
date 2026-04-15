@@ -256,6 +256,8 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 .wiz-badge{display:inline-block;background:rgba(232,121,249,.15);border:1px solid rgba(232,121,249,.4);color:#e879f9;font-size:5px;padding:2px 8px;letter-spacing:2px;margin-top:5px;}
 .wiz-empty{text-align:center;font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:40px;grid-column:1/-1;line-height:2;}
 
+
+
 @media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
@@ -284,6 +286,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <li><a href="#how">HOW IT WORKS</a></li>
     <li><a href="#lore">LORE</a></li>
     <li><a href="#hall" style="color:#e879f9;">🔮 HALL OF FAME</a></li>
+    <li><a href="tokenomics.html" style="color:#22d3ee;">📊 TOKENOMICS</a></li>
     <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24;font-weight:bold;">WHITE PAPER</a></li>
   </ul>
   <div class="nav-right">
@@ -645,6 +648,8 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   </div>
 </section>
 
+
+
 <footer>
   <div class="logo">✦ PIXELWALLS.XYZ ✦</div>
   <div class="links">
@@ -655,6 +660,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <a href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank">DEXSCREENER</a>
     <a href="#wall">THE WALL</a>
     <a href="#token">$PIXEL</a>
+    <a href="#tokenomics">TOKENOMICS</a>
   </div>
   <div class="disc">Pixelwalls is a community project on Solana. $PIXEL is a meme token. Crypto involves risk. DYOR. Not financial advice. Magic not guaranteed.</div>
 </footer>
@@ -719,6 +725,66 @@ const PROGRAM_ID='CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
 const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
 const AGENT_WALLET='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
 const PUMP_URL='https://pump.fun/coin/'+CA;
+const PIXEL_MINT='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const TOKEN_PROGRAM='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const ASSOCIATED_TOKEN='ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
+
+// ── RANK SYSTEM ─────────────────────────────────────────────────────
+const RANKS=[
+  {min:5_000_000, title:'Archmage', color:'#e879f9'},
+  {min:1_000_000, title:'King',     color:'#fbbf24'},
+  {min:250_000,   title:'Lord',     color:'#22d3ee'},
+  {min:50_000,    title:'Knight',   color:'#4ade80'},
+  {min:10_000,    title:'Squire',   color:'#a78bfa'},
+  {min:0,         title:'Apprentice',color:'#9d8ccc'},
+];
+const BOOST_TITLES={bronze:'Mage',silver:'Sorcerer',gold:'Warlock',wizard:'Wizard'};
+let pixelBalance=0; // current connected wallet $PIXEL balance
+
+function getRankFromBalance(bal){
+  for(const r of RANKS) if(bal>=r.min) return r;
+  return RANKS[RANKS.length-1];
+}
+function getBoostTitle(tier){
+  if(!tier||tier===0) return null;
+  const map={1:'Mage',2:'Sorcerer',3:'Warlock',4:'Wizard'};
+  return map[tier]||null;
+}
+function getFullTitle(walletBal, boostTier){
+  const rank=getRankFromBalance(walletBal);
+  const boost=getBoostTitle(boostTier);
+  return boost ? rank.title+' '+boost : rank.title;
+}
+
+async function fetchPixelBalance(walletAddr){
+  try{
+    // Use Helius RPC if available, fallback to public mainnet
+    const rpc=window.HELIUS_RPC||'https://api.mainnet-beta.solana.com';
+    const res=await fetch(rpc,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        jsonrpc:'2.0',id:1,
+        method:'getParsedTokenAccountsByOwner',
+        params:[walletAddr,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]
+      })
+    });
+    const data=await res.json();
+    const accounts=data?.result?.value||[];
+    if(!accounts.length){pixelBalance=0;return 0;}
+    const amt=accounts[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;
+    pixelBalance=amt;
+    updateRankDisplay();
+    return amt;
+  }catch(e){pixelBalance=0;return 0;}
+}
+
+function updateRankDisplay(){
+  const el=document.getElementById('myRankDisplay');
+  if(!el||!walletConnected) return;
+  const r=getRankFromBalance(pixelBalance);
+  el.innerHTML=`<span style="color:${r.color};font-size:16px;">${r.title}</span> <span style="color:var(--muted);font-size:12px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL</span>`;
+}
 const GRID=1000, SOL_USD=170;
 const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
 
@@ -754,6 +820,11 @@ async function doConnect(w){
     document.getElementById('verifyXBtn').disabled=false;
     showToast('✦ '+w.name+' connected: '+s);
     if(dragStart)refreshSidebar();
+    // Fetch $PIXEL balance for rank calculation
+    fetchPixelBalance(pk).then(bal=>{
+      const rank=getRankFromBalance(bal);
+      if(bal>=10000) showToast('✦ Rank: '+rank.title+' ('+bal.toLocaleString()+' $PIXEL)');
+    });
   }catch(e){showToast(e.code===4001?'Cancelled.':(e.message||'Error'));}
 }
 function disconnectWallet(){
@@ -1370,6 +1441,13 @@ function switchTab(name,btn){
     }
   }
 }
+function getMyRankBadge(){
+  if(!pixelBalance) return '';
+  const r=getRankFromBalance(pixelBalance);
+  const bt=getBoostTitle(0);
+  return `<div style="text-align:center;padding:8px 0 4px;font-family:'VT323',monospace;font-size:18px;color:${r.color};">${r.title}</div>
+          <div style="text-align:center;font-size:9px;color:var(--muted);padding-bottom:10px;letter-spacing:1px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL HELD</div>`;
+}
 function renderMySpaces(){
   const grid=document.getElementById('mySpacesGrid'),summary=document.getElementById('myWallSummary');
   const mine=Object.values(claimedSpaces).filter(d=>d.owner===shortAddr());
@@ -1854,7 +1932,7 @@ function shareOnX(){
   const{current}=getLevelData(q);
   const text=encodeURIComponent(
     'I just claimed my eternal space on the blockchain 🧙\n\n'+
-    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwalls_xyz\n\n':'')+
+    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwallsol\n\n':'')+
     'Pixelwalls — 1,000,000 permanent pixels on Solana.\nClaim yours before the price rises 👇\n\n'+
     link+'\n\n#Solana #Pixelwalls #PIXEL'
   );
@@ -1897,8 +1975,8 @@ function showProfilePopup(spaceData, canvasX, canvasY){
     <div class="profile-popup-meta">
       Space: <span>(${spaceData.col}, ${spaceData.row})</span><br/>
       Size: <span>${spaceData.w||1}×${spaceData.h||1}</span><br/>
+      ${isMine&&pixelBalance>0?`Rank: <span style="color:${getRankFromBalance(pixelBalance).color};">${getFullTitle(pixelBalance,spaceData.boostTier)}</span><br/>`:''}
       ${spaceData.listPrice?'<span style="color:var(--cyan);">FOR SALE: '+spaceData.listPrice+' SOL</span>':''}
-      ${isX?'':''}
     </div>
     <div class="profile-popup-actions">
       ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏 VISIT</button>`:''}
@@ -2057,6 +2135,155 @@ window.addEventListener('load',async()=>{
   renderWizardHall();
   document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 });
+
+// ── TOKENOMICS CHARTS ───────────────────────────────────────────
+(function initTokenomicsCharts(){
+  if(typeof Chart === 'undefined') return;
+
+  // Wallet bar rows
+  const walletData = [
+    {label:'Staking reward pool (2×)', amt:40, color:'#8b5cf6'},
+    {label:'LP reserve / top-up (1×)', amt:20, color:'#22d3ee'},
+    {label:'Treasury reserve (2×)',     amt:40, color:'#ef4444'},
+    {label:'Burn reserve (1×)',         amt:20, color:'#fbbf24'},
+    {label:'Dev fund (1×)',             amt:20, color:'#4ade80'},
+    {label:'Community/marketing (2×)', amt:40, color:'#e879f9'},
+    {label:'Fee reinvestment (1×)',     amt:20, color:'#22d3ee'},
+    {label:'Ecosystem grants (1×)',     amt:20, color:'#8b5cf6'},
+  ];
+  const wb = document.getElementById('tkWalletBars');
+  if(wb) walletData.forEach(w=>{
+    const pct = Math.round(w.amt/220*100);
+    wb.innerHTML += `<div class="tk-row">
+      <div class="tk-row-label">${w.label}</div>
+      <div class="tk-bar-wrap"><div class="tk-bar" style="width:${pct}%;background:${w.color};"></div></div>
+      <div class="tk-row-val">${w.amt}M</div>
+    </div>`;
+  });
+
+  // Wallet purpose cards
+  const walletPurposes = [
+    {name:'STAKING REWARD POOL',  n:2, amt:'40M', desc:'Funds Streamflow staking pool. Locked in contract. Every holder who stakes earns yield from this.', lock:'STREAMFLOW — STAKING CONTRACT', col:'#8b5cf6'},
+    {name:'LP RESERVE',           n:1, amt:'20M', desc:'Held ready to deepen Meteora pool if price drops. Active defense — not passive holding.', lock:'STREAMFLOW 6MO LOCK', col:'#22d3ee'},
+    {name:'TREASURY RESERVE',     n:2, amt:'40M', desc:'Emergency runway only. Never sold under any circumstance. Verifiable on Solscan.', lock:'STREAMFLOW 24MO LOCK — NEVER SOLD', col:'#ef4444'},
+    {name:'BURN RESERVE',         n:1, amt:'20M', desc:'Dedicated to quarterly token burns. Each burn reduces supply permanently, making your tokens scarcer.', lock:'PUBLIC QUARTERLY BURNS ON-CHAIN', col:'#fbbf24'},
+    {name:'DEV FUND',             n:1, amt:'20M', desc:'Team tokens. 12-month cliff — team earns nothing for a year. Then linear vest. Skin in the game.', lock:'12MO CLIFF + LINEAR VEST', col:'#4ade80'},
+    {name:'COMMUNITY & MARKETING',n:2, amt:'40M', desc:'Pixel giveaways, KOL campaigns, contests, growth. Released on 6-month linear schedule.', lock:'6MO LINEAR VEST ON STREAMFLOW', col:'#e879f9'},
+    {name:'FEE REINVESTMENT',     n:1, amt:'20M', desc:'Meteora LP fee revenue (SOL + $PIXEL) flows here. Used to buy $PIXEL and extend staking runway.', lock:'OPERATIONAL — FEEDS FLYWHEEL', col:'#22d3ee'},
+    {name:'ECOSYSTEM GRANTS',     n:1, amt:'20M', desc:'For builders, tools, integrations, and partnerships. Released on milestone achievement only.', lock:'MILESTONE-BASED RELEASE', col:'#8b5cf6'},
+  ];
+  const wg = document.getElementById('tkWalletGrid');
+  if(wg) walletPurposes.forEach(w=>{
+    wg.innerHTML += `<div class="tk-wallet">
+      <div class="tk-wallet-name">${w.name} (${w.n}×20M)</div>
+      <div class="tk-wallet-amt" style="color:${w.col};">${w.amt}</div>
+      <div class="tk-wallet-desc">${w.desc}</div>
+      <div class="tk-wallet-lock">✦ ${w.lock}</div>
+    </div>`;
+  });
+
+  // Agent wallet flow
+  const agentSteps = [
+    {n:'01', text:'User buys a pixel', sub:'SOL sent to smart contract'},
+    {n:'02', text:'90% SOL → Treasury wallet', sub:'Funds operations + future development'},
+    {n:'03', text:'10% SOL → Agent wallet', sub:'Earmarked for staking pool funding'},
+    {n:'04', text:'Agent SOL buys $PIXEL weekly', sub:'Creates consistent market buy pressure'},
+    {n:'05', text:'Bought $PIXEL → staking pool', sub:'Extends staker runway from real revenue'},
+    {n:'06', text:'User buys a pixel boost ($PIXEL)', sub:'Mage 10K · Sorcerer 50K · Warlock 250K · Wizard 1M'},
+    {n:'07', text:'100% of boost $PIXEL → BURNED', sub:'Never re-enters circulation — permanent deflation'},
+  ];
+  const af = document.getElementById('tkAgentFlow');
+  if(af) agentSteps.forEach(s=>{
+    const isBurn = s.n === '07';
+    af.innerHTML += `<div class="tk-flow-step" style="border-left-color:${isBurn?'var(--red)':'var(--lav)'};">
+      <div class="tk-flow-num">${s.n}</div>
+      <div>
+        <div class="tk-flow-text" style="color:${isBurn?'var(--red)':'var(--white)'};">${s.text}</div>
+        <div class="tk-flow-sub">${s.sub}</div>
+      </div>
+    </div>`;
+  });
+
+  // Revenue streams
+  const revenueSteps = [
+    {icon:'◆', title:'STREAM 1 — PIXEL SALES', col:'#8b5cf6', text:'Every pixel claimed sends SOL to treasury. Bonding curve: 0.01→0.50 SOL. Max revenue $20.9M at full sellout.'},
+    {icon:'◆', title:'STREAM 2 — METEORA LP FEES', col:'#22d3ee', text:'1% fee on every $PIXEL swap, 24/7 automatic. At $50K daily volume = $182,500/yr. Grows with token traction.'},
+    {icon:'◆', title:'STREAM 3 — BOOST BURNS', col:'#fbbf24', text:'Every boost purchase destroys $PIXEL permanently. 100 Wizard boosts = 100M tokens gone. Each burn makes remaining tokens more scarce.'},
+  ];
+  const rf = document.getElementById('tkRevenueFlow');
+  if(rf) revenueSteps.forEach(s=>{
+    rf.innerHTML += `<div class="tk-flow-step" style="border-left-color:${s.col};margin-bottom:6px;">
+      <div class="tk-flow-num" style="color:${s.col};">${s.icon}</div>
+      <div>
+        <div class="tk-flow-text" style="color:${s.col};font-size:14px;">${s.title}</div>
+        <div class="tk-flow-sub" style="margin-top:4px;">${s.text}</div>
+      </div>
+    </div>`;
+  });
+
+  // Supply donut
+  const sc = document.getElementById('tkSupplyChart');
+  if(sc) new Chart(sc,{
+    type:'doughnut',
+    data:{
+      labels:['Free float (720M)','Meteora LP (50M)','Project wallets (220M)','Burned (10M)'],
+      datasets:[{data:[720,50,220,10],
+        backgroundColor:['#5b21b6','#22d3ee','#fbbf24','#ef4444'],
+        borderColor:'#0a0612',borderWidth:2,hoverOffset:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}}}
+  });
+
+  // Burn chart
+  const bc = document.getElementById('tkBurnChart');
+  if(bc) new Chart(bc,{
+    type:'bar',
+    data:{
+      labels:['Already burned','Q1 burn','Q2 burn','Q3 burn','Q4 burn'],
+      datasets:[{
+        label:'Tokens burned',
+        data:[10,20,15,10,5],
+        backgroundColor:['#ef4444','#ef4444','#dc2626','#b91c1c','#991b1b'],
+        borderWidth:0,borderRadius:3
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'M $PIXEL burned'},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'M'}},
+        x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+      }}
+  });
+
+  // Runway chart
+  const rc = document.getElementById('tkRunwayChart');
+  if(rc) new Chart(rc,{
+    type:'bar',
+    data:{
+      labels:['3% participation','5% participation','10% participation','20% participation'],
+      datasets:[{
+        label:'Months runway',
+        data:[69,42,21,10],
+        backgroundColor:['#22d3ee','#22d3ee','#fbbf24','#ef4444'],
+        borderWidth:0,borderRadius:3
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y+' months runway'},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'mo'}},
+        x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+      }}
+  });
+})();
+
 </script>
 </body>
 </html>
