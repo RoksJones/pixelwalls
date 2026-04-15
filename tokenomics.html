@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>$PIXEL Tokenomics — Pixelwalls</title>
+<meta name="description" content="Full $PIXEL token allocation transparency — 11 wallets, purposes, locks, and revenue flows."/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%238b5cf6'/><text y='24' font-size='20'>✦</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --void:#0a0612;--deep:#110d22;--purple:#2d1b69;--violet:#5b21b6;
+  --lav:#8b5cf6;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;
+  --green:#4ade80;--white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--void);
+  color:var(--white);
+  font-family:'Press Start 2P',monospace;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none;}
+
+/* NAV */
+nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;height:56px;
+  background:rgba(10,6,18,.95);
+  border-bottom:1px solid rgba(91,33,182,.4);
+  backdrop-filter:blur(8px);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:28px;height:28px;background:var(--violet);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:4px;}
+.logo-mark span{background:var(--gold);display:block;}
+.logo-text{font-size:10px;color:var(--gold);letter-spacing:1px;}
+.nav-links{display:flex;gap:18px;list-style:none;}
+.nav-links a{color:var(--muted);font-size:7px;letter-spacing:1px;transition:color .2s;}
+.nav-links a:hover{color:var(--lav);}
+.nav-back{border:1px solid var(--lav);color:var(--lav);background:transparent;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.nav-back:hover{background:var(--lav);color:var(--void);}
+
+/* HERO */
+.hero{
+  text-align:center;padding:60px 28px 40px;
+  background:linear-gradient(180deg,rgba(43,27,105,.3) 0%,transparent 100%);
+}
+.hero-label{font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:16px;}
+.hero-title{
+  font-size:clamp(14px,3vw,24px);line-height:1.5;margin-bottom:16px;
+  background:linear-gradient(135deg,var(--cyan),var(--lav),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-sub{
+  font-family:'VT323',monospace;font-size:18px;color:var(--muted);
+  max-width:700px;margin:0 auto 32px;line-height:1.7;
+}
+.hero-sub em{color:var(--cyan);font-style:normal;}
+.commitment-box{
+  display:inline-block;
+  border:1px solid rgba(251,191,36,.4);
+  background:rgba(251,191,36,.06);
+  padding:14px 24px;
+  font-family:'VT323',monospace;font-size:16px;color:var(--gold);
+  line-height:1.7;max-width:700px;text-align:left;
+}
+
+/* SECTION */
+.section{padding:48px 28px;max-width:1100px;margin:0 auto;}
+.section-title{font-size:9px;color:var(--cyan);letter-spacing:3px;margin-bottom:24px;}
+.section-sub{font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.7;margin-bottom:24px;}
+.divider{border:none;border-top:1px solid rgba(91,33,182,.3);margin:0 0 40px;}
+
+/* SUPPLY METRICS */
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:32px;}
+.metric{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);padding:16px 10px;text-align:center;}
+.metric .val{font-family:'VT323',monospace;font-size:26px;color:var(--gold);margin-bottom:6px;}
+.metric .lbl{font-size:6px;color:var(--muted);letter-spacing:1px;line-height:1.5;}
+
+/* CHARTS GRID */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;}
+.chart-card{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);padding:20px;}
+.chart-title{font-size:7px;color:var(--cyan);letter-spacing:2px;margin-bottom:14px;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.legend span{font-family:'VT323',monospace;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.ldot{width:10px;height:10px;flex-shrink:0;}
+
+/* WALLET CARDS */
+.wallet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:32px;}
+.wallet-card{
+  background:rgba(17,13,34,.9);
+  border:1px solid rgba(91,33,182,.3);
+  padding:18px;
+  transition:border-color .2s;
+}
+.wallet-card:hover{border-color:var(--lav);}
+.wallet-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.wallet-icon{font-size:20px;}
+.wallet-role{font-size:7px;letter-spacing:1px;margin-bottom:3px;}
+.wallet-amt{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
+.wallet-addr{
+  font-family:'VT323',monospace;font-size:13px;color:var(--muted);
+  word-break:break-all;margin-bottom:10px;
+  padding:8px;background:rgba(0,0,0,.3);
+  cursor:pointer;transition:color .2s;
+  display:block;
+}
+.wallet-addr:hover{color:var(--cyan);}
+.wallet-desc{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+.wallet-lock{font-size:6px;letter-spacing:1px;padding:4px 8px;border:1px solid;display:inline-block;}
+
+/* FLOW STEPS */
+.flow{display:flex;flex-direction:column;gap:8px;}
+.flow-step{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 12px;
+  background:rgba(91,33,182,.08);
+  border-left:2px solid var(--lav);
+}
+.flow-num{font-size:7px;color:var(--gold);min-width:20px;margin-top:2px;}
+.flow-body{flex:1;}
+.flow-text{font-family:'VT323',monospace;font-size:16px;color:var(--white);line-height:1.4;}
+.flow-sub{font-size:6px;color:var(--muted);letter-spacing:.5px;margin-top:4px;}
+
+/* BAR ROWS */
+.bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(91,33,182,.2);}
+.bar-row:last-child{border-bottom:none;}
+.bar-label{font-family:'VT323',monospace;font-size:15px;color:var(--muted);width:200px;flex-shrink:0;}
+.bar-wrap{flex:1;height:5px;background:rgba(91,33,182,.2);}
+.bar-fill{height:100%;}
+.bar-val{font-family:'VT323',monospace;font-size:15px;color:var(--white);width:40px;text-align:right;}
+
+/* INFO ROWS */
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(91,33,182,.2);font-family:'VT323',monospace;font-size:16px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--muted);}
+.info-val{color:var(--white);font-weight:bold;}
+
+/* SEEKER SECTION */
+.seeker-box{
+  background:rgba(232,121,249,.06);
+  border:1px solid rgba(232,121,249,.3);
+  padding:24px;margin-bottom:24px;
+}
+.seeker-title{font-size:9px;color:var(--pink);letter-spacing:2px;margin-bottom:14px;}
+
+/* NOTE BOX */
+.note{
+  font-family:'VT323',monospace;font-size:15px;color:var(--muted);
+  line-height:1.7;padding:14px;
+  background:rgba(34,211,238,.05);
+  border-left:2px solid var(--cyan);
+  margin-top:12px;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;padding:40px 28px;
+  border-top:1px solid rgba(91,33,182,.3);
+  font-family:'VT323',monospace;font-size:15px;color:var(--muted);
+  line-height:1.8;
+}
+footer a{color:var(--lav);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:rgba(17,13,34,.95);border:1px solid var(--lav);
+  font-family:'VT323',monospace;font-size:16px;color:var(--cyan);
+  padding:10px 20px;z-index:999;transition:transform .3s;pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:780px){
+  nav{padding:0 14px;}
+  .nav-links{display:none;}
+  .hero{padding:40px 14px 28px;}
+  .section{padding:32px 14px;}
+  .metrics{grid-template-columns:repeat(3,1fr);}
+  .chart-grid{grid-template-columns:1fr;}
+  .wallet-grid{grid-template-columns:1fr;}
+}
+@media(max-width:480px){
+  .metrics{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <span class="logo-text">PIXELWALLS</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="index.html#wall">THE WALL</a></li>
+    <li><a href="index.html#token">$PIXEL</a></li>
+    <li><a href="index.html#hall">HALL OF FAME</a></li>
+    <li><a href="whitepaper.html" style="color:var(--gold);">WHITE PAPER</a></li>
+  </ul>
+  <button class="nav-back" onclick="location.href='index.html'">← BACK TO WALL</button>
+</nav>
+
+<div class="hero">
+  <p class="hero-label">✦ FULL ON-CHAIN TRANSPARENCY ✦</p>
+  <h1 class="hero-title">$PIXEL TOKENOMICS</h1>
+  <p class="hero-sub">
+    Every token has a purpose. Every wallet is <em>publicly verifiable</em>.<br/>
+    Nothing is hidden. Nothing is vague. This is the complete picture.
+  </p>
+  <div class="commitment-box">
+    ✦ This document represents a public, permanent commitment to our holders.<br/>
+    ✦ All wallet locks are executed on Streamflow and verifiable on Solscan.<br/>
+    ✦ No team wallet unlocks without a published schedule.<br/>
+    ✦ The Archmage's word is law.
+  </div>
+</div>
+
+<hr class="divider" style="margin-top:40px;"/>
+
+<!-- SUPPLY OVERVIEW -->
+<div class="section">
+  <p class="section-title">✦ SUPPLY OVERVIEW</p>
+  <div class="metrics" id="supplyMetrics"></div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">990M CURRENT SUPPLY BREAKDOWN</div>
+      <div class="legend">
+        <span><span class="ldot" style="background:#5b21b6;"></span>Free float 72.7%</span>
+        <span><span class="ldot" style="background:#22d3ee;"></span>Meteora LP 5.1%</span>
+        <span><span class="ldot" style="background:#fbbf24;"></span>Project wallets 22.2%</span>
+        <span><span class="ldot" style="background:#ef4444;"></span>Burned 1.0%</span>
+      </div>
+      <div style="position:relative;width:100%;height:220px;">
+        <canvas id="supplyChart" role="img" aria-label="$PIXEL supply: 720M free float, 50M Meteora LP, 220M project wallets, 10M burned permanently">720M freely tradeable. 50M in Meteora LP earning fees. 220M project wallets locked. 10M burned permanently.</canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">PROJECT WALLET ALLOCATION (220M)</div>
+      <div id="walletBars"></div>
+      <div class="note" style="margin-top:14px;">
+        All 220M project tokens are assigned to specific purposes. Zero tokens are held speculatively. Every allocation either benefits holders directly (staking, LP) or is locked beyond team reach (treasury, dev cliff).
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- 11 WALLETS -->
+<div class="section">
+  <p class="section-title">✦ THE 11 WALLETS — CLICK ANY ADDRESS TO VIEW ON SOLSCAN</p>
+  <p class="section-sub">
+    Each wallet holds exactly 20,000,000 $PIXEL and has one specific purpose. Click any address to verify on Solscan.
+  </p>
+  <div class="wallet-grid" id="walletGrid"></div>
+</div>
+
+<hr class="divider"/>
+
+<!-- AGENT WALLET -->
+<div class="section">
+  <p class="section-title">✦ AGENT WALLET — HOW REVENUE FLOWS</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div>
+      <div class="chart-title" style="margin-bottom:14px;">PIXEL SALE REVENUE FLOW</div>
+      <div class="flow" id="solFlow"></div>
+    </div>
+    <div>
+      <div class="chart-title" style="margin-bottom:14px;">BOOST PURCHASE FLOW</div>
+      <div class="flow" id="pixelFlow"></div>
+    </div>
+  </div>
+  <div class="note" style="margin-top:20px;">
+    Agent wallet: <span style="color:var(--cyan);font-family:'VT323',monospace;font-size:15px;">HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC</span><br/>
+    Treasury wallet: <span style="color:var(--cyan);font-family:'VT323',monospace;font-size:15px;">9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk</span><br/><br/>
+    Both addresses are compile-time constants in the smart contract — enforced at the protocol level, not by trust.
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- SEEKER AIRDROP -->
+<div class="section">
+  <p class="section-title">✦ SOLANA SEEKER GENESIS TOKEN AIRDROP</p>
+  <div class="seeker-box">
+    <div class="seeker-title">📱 SEEKER HOLDERS — YOU'RE FIRST</div>
+    <p class="section-sub" style="margin-bottom:20px;">
+      The first 1,000 pixel buyers who also hold a Solana Seeker Genesis Token receive a special airdrop via the Cherry app. This is our way of reaching the most committed crypto-native community in the Solana ecosystem.
+    </p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+      <div class="metric"><div class="val" style="color:var(--pink);">1,000</div><div class="lbl">MAX RECIPIENTS</div></div>
+      <div class="metric"><div class="val" style="color:var(--pink);">10,000</div><div class="lbl">$PIXEL PER WALLET</div></div>
+      <div class="metric"><div class="val" style="color:var(--pink);">30 DAYS</div><div class="lbl">CLAIM WINDOW</div></div>
+    </div>
+    <div class="flow">
+      <div class="flow-step" style="border-left-color:var(--pink);">
+        <div class="flow-num">01</div>
+        <div class="flow-body">
+          <div class="flow-text">Buy any pixel on pixelwalls.xyz</div>
+          <div class="flow-sub">Must be one of the first 1,000 buyers</div>
+        </div>
+      </div>
+      <div class="flow-step" style="border-left-color:var(--pink);">
+        <div class="flow-num">02</div>
+        <div class="flow-body">
+          <div class="flow-text">Hold a Solana Seeker Genesis Token (SGT)</div>
+          <div class="flow-sub">The soulbound NFT that verifies Seeker phone ownership</div>
+        </div>
+      </div>
+      <div class="flow-step" style="border-left-color:var(--pink);">
+        <div class="flow-num">03</div>
+        <div class="flow-body">
+          <div class="flow-text">Claim 10,000 $PIXEL via Cherry app</div>
+          <div class="flow-sub">30-day claim window from your pixel purchase date. Unclaimed tokens return to community pool.</div>
+        </div>
+      </div>
+      <div class="flow-step" style="border-left-color:var(--gold);">
+        <div class="flow-num">✦</div>
+        <div class="flow-body">
+          <div class="flow-text" style="color:var(--gold);">10,000 $PIXEL = Squire rank instantly</div>
+          <div class="flow-sub">You'll have a visible title on your pixel the moment you claim. That's not a coincidence.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:16px;">
+      Source wallet: <span style="color:var(--pink);font-family:'VT323',monospace;">34wENeqscrYxXEQeURBTLfAskpeVPFHu9RtGG66fGwj7</span> (Seeker Airdrop Reserve — 10M allocated, 10M rolls to community campaigns)
+    </div>
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- BURN + RUNWAY CHARTS -->
+<div class="section">
+  <p class="section-title">✦ BURN SCHEDULE & STAKING RUNWAY</p>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">QUARTERLY BURN SCHEDULE</div>
+      <div style="position:relative;width:100%;height:200px;">
+        <canvas id="burnChart" role="img" aria-label="Quarterly burns: already 10M, Q1 20M, Q2 15M, Q3 10M, Q4 5M">Already burned 10M. Q1: 20M. Q2: 15M. Q3: 10M. Q4: 5M. Total year-1 burns: 60M tokens.</canvas>
+      </div>
+      <div class="note" style="margin-top:12px;">
+        60M total burned in year 1 = 6% of original supply gone permanently. Every Wizard boost adds 1M more. Burns are announced 7 days in advance on @pixelwallsol.
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">STAKING POOL RUNWAY (40M + WEEKLY REFILL)</div>
+      <div style="position:relative;width:100%;height:200px;">
+        <canvas id="runwayChart" role="img" aria-label="Staking runway at 30% APY: 3% participation 69 months, 5% 42 months, 10% 21 months, 20% 10 months">Runway at 30% APY: 3% staking = 69 months, 5% = 42 months, 10% = 21 months, 20% = 10 months.</canvas>
+      </div>
+      <div class="note" style="margin-top:12px;">
+        Initial pool: 40M. Refilled weekly from agent wallet buybacks (pixel sales revenue). Meteora fee income adds a second refill stream. APY target: 30%. Adjusted quarterly.
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider"/>
+
+<!-- KEY ADDRESSES -->
+<div class="section">
+  <p class="section-title">✦ KEY CONTRACT ADDRESSES</p>
+  <div class="chart-card">
+    <div id="keyAddresses"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div style="font-size:10px;color:var(--gold);margin-bottom:12px;">✦ PIXELWALLS.XYZ ✦</div>
+  <div style="margin-bottom:12px;">
+    <a href="index.html">THE WALL</a> &nbsp;·&nbsp;
+    <a href="https://twitter.com/pixelwallsol" target="_blank">@PIXELWALLSOL</a> &nbsp;·&nbsp;
+    <a href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">PUMP.FUN</a> &nbsp;·&nbsp;
+    <a href="https://www.meteora.ag/dammv2/A2o487PSnxgiHE8TuWW3tySUQHdRsXEi5o9PaSJdPMcW" target="_blank">METEORA LP</a>
+  </div>
+  <div>$PIXEL is a meme token on Solana. Crypto involves risk. DYOR. Not financial advice.<br/>
+  All wallet locks are verifiable on Solscan. The wall is eternal. The Archmage is watching.</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const WALLETS = [{"addr": "8bBejAvXLwJ7PMFE13UPEpZxkiAQPtXCXXU9PzN2zJU8", "role": "Staking Reward Pool #1", "tokens": 20000000, "color": "#8b5cf6", "lock": "Streamflow Staking Contract", "lock_color": "#4ade80", "desc": "Funds the Streamflow staking pool directly. Locked in the staking contract \u2014 only releases as staking yield to holders. Cannot be withdrawn by the team.", "icon": "\u26a1"}, {"addr": "7EqvsFDE4RtB1hHSUamPu18D47hDrPZMejkYHRpLnsKn", "role": "Staking Reward Pool #2", "tokens": 20000000, "color": "#8b5cf6", "lock": "Streamflow Staking Contract", "lock_color": "#4ade80", "desc": "Second staking pool wallet. Combined with Pool #1 gives 40M $PIXEL to fund staker yield. Weekly refills from agent wallet buybacks extend runway indefinitely.", "icon": "\u26a1"}, {"addr": "HJNvtQfKFteqUv8mGLDXmEmVTSJF6T6N8nuvHkgjtNLY", "role": "Treasury Reserve #1", "tokens": 20000000, "color": "#ef4444", "lock": "Streamflow \u2014 24 Month Lock", "lock_color": "#ef4444", "desc": "Emergency treasury. Never sold under any circumstance. 24-month Streamflow lock \u2014 verifiable on Solscan. Exists as a last resort only.", "icon": "\ud83c\udfdb"}, {"addr": "HPQCP9MNiLcDDFpK2g7R1J1WcNmjrr4uWpo22Vbng8sx", "role": "Treasury Reserve #2", "tokens": 20000000, "color": "#ef4444", "lock": "Streamflow \u2014 24 Month Lock", "lock_color": "#ef4444", "desc": "Second treasury reserve. Combined 40M in reserve provides a permanent safety net. Both wallets locked for 24 months. No team access during this period.", "icon": "\ud83c\udfdb"}, {"addr": "35V28Sp1LeGDg9zSp7EixDqro7P6DD3ntwTubkyLQmEh", "role": "LP Reserve / Price Defense", "tokens": 20000000, "color": "#22d3ee", "lock": "Streamflow \u2014 6 Month Lock", "lock_color": "#22d3ee", "desc": "Held ready to deepen the Meteora DAMM v2 pool if price drops significantly. Active price defense \u2014 deployed when needed to tighten spreads and defend the floor.", "icon": "\ud83d\udca7"}, {"addr": "FQ9JEFZ33nCqCNDSZ6vVhsS2r5WqttB3Q5sYdp5x3zzw", "role": "Burn Reserve", "tokens": 20000000, "color": "#fbbf24", "lock": "Quarterly Public Burns", "lock_color": "#fbbf24", "desc": "Dedicated to scheduled quarterly burns. Q1: 20M. Q2: 15M. Q3: 10M. Q4: 5M. Each burn announced 7 days in advance, executed publicly on-chain. Supply decreases permanently.", "icon": "\ud83d\udd25"}, {"addr": "6m5Gbwbx6ZVDvTp2B8ugrpRtZdTkvCHhLbAGbD6Vc4XJ", "role": "Dev Fund", "tokens": 20000000, "color": "#4ade80", "lock": "12Mo Cliff + Linear Vest", "lock_color": "#4ade80", "desc": "Team allocation. 12-month cliff \u2014 team earns zero tokens for the first year. After cliff, linear vest over 12 months. Team is fully aligned with long-term success.", "icon": "\ud83d\udee0"}, {"addr": "34wENeqscrYxXEQeURBTLfAskpeVPFHu9RtGG66fGwj7", "role": "Seeker Airdrop Reserve", "tokens": 20000000, "color": "#e879f9", "lock": "Cherry App \u2014 Claim Window 30 Days", "lock_color": "#e879f9", "desc": "10M reserved for the Solana Seeker Genesis Token holder airdrop (first 1,000 pixel buyers who also hold a Seeker NFT \u2014 10,000 $PIXEL each via Cherry app). Remaining 10M rolls into community campaigns.", "icon": "\ud83d\udcf1"}, {"addr": "CqqThkHE4LLgBuAXAmhXkK2ypi2Ty5Kk6DZ52mxqnW3r", "role": "Community & Marketing", "tokens": 20000000, "color": "#e879f9", "lock": "6 Month Linear Vest", "lock_color": "#e879f9", "desc": "Pixel giveaways, KOL campaigns, community contests, Twitter spaces, and growth initiatives. Released on a 6-month linear schedule \u2014 accountable, not a lump sum.", "icon": "\ud83d\udce3"}, {"addr": "E5HKLHPYoXFZAXLt366qVQ8ekJFfqSeDJm7AkvqzxJsz", "role": "Fee Reinvestment", "tokens": 20000000, "color": "#22d3ee", "lock": "Operational \u2014 Flywheel Funded", "lock_color": "#22d3ee", "desc": "Receives Meteora DAMM v2 trading fees (1% on every swap). SOL fees buy $PIXEL on market. $PIXEL fees replenish the staking pool. This wallet is the engine of the sustainability flywheel.", "icon": "\u267b"}, {"addr": "FyUN23ctu1qQA3XszJy7mWiSb4bNxTEGhJzQix5sFkby", "role": "Ecosystem Grants", "tokens": 20000000, "color": "#8b5cf6", "lock": "Milestone-Based Release", "lock_color": "#8b5cf6", "desc": "For builders, tools, integrations, and strategic partnerships. Released only upon verified milestone achievement \u2014 no speculative grants. Grows the wall's utility beyond pixels.", "icon": "\ud83c\udf10"}];
+const SUPPLY  = {"original": 1000000000, "burned": 10000000, "current": 990000000, "meteora_lp": 50000000, "project_held": 220000000, "free_float": 720000000, "token_ca": "7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump", "meteora_pool": "A2o487PSnxgiHE8TuWW3tySUQHdRsXEi5o9PaSJdPMcW", "treasury": "9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk", "agent": "HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC"};
+
+function copyAddr(addr){
+  navigator.clipboard.writeText(addr).then(()=>showToast('✦ Address copied!')).catch(()=>{});
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Supply metrics
+const metricData=[
+  {val:'1B',      lbl:'ORIGINAL SUPPLY',        col:'var(--white)'},
+  {val:'10M',     lbl:'BURNED ON-CHAIN',         col:'var(--red)'},
+  {val:'990M',    lbl:'CURRENT SUPPLY',          col:'var(--white)'},
+  {val:'720M',    lbl:'FREE FLOAT (72.7%)',       col:'var(--green)'},
+  {val:'50M',     lbl:'METEORA LP (1% FEE)',      col:'var(--cyan)'},
+];
+const sm=document.getElementById('supplyMetrics');
+metricData.forEach(m=>{
+  sm.innerHTML+=`<div class="metric"><div class="val" style="color:${m.col};">${m.val}</div><div class="lbl">${m.lbl}</div></div>`;
+});
+
+// Wallet allocation bars
+const barData=[
+  {label:'Staking pools (2×)',    amt:40, color:'#8b5cf6'},
+  {label:'Treasury reserve (2×)',  amt:40, color:'#ef4444'},
+  {label:'Community/mktg (2×)',   amt:40, color:'#e879f9'},
+  {label:'LP reserve (1×)',        amt:20, color:'#22d3ee'},
+  {label:'Burn reserve (1×)',      amt:20, color:'#fbbf24'},
+  {label:'Dev fund (1×)',          amt:20, color:'#4ade80'},
+  {label:'Seeker airdrop (1×)',    amt:20, color:'#e879f9'},
+  {label:'Fee reinvestment (1×)', amt:20, color:'#22d3ee'},
+  {label:'Ecosystem grants (1×)', amt:20, color:'#8b5cf6'},
+];
+const wb=document.getElementById('walletBars');
+barData.forEach(b=>{
+  const pct=Math.round(b.amt/220*100);
+  wb.innerHTML+=`<div class="bar-row">
+    <div class="bar-label">${b.label}</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${b.color};"></div></div>
+    <div class="bar-val">${b.amt}M</div>
+  </div>`;
+});
+
+// Wallet cards
+const wg=document.getElementById('walletGrid');
+WALLETS.forEach((w,i)=>{
+  const short=w.addr.slice(0,8)+'...'+w.addr.slice(-8);
+  const solscan=`https://solscan.io/account/${w.addr}`;
+  wg.innerHTML+=`<div class="wallet-card">
+    <div class="wallet-header">
+      <div class="wallet-icon">${w.icon}</div>
+      <div>
+        <div class="wallet-role" style="color:${w.color};">${w.role}</div>
+        <div class="wallet-amt">20,000,000 $PIXEL</div>
+      </div>
+    </div>
+    <a class="wallet-addr" href="${solscan}" target="_blank" title="View on Solscan">${w.addr}</a>
+    <div class="wallet-desc">${w.desc}</div>
+    <span class="wallet-lock" style="color:${w.lock_color};border-color:${w.lock_color};">✦ ${w.lock}</span>
+  </div>`;
+});
+
+// Agent wallet flows
+const solSteps=[
+  {n:'01',t:'User buys a pixel',         s:'SOL sent to Pixelwalls smart contract'},
+  {n:'02',t:'90% SOL → Treasury wallet', s:'9LABvU... — funds project operations'},
+  {n:'03',t:'10% SOL → Agent wallet',    s:'HKCnY... — earmarked for staking pool'},
+  {n:'04',t:'Agent buys $PIXEL weekly',  s:'Consistent market buy pressure on Meteora'},
+  {n:'05',t:'$PIXEL → Staking pool',     s:'Extends staker APY from real revenue — not inflation'},
+];
+const pixelSteps=[
+  {n:'01',t:'User pays $PIXEL for boost', s:'Mage 10K · Sorcerer 50K · Warlock 250K · Wizard 1M'},
+  {n:'02',t:'100% of $PIXEL → BURNED',    s:'Never re-enters circulation. Ever.', red:true},
+  {n:'03',t:'Supply decreases permanently',s:'Every boost makes all remaining tokens more scarce', red:true},
+  {n:'04',t:'Scarcity increases value',   s:'Burn pressure compounds as more boosts are applied'},
+];
+const sf=document.getElementById('solFlow');
+solSteps.forEach(s=>{
+  sf.innerHTML+=`<div class="flow-step">
+    <div class="flow-num">${s.n}</div>
+    <div class="flow-body"><div class="flow-text">${s.t}</div><div class="flow-sub">${s.s}</div></div>
+  </div>`;
+});
+const pf=document.getElementById('pixelFlow');
+pixelSteps.forEach(s=>{
+  const col=s.red?'var(--red)':'var(--white)';
+  const bc=s.red?'var(--red)':'var(--lav)';
+  pf.innerHTML+=`<div class="flow-step" style="border-left-color:${bc};">
+    <div class="flow-num" style="color:${col};">${s.n}</div>
+    <div class="flow-body"><div class="flow-text" style="color:${col};">${s.t}</div><div class="flow-sub">${s.s}</div></div>
+  </div>`;
+});
+
+// Key addresses
+const ka=document.getElementById('keyAddresses');
+const addrs=[
+  {label:'$PIXEL Token CA',      addr:SUPPLY.token_ca,     url:`https://pump.fun/coin/${SUPPLY.token_ca}`},
+  {label:'Meteora DAMM v2 Pool', addr:SUPPLY.meteora_pool, url:`https://www.meteora.ag/dammv2/${SUPPLY.meteora_pool}`},
+  {label:'Treasury Wallet',      addr:SUPPLY.treasury,     url:`https://solscan.io/account/${SUPPLY.treasury}`},
+  {label:'Agent Wallet',         addr:SUPPLY.agent,        url:`https://solscan.io/account/${SUPPLY.agent}`},
+];
+addrs.forEach(a=>{
+  ka.innerHTML+=`<div class="info-row">
+    <span class="info-label">${a.label}</span>
+    <a href="${a.url}" target="_blank" style="color:var(--cyan);font-family:'VT323',monospace;font-size:14px;word-break:break-all;text-align:right;">${a.addr}</a>
+  </div>`;
+});
+
+// Supply donut
+new Chart(document.getElementById('supplyChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Free float (720M)','Meteora LP (50M)','Project wallets (220M)','Burned (10M)'],
+    datasets:[{data:[720,50,220,10],
+      backgroundColor:['#5b21b6','#22d3ee','#fbbf24','#ef4444'],
+      borderColor:'#0a0612',borderWidth:2,hoverOffset:6}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>' '+ctx.label},
+        bodyColor:'#f5f0ff',backgroundColor:'#110d22',
+        borderColor:'#5b21b6',borderWidth:1}
+    }
+  }
+});
+
+// Burn chart
+new Chart(document.getElementById('burnChart'),{
+  type:'bar',
+  data:{
+    labels:['Burned already','Q1','Q2','Q3','Q4'],
+    datasets:[{
+      label:'Tokens burned',data:[10,20,15,10,5],
+      backgroundColor:['#991b1b','#ef4444','#dc2626','#b91c1c','#991b1b'],
+      borderWidth:0,borderRadius:3
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'M $PIXEL burned'},bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+    scales:{
+      y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'M'}},
+      x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+    }
+  }
+});
+
+// Runway chart
+new Chart(document.getElementById('runwayChart'),{
+  type:'bar',
+  data:{
+    labels:['3% staked','5% staked','10% staked','20% staked'],
+    datasets:[{
+      label:'Months',data:[69,42,21,10],
+      backgroundColor:['#22d3ee','#22d3ee','#fbbf24','#ef4444'],
+      borderWidth:0,borderRadius:3
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+' months runway'},bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+    scales:{
+      y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'mo'}},
+      x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+    }
+  }
+});
+</script>
+</body>
+</html>
