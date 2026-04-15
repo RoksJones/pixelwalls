@@ -78,6 +78,14 @@
       "destination": "/api/cluster-metadata"
     },
     {
+      "source": "/api/auth/twitter/callback",
+      "destination": "/api/xcallback"
+    },
+    {
+      "source": "/api/auth/twitter/login",
+      "destination": "/api/xlogin"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     },
