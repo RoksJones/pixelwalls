@@ -1,22 +1,89 @@
 {
   "functions": {
-    "api/xlogin.js":   { "memory": 256, "maxDuration": 10 },
-    "api/xcallback.js":{ "memory": 256, "maxDuration": 10 }
+    "api/xlogin.js": {
+      "memory": 256,
+      "maxDuration": 10
+    },
+    "api/xcallback.js": {
+      "memory": 256,
+      "maxDuration": 10
+    },
+    "api/metadata.js": {
+      "memory": 256,
+      "maxDuration": 10
+    },
+    "api/pixel-image.js": {
+      "memory": 256,
+      "maxDuration": 10
+    },
+    "api/mint-nft.js": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "api/mint-cluster.js": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "api/cluster-metadata.js": {
+      "memory": 256,
+      "maxDuration": 10
+    }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options",   "value": "nosniff" },
-        { "key": "X-Frame-Options",           "value": "SAMEORIGIN" },
-        { "key": "X-XSS-Protection",          "value": "1; mode=block" },
-        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/tokenomics.html",
+      "destination": "/tokenomics.html"
+    },
+    {
+      "source": "/whitepaper.html",
+      "destination": "/whitepaper.html"
+    },
+    {
+      "source": "/api/metadata/:col/:row",
+      "destination": "/api/metadata"
+    },
+    {
+      "source": "/api/pixel-image/:col/:row",
+      "destination": "/api/pixel-image"
+    },
+    {
+      "source": "/api/metadata/cluster/:c1/:r1/:c2/:r2",
+      "destination": "/api/cluster-metadata"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }
