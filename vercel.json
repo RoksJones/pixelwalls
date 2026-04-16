@@ -97,5 +97,18 @@
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.pixelwalls.xyz"
+        }
+      ],
+      "destination": "https://pixelwalls.xyz/:path*",
+      "permanent": true
+    }
   ]
 }
