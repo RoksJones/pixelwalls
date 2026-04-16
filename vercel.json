@@ -16,10 +16,6 @@
       "memory": 256,
       "maxDuration": 10
     },
-    "api/mint-cluster.js": {
-      "memory": 512,
-      "maxDuration": 30
-    },
     "api/cluster-metadata.js": {
       "memory": 256,
       "maxDuration": 10
