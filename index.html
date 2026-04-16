@@ -258,6 +258,102 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 
 
 
+
+/* ── SNS.ID STYLE PIXEL PROFILE ─────────────────────────────────── */
+.pixel-profile-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(10,6,18,.85);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+}
+.pixel-profile{
+  background:#110d22;
+  border:1px solid rgba(91,33,182,.5);
+  width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  position:relative;
+}
+.pf-banner{
+  height:110px;
+  background:linear-gradient(135deg,#2d1b69,#1d0940,#0a0612);
+  position:relative;overflow:hidden;
+}
+.pf-banner-pixel{
+  position:absolute;inset:0;
+  display:grid;grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(3,1fr);opacity:.3;
+}
+.pf-banner-pixel span{display:block;}
+.pf-avatar-wrap{
+  position:absolute;bottom:-32px;left:20px;
+}
+.pf-avatar{
+  width:72px;height:72px;border-radius:0;
+  border:3px solid #110d22;
+  background:rgba(91,33,182,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;overflow:hidden;image-rendering:pixelated;
+}
+.pf-avatar img{width:100%;height:100%;object-fit:cover;}
+.pf-close{
+  position:absolute;top:8px;right:8px;
+  background:rgba(10,6,18,.6);border:1px solid rgba(91,33,182,.4);
+  color:#9d8ccc;font-family:'Press Start 2P',monospace;font-size:8px;
+  padding:6px 10px;cursor:pointer;
+}
+.pf-body{padding:44px 20px 20px;}
+.pf-name{font-size:12px;color:#f5f0ff;margin-bottom:4px;}
+.pf-coord{font-family:'VT323',monospace;font-size:16px;color:#9d8ccc;margin-bottom:6px;}
+.pf-rank{font-size:7px;margin-bottom:12px;letter-spacing:1px;}
+.pf-desc{
+  font-family:'VT323',monospace;font-size:16px;color:#9d8ccc;
+  line-height:1.6;margin-bottom:14px;padding-bottom:14px;
+  border-bottom:1px solid rgba(91,33,182,.3);
+}
+.pf-socials{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.pf-social-btn{
+  display:flex;align-items:center;gap:5px;
+  border:1px solid rgba(91,33,182,.3);
+  padding:5px 10px;cursor:pointer;transition:all .2s;
+  font-family:'VT323',monospace;font-size:14px;color:#9d8ccc;
+  text-decoration:none;
+}
+.pf-social-btn:hover{border-color:var(--lav);color:var(--white);}
+.pf-meta{
+  font-family:'VT323',monospace;font-size:14px;color:#9d8ccc;
+  line-height:1.8;margin-bottom:14px;
+  padding:10px;background:rgba(91,33,182,.08);
+}
+.pf-meta span{color:var(--cyan);}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.pf-btn{
+  flex:1;min-width:100px;
+  border:1px solid rgba(91,33,182,.4);
+  background:transparent;color:#9d8ccc;
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  padding:10px 8px;cursor:pointer;letter-spacing:.5px;transition:all .2s;
+}
+.pf-btn:hover{background:rgba(91,33,182,.2);color:var(--white);}
+.pf-btn.primary{border-color:var(--gold);color:var(--gold);}
+.pf-btn.primary:hover{background:rgba(251,191,36,.15);}
+.pf-btn.danger{border-color:var(--red);color:var(--red);}
+
+/* Profile EDIT form inside My Wall tab */
+.pf-edit-form{padding:14px;}
+.pf-edit-section{font-size:7px;color:var(--cyan);letter-spacing:2px;margin:16px 0 10px;}
+.pf-edit-row{margin-bottom:10px;}
+.pf-edit-label{font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:5px;display:block;}
+.pf-edit-input{
+  width:100%;background:rgba(0,0,0,.3);
+  border:1px solid rgba(91,33,182,.3);
+  color:var(--white);font-family:'VT323',monospace;font-size:15px;
+  padding:8px 10px;outline:none;transition:border-color .2s;
+}
+.pf-edit-input:focus{border-color:var(--lav);}
+.pf-edit-input::placeholder{color:rgba(157,140,204,.4);}
+.pf-color-row{display:flex;gap:8px;align-items:center;}
+.pf-color-preview{width:36px;height:36px;border:1px solid rgba(91,33,182,.3);flex-shrink:0;}
+
 @media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
@@ -387,6 +483,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
         <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
         <button class="stab" onclick="switchTab('boost',this)">BOOST ⚡</button>
+        <button class="stab" onclick="switchTab('merge',this)">MERGE ◈</button>
         <button class="stab" onclick="switchTab('invite',this)">INVITE</button>
       </div>
       <!-- SELECT TAB -->
@@ -491,6 +588,35 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         </div>
 
       <!-- INVITE TAB -->
+      <!-- MERGE TAB -->
+      <div class="tab-panel" id="tab-merge">
+        <div class="sb-card">
+          <div class="sb-title">◈ MERGE PIXELS</div>
+          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
+            Select a rectangular block of pixels you own (2×2 minimum, 10×10 maximum) to merge into a single cluster NFT.
+          </div>
+          <div id="mergeStatus" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">
+            Select pixels on the wall first.
+          </div>
+          <div id="mergeInfo" style="display:none;margin-bottom:10px;">
+            <div class="info-row"><span class="info-key">SELECTION</span><span class="info-val" id="mergeSelInfo">—</span></div>
+            <div class="info-row"><span class="info-key">YOUR PIXELS</span><span class="info-val" id="mergeOwnedCount">—</span></div>
+            <div class="info-row"><span class="info-key">SIZE</span><span class="info-val" id="mergeSize">—</span></div>
+          </div>
+          <button class="aBtn aBtn-primary" id="mergeBtnExecute" disabled onclick="executeMerge()" style="margin-bottom:8px;">◈ MERGE INTO CLUSTER NFT</button>
+          <div style="font-family:'VT323',monospace;font-size:12px;color:var(--muted);line-height:1.6;">
+            ✦ Minimum: 2×2 (4 pixels)<br/>
+            ✦ Maximum: 10×10 (100 pixels)<br/>
+            ✦ All pixels must be yours<br/>
+            ✦ Merging is permanent — pixels become a single NFT<br/>
+            ✦ Cluster NFT is tradeable as one unit
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ MY CLUSTERS</div>
+          <div id="myClusters" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">No clusters yet.</div>
+        </div>
+      </div>
       <div class="tab-panel" id="tab-invite">
         <div class="sb-card">
           <div class="sb-title">✦ YOUR WIZARD RANK</div>
@@ -677,8 +803,13 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
       ✦ Follow <a href="https://twitter.com/pixelwallsol" target="_blank" style="color:var(--cyan);">@pixelwallsol</a> for the launch alert
     </div>
-    <button class="aBtn aBtn-primary" onclick="window.open('https://twitter.com/pixelwallsol','_blank');markInviteePurchased(walletAddress||'');">𝕏 FOLLOW @pixelwallsol FOR LAUNCH</button>
-    <button class="aBtn aBtn-outline" onclick="closeModal('claimModal')">CLOSE</button>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="aBtn aBtn-primary" style="flex:2;" onclick="executeClaim()">🔮 CONFIRM &amp; BUY</button>
+    <button class="aBtn aBtn-outline" style="flex:1;" onclick="closeModal('claimModal')">CANCEL</button>
+  </div>
+  <div style="margin-top:8px;text-align:center;">
+    <a href="https://twitter.com/pixelwallsol" target="_blank" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">𝕏 Follow @pixelwallsol for updates</a>
+  </div>
   </div>
 </div>
 
@@ -719,7 +850,12 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 <div class="toast" id="toast"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────
+// -- CONFIG ------------------------------------------------
+// ── DEVNET / MAINNET TOGGLE ──────────────────────────────────────
+// Set DEVNET_MODE = true to test on Solana devnet (free fake SOL)
+// Set DEVNET_MODE = false before going to production
+const DEVNET_MODE = false;
+// Override RPC: set window.HELIUS_RPC before script loads, or use env
 const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
 const PROGRAM_ID='CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
 const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
@@ -729,7 +865,7 @@ const PIXEL_MINT='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
 const TOKEN_PROGRAM='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const ASSOCIATED_TOKEN='ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 
-// ── RANK SYSTEM ─────────────────────────────────────────────────────
+// -- RANK SYSTEM -----------------------------------------------------
 const RANKS=[
   {min:5_000_000, title:'Archmage', color:'#e879f9'},
   {min:1_000_000, title:'King',     color:'#fbbf24'},
@@ -788,7 +924,7 @@ function updateRankDisplay(){
 const GRID=1000, SOL_USD=170;
 const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
 
-// ── WALLET ────────────────────────────────────────────────
+// -- WALLET ------------------------------------------------
 let walletConnected=false,walletAddress=null;
 function getWallets(){
   const w=[];
@@ -859,7 +995,7 @@ function showPickerModal(ws){
 function closePicker(){const m=document.getElementById('wpm');if(m)m.remove();}
 function shortAddr(){return walletAddress?walletAddress.slice(0,4)+'...'+walletAddress.slice(-4):'';}
 
-// ── DATA STORE (localStorage until contract deploys) ──────
+// -- DATA STORE (localStorage until contract deploys) ------
 let claimedSpaces={},totalClaimed=0,totalVol=0;
 function spaceKey(c,r){return c+','+r;}
 function saveToStorage(){
@@ -880,7 +1016,7 @@ function loadFromStorage(){
 }
 function loadMySpaces(){loadFromStorage();renderMySpaces();}
 
-// ── CANVAS ────────────────────────────────────────────────
+// -- CANVAS ------------------------------------------------
 const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
 // minimap removed
 const miniMap=null,mctx=null;
@@ -1003,8 +1139,8 @@ function render(){
   // minimap removed
 }
 
-// ── CANVAS EVENTS ─────────────────────────────────────────
-// ── INTERACTION STATE ──────────────────────────────────────
+// -- CANVAS EVENTS -----------------------------------------
+// -- INTERACTION STATE --------------------------------------
 let hoverPos   = {col:-1, row:-1};
 let isPanning  = false, panStart=null, panXY=null;
 let isDragging = false;
@@ -1025,14 +1161,14 @@ function evtPos(e){
   return{px:(e.clientX-r.left)*(canvas.width/r.width), py:(e.clientY-r.top)*(canvas.height/r.height)};
 }
 
-// ── WHEEL ZOOM ────────────────────────────────────────────
+// -- WHEEL ZOOM --------------------------------------------
 canvas.addEventListener('wheel',e=>{
   e.preventDefault();
   const{px,py}=evtPos(e);
   zoomBy(e.deltaY<0?1.25:.8,px,py);
 },{passive:false});
 
-// ── MOUSE DOWN ────────────────────────────────────────────
+// -- MOUSE DOWN --------------------------------------------
 canvas.addEventListener('mousedown',e=>{
   if(e.button!==0)return;
   const{px,py}=evtPos(e);
@@ -1055,7 +1191,7 @@ canvas.addEventListener('mousedown',e=>{
   }
 });
 
-// ── MOUSE MOVE ────────────────────────────────────────────
+// -- MOUSE MOVE --------------------------------------------
 canvas.addEventListener('mousemove',e=>{
   const{px,py}=evtPos(e);
   const{col,row}=c2g(px,py);
@@ -1084,7 +1220,7 @@ canvas.addEventListener('mousemove',e=>{
   hoverPos={col:gc, row:gr};render();
 });
 
-// ── MOUSE UP ──────────────────────────────────────────────
+// -- MOUSE UP ----------------------------------------------
 canvas.addEventListener('mouseup',e=>{
   if(isPanning){
     isPanning=false;
@@ -1122,7 +1258,7 @@ canvas.addEventListener('mouseup',e=>{
   }
 });
 
-// ── MOUSE LEAVE ───────────────────────────────────────────
+// -- MOUSE LEAVE -------------------------------------------
 canvas.addEventListener('mouseleave',()=>{
   isPanning=false;isDragging=false;
   hoverPos={col:-1,row:-1};
@@ -1131,7 +1267,7 @@ canvas.addEventListener('mouseleave',()=>{
   render();
 });
 
-// ── TOUCH PINCH ZOOM ──────────────────────────────────────
+// -- TOUCH PINCH ZOOM --------------------------------------
 let ltd=null;
 canvas.addEventListener('touchstart',e=>{
   if(e.touches.length===2)
@@ -1146,9 +1282,9 @@ canvas.addEventListener('touchmove',e=>{
 },{passive:false});
 canvas.addEventListener('touchend',()=>{ltd=null;});
 
-// ── MINIMAP CLICK — removed (minimap disabled) ────────────
+// -- MINIMAP CLICK — removed (minimap disabled) ------------
 
-// ── RESOLVE SELECTION ─────────────────────────────────────
+// -- RESOLVE SELECTION -------------------------------------
 // Classifies every cell in dragStart→dragEnd as available/forSale/blocked
 function resolveSelection(){
   selAvailable=[]; selForSale=[]; selBlocked=[];
@@ -1166,7 +1302,7 @@ function resolveSelection(){
   }
 }
 
-// ── GET DRAG RECT ─────────────────────────────────────────
+// -- GET DRAG RECT -----------------------------------------
 function getSelRect(){
   if(!dragStart||!dragEnd) return null;
   return{
@@ -1177,7 +1313,7 @@ function getSelRect(){
 
 function selPixelCount(){return selAvailable.length+selForSale.length;}
 
-// ── SELECT A SINGLE SPACE (called from outside) ───────────
+// -- SELECT A SINGLE SPACE (called from outside) -----------
 function selectSpace(col,row){
   // Record wizard click if this pixel has wizard boost
   const ck=spaceKey(Math.max(0,Math.min(col,GRID-1)),Math.max(0,Math.min(row,GRID-1)));
@@ -1187,7 +1323,7 @@ function selectSpace(col,row){
   resolveSelection();refreshSidebar();render();
 }
 
-// ── CLEAR SELECTION ───────────────────────────────────────
+// -- CLEAR SELECTION ---------------------------------------
 function clearSelection(){
   dragStart=null;dragEnd=null;dragMoved=false;
   selAvailable=[];selForSale=[];selBlocked=[];
@@ -1205,7 +1341,7 @@ function clearSelection(){
 }
 
 
-// ── PIXEL COUNT QUICK BUTTONS ──────────────────────────────
+// -- PIXEL COUNT QUICK BUTTONS ------------------------------
 let pixelCount=1;
 function blockDims(){const w=Math.ceil(Math.sqrt(pixelCount)),h=Math.ceil(pixelCount/w);return[w,h];}
 
@@ -1237,7 +1373,7 @@ function updateSelInfo(){
   }
 }
 
-// ── SELECTION in render ───────────────────────────────────
+// -- SELECTION in render -----------------------------------
 function renderSelection(){
   if(!dragStart) return;
   const s=cs();
@@ -1382,7 +1518,7 @@ function refreshSidebar(){
 
 
 
-// ── IMAGE UPLOAD ──────────────────────────────────────────
+// -- IMAGE UPLOAD ------------------------------------------
 let pendingImageDataUrl=null;
 function handleImageUpload(e){
   const file=e.target.files[0];if(!file)return;
@@ -1397,13 +1533,13 @@ function handleImageUpload(e){
   reader.readAsDataURL(file);
 }
 
-// ── CLAIM ─────────────────────────────────────────────────
+// -- CLAIM -------------------------------------------------
 async function claimSpace(){
   if(!dragStart){showToast('Click or drag on the wall to select pixels first!');return;}
-  if(!walletConnected){showToast('Connecting wallet...');await connectWallet();return;}
+  if(!walletConnected){showToast('Connecting wallet first...');await connectWallet();if(!walletConnected)return;}
 
   const avail=selAvailable.length, sale=selForSale.length, total=avail+sale;
-  if(total===0){showToast('No buyable pixels in selection — all are owned and not for sale.');return;}
+  if(total===0){showToast('No buyable pixels in selection.');return;}
 
   const priceEach=getCurrentPrice();
   const costAvail=+(priceEach*avail).toFixed(4);
@@ -1413,15 +1549,116 @@ async function claimSpace(){
   const blocked=selBlocked.length;
 
   document.getElementById('claimBody').innerHTML=
-    `Buying <span style="color:var(--green)">${total} pixel${total>1?'s':''}</span> in `+
+    `Buying <span style="color:var(--green)">${total} pixel${total>1?'s':''}</span> at `+
     `<span style="color:var(--cyan)">(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})</span>`+
-    (blocked?`<br/><span style="color:#ef4444;font-size:14px;">${blocked} owned pixel${blocked>1?'s':''} skipped automatically</span>`:'');
+    (blocked?`<br/><span style="color:#ef4444;font-size:14px;">${blocked} already-owned skipped</span>`:'');
   document.getElementById('claimPrice').textContent=totalCost+' SOL';
-  document.getElementById('claimUsd').textContent='≈ $'+(totalCost*SOL_USD).toFixed(2)+' USD · 90% treasury · 10% agent';
+  document.getElementById('claimUsd').textContent='≈ $'+(totalCost*SOL_USD).toFixed(2)+' · 90% treasury · 10% agent';
   document.getElementById('claimModal').classList.add('open');
 }
 
-// ── MY WALL ───────────────────────────────────────────────
+async function executeClaim(){
+  // Called from the CONFIRM button in claimModal
+  closeModal('claimModal');
+  if(!walletConnected||!dragStart){return;}
+
+  const rect=getSelRect();
+  const avail=[...selAvailable];
+  const onSale=[...selForSale];
+  const allToBuy=[...avail,...onSale];
+  if(!allToBuy.length) return;
+
+  const btn=document.getElementById('claimBtn');
+  btn.disabled=true;
+  btn.textContent='🔮 BUYING...';
+  showToast('Preparing transaction...');
+
+  try{
+    // Build transaction via Solana web3
+    const w=getWallets()[0];
+    if(!w){showToast('No wallet found.');btn.disabled=false;return;}
+
+    const {Connection,PublicKey,Transaction,SystemProgram,LAMPORTS_PER_SOL}=window.solanaWeb3||{};
+    if(!Connection){showToast('Solana library not loaded. Refresh and try again.');btn.disabled=false;return;}
+
+    const rpc = DEVNET_MODE?'https://api.devnet.solana.com':(window.HELIUS_RPC||'https://api.mainnet-beta.solana.com');
+    const connection = new Connection(rpc,'confirmed');
+
+    // Build one transaction per pixel (contract requires one tx per pixel PDA)
+    let successCount=0;
+    for(const key of avail){
+      const [col,row]=key.split(',').map(Number);
+      const price=getCurrentPrice();
+      const lamports=Math.round(price*LAMPORTS_PER_SOL);
+
+      // For now: simple SOL transfer to treasury + agent
+      // Replace with Anchor program CPI when Program ID is live
+      const treasuryKey=new PublicKey(TREASURY_WALLET);
+      const agentKey=new PublicKey(AGENT_WALLET);
+      const treasuryLamports=Math.round(lamports*0.9);
+      const agentLamports=lamports-treasuryLamports;
+
+      const tx=new Transaction().add(
+        SystemProgram.transfer({fromPubkey:new PublicKey(walletAddress),toPubkey:treasuryKey,lamports:treasuryLamports}),
+        SystemProgram.transfer({fromPubkey:new PublicKey(walletAddress),toPubkey:agentKey,lamports:agentLamports})
+      );
+      const {blockhash}=await connection.getLatestBlockhash();
+      tx.recentBlockhash=blockhash;
+      tx.feePayer=new PublicKey(walletAddress);
+
+      try{
+        const signed=await w.obj.signTransaction(tx);
+        const sig=await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(sig,'confirmed');
+        showToast(`✦ Pixel (${col},${row}) claimed!`);
+        // Record locally
+        claimedSpaces[key]={col,row,owner:shortAddr(),color:document.getElementById('colorPicker')?.value||'#5b21b6',price,txSig:sig};
+        totalClaimed++;totalVol+=price;
+        paintPixel(col,row,claimedSpaces[key].color);
+        saveToStorage();
+        updateStats();
+        // Mint cNFT
+        mintCNFT(sig,walletAddress,col,row).catch(e=>console.warn('cNFT mint (async):',e));
+        successCount++;
+      }catch(e){
+        if(e.code===4001){showToast('Transaction cancelled.');break;}
+        showToast(`Pixel (${col},${row}) failed: ${e.message?.slice(0,50)}`);
+      }
+    }
+    render();
+    if(successCount>0){
+      showToast(`✦ ${successCount} pixel${successCount>1?'s':''} claimed! 🎉`);
+      renderMySpaces();
+      setTimeout(()=>refreshSidebar(),500);
+    }
+  }catch(e){
+    console.error('Claim error:',e);
+    showToast('Transaction error: '+e.message?.slice(0,60));
+  }finally{
+    btn.disabled=false;
+    btn.textContent=dragStart?`🔮 CLAIM THIS SPACE`:'🔮 CLAIM YOUR SPACE';
+  }
+}
+
+async function mintCNFT(txSig,wallet,col,row){
+  // Fire-and-forget after claim confirms. Runs on Vercel serverless.
+  try{
+    const r=await fetch('/api/mint-cnft',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({txSignature:txSig,buyerWallet:wallet,col,row})
+    });
+    const d=await r.json();
+    if(d.success){
+      const key=col+','+row;
+      if(claimedSpaces[key]) claimedSpaces[key].assetId=d.assetId;
+      saveToStorage();
+      console.log('cNFT minted:',d.assetId);
+    }
+  }catch(e){console.warn('mintCNFT error:',e);}
+}
+
+// -- MY WALL -----------------------------------------------
 function switchTab(name,btn){
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -1459,12 +1696,13 @@ function renderMySpaces(){
   mine.forEach(d=>{
     const tile=document.createElement('div');tile.className='space-tile';tile.onclick=()=>openEditModal(d);
     let ph=d.imageDataUrl?`<img class="space-tile-img" src="${d.imageDataUrl}" alt="space"/>`:`<div class="space-tile-color" style="background:${d.color||'#3730a3'};"></div>`;
+    tile.setAttribute('data-key', k);
     tile.innerHTML=`${ph}<div class="space-tile-info"><div class="space-tile-coord">(${d.col},${d.row})</div><div class="space-tile-size">${d.w||1}×${d.h||1}${d.xVerified?' ✦ X':''}</div>${d.listPrice?`<div style="color:var(--gold);font-size:10px;">FOR SALE: ${d.listPrice} SOL</div>`:''}</div>`;
     grid.appendChild(tile);
   });
 }
 
-// ── EDIT MODAL ────────────────────────────────────────────
+// -- EDIT MODAL --------------------------------------------
 let editingSpace=null;
 function openEditModal(d){
   editingSpace=d;
@@ -1498,10 +1736,10 @@ function saveEdit(){
   closeModal('editModal');showToast('✦ Space updated!');
 }
 
-// ── PRICING ───────────────────────────────────────────────
+// -- PRICING -----------------------------------------------
 function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p;return .50;}
 
-// ── X VERIFY ─────────────────────────────────────────────
+// -- X VERIFY ---------------------------------------------
 function verifyX(){
   if(!walletConnected){showToast('Connect wallet first!');return;}
   // Pre-fill selected space if any
@@ -1527,7 +1765,7 @@ function doXOAuth(){
   closeModal('xModal');
 }
 
-// ── TOKEN DATA — DexScreener primary, pump.fun fallback ──
+// -- TOKEN DATA — DexScreener primary, pump.fun fallback --
 const PAIR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
 const DEX='https://api.dexscreener.com';
 function updateStats(){
@@ -1617,7 +1855,7 @@ async function fetchTokenData(){
 }
 
 
-// ── BOOST SYSTEM ─────────────────────────────────────────
+// -- BOOST SYSTEM -----------------------------------------
 const BOOST_TIERS = {
   bronze: { name:'Bronze', cost:10000,  label:'10K $PIXEL',  color:'#cd7f32', effect:'glow' },
   silver: { name:'Silver', cost:50000,  label:'50K $PIXEL',  color:'#c0c0c0', effect:'pulse' },
@@ -1702,7 +1940,7 @@ function renderActiveBoosts(){
 }
 
 
-// ── REFERRAL & INVITE SYSTEM ─────────────────────────────
+// -- REFERRAL & INVITE SYSTEM -----------------------------
 // Rules:
 //   - Invite link only shown AFTER user owns at least 1 pixel
 //   - A referral only earns reward points if referred user has BOTH:
@@ -1710,7 +1948,7 @@ function renderActiveBoosts(){
 //     2. Verified their X account
 //   - Raw invitees tracked separately from qualified invitees
 
-// ── 10 WIZARD LEVELS ─────────────────────────────────────
+// -- 10 WIZARD LEVELS -------------------------------------
 const WIZARD_LEVELS = [
   { level:0,  name:'Wanderer',       min:0,   color:'#9d8ccc', desc:'Yet to find your first follower.' },
   { level:1,  name:'Apprentice',     min:1,   color:'#c0c0c0', desc:'The journey begins.' },
@@ -1828,7 +2066,7 @@ function renderInviteTab(){
   const pending=allInvitees.filter(e=>!e.qualified).length;
   const{current,next}=getLevelData(qualified);
 
-  // ── Link box ────────────────────────────────────────────
+  // -- Link box --------------------------------------------
   const linkBox=document.getElementById('inviteLinkBox');
   if(!walletConnected){
     linkBox.textContent='Connect your wallet first.';
@@ -1841,7 +2079,7 @@ function renderInviteTab(){
     linkBox.style.color='var(--cyan)';
   }
 
-  // ── Level badge ─────────────────────────────────────────
+  // -- Level badge -----------------------------------------
   const levelEl=document.getElementById('inviteLevel');
   const isGrad=current.color.startsWith('linear');
   levelEl.textContent=current.level;
@@ -1856,7 +2094,7 @@ function renderInviteTab(){
   document.getElementById('inviteChain').textContent=
     data.inviter?data.inviter.slice(0,6)+'...':'Direct';
 
-  // ── Level name + desc ───────────────────────────────────
+  // -- Level name + desc -----------------------------------
   const nameEl=document.getElementById('inviteLevelName');
   if(nameEl){
     const isGrad2=current.color.startsWith('linear');
@@ -1872,7 +2110,7 @@ function renderInviteTab(){
   const descEl=document.getElementById('inviteLevelDesc');
   if(descEl) descEl.textContent=current.desc;
 
-  // ── Next level progress ─────────────────────────────────
+  // -- Next level progress ---------------------------------
   const progressEl=document.getElementById('inviteProgress');
   if(progressEl){
     if(!next){
@@ -1884,7 +2122,7 @@ function renderInviteTab(){
     }
   }
 
-  // ── Invitee list ────────────────────────────────────────
+  // -- Invitee list ----------------------------------------
   const list=document.getElementById('inviteList');
   if(!allInvitees.length){
     list.innerHTML='<div style="color:var(--muted);">No invites yet.</div>';
@@ -1952,7 +2190,7 @@ function processReferralOnConnect(wallet){
 }
 
 
-// ── PROFILE POPUP ──────────────────────────────────────────
+// -- PROFILE POPUP ------------------------------------------
 let profilePopupEl=null;
 
 function showProfilePopup(spaceData, canvasX, canvasY){
@@ -2006,7 +2244,7 @@ function hideProfilePopup(){
 }
 
 
-// ── WIZARD HALL OF FAME ──────────────────────────────────────────
+// -- WIZARD HALL OF FAME ------------------------------------------
 function getWizardSpaces(){try{return JSON.parse(localStorage.getItem('pw_wizards')||'{}');}catch(e){return {};}}
 function saveWizardSpaces(d){try{localStorage.setItem('pw_wizards',JSON.stringify(d));}catch(e){}}
 
@@ -2081,7 +2319,256 @@ function jumpToWizard(key){
   document.getElementById('wall').scrollIntoView({behavior:'smooth'});
   showToast('🔮 Jumped to Wizard pixel ('+w.col+','+w.row+')');
 }
-// ── END WIZARD HALL ───────────────────────────────────────────────
+// -- END WIZARD HALL ---------------------------------------------
+
+// -- PIXEL PROFILE DATA --------------------------------------------
+// Stored per pixel key: { color, url, desc, avatar, x, telegram, discord, email, github }
+function getProfile(key){
+  try{ return JSON.parse(localStorage.getItem('pw_prof_'+key)||'{}'); }catch(e){ return {}; }
+}
+function saveProfile(key, data){
+  try{ localStorage.setItem('pw_prof_'+key, JSON.stringify(data)); }catch(e){}
+}
+
+function showPixelProfile(col, row){
+  const key = col+','+row;
+  const sp  = claimedSpaces[key];
+  if(!sp) return;
+  const prof = getProfile(key);
+  const isMine = sp.owner === shortAddr();
+  const rank = pixelBalance > 0 ? getRankFromBalance(pixelBalance) : null;
+
+  // Remove existing
+  document.getElementById('pixelProfileOverlay')?.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'pixelProfileOverlay';
+  ov.className = 'pixel-profile-overlay';
+  ov.onclick = e => { if(e.target===ov) ov.remove(); };
+
+  // Generate banner pixel art from color
+  const baseColor = prof.color || sp.color || '#5b21b6';
+  const bannerPixels = Array.from({length:24}, (_,i) => {
+    const hue = (parseInt(baseColor.slice(1,3),16) + i*15) % 360;
+    return `<span style="background:hsl(${hue},60%,${30+Math.random()*20}%)"></span>`;
+  }).join('');
+
+  const socialLinks = [
+    prof.x       ? {icon:'𝕏', label:'@'+prof.x,       url:'https://twitter.com/'+prof.x}       : null,
+    prof.telegram ? {icon:'✈', label:prof.telegram,     url:'https://t.me/'+prof.telegram}        : null,
+    prof.discord  ? {icon:'◈', label:prof.discord,      url:null}                                 : null,
+    prof.website  ? {icon:'◆', label:'Website',         url:prof.website}                         : null,
+    prof.github   ? {icon:'◉', label:prof.github,       url:'https://github.com/'+prof.github}   : null,
+  ].filter(Boolean);
+
+  const rankBadge = rank ? `<div class="pf-rank" style="color:${rank.color};">✦ ${rank.title}${sp.boostTier > 0 ? ' '+['','Mage','Sorcerer','Warlock','Wizard'][sp.boostTier] : ''}</div>` : '';
+
+  const avatarHtml = prof.avatar
+    ? `<img src="${prof.avatar}" onerror="this.style.display='none'"/>`
+    : `<span style="font-size:28px;">🧙</span>`;
+
+  const boostGlow = sp.boostTier === 4
+    ? 'box-shadow:0 0 20px rgba(232,121,249,.6),0 0 40px rgba(232,121,249,.3);'
+    : sp.boostTier === 3
+    ? 'box-shadow:0 0 15px rgba(251,191,36,.5);'
+    : '';
+
+  ov.innerHTML = `<div class="pixel-profile" style="${boostGlow}">
+    <div class="pf-banner">
+      <div class="pf-banner-pixel">${bannerPixels}</div>
+      <div class="pf-avatar-wrap">
+        <div class="pf-avatar" style="border-color:${baseColor};">${avatarHtml}</div>
+      </div>
+      <button class="pf-close" onclick="document.getElementById('pixelProfileOverlay').remove()">✕</button>
+    </div>
+    <div class="pf-body">
+      <div class="pf-name">${prof.displayName || sp.owner?.slice(0,8)+'...'||'Unknown'}</div>
+      <div class="pf-coord">(${col}, ${row})</div>
+      ${rankBadge}
+      ${prof.desc ? `<div class="pf-desc">${prof.desc}</div>` : ''}
+      ${socialLinks.length ? `<div class="pf-socials">
+        ${socialLinks.map(s => s.url
+          ? `<a class="pf-social-btn" href="${s.url}" target="_blank">${s.icon} ${s.label}</a>`
+          : `<span class="pf-social-btn">${s.icon} ${s.label}</span>`
+        ).join('')}
+      </div>` : ''}
+      <div class="pf-meta">
+        Owner: <span>${sp.owner||'—'}</span><br/>
+        Pixel: <span>(${col}, ${row})</span><br/>
+        ${sp.listPrice ? `Listed: <span style="color:var(--gold);">${sp.listPrice} SOL</span><br/>` : ''}
+        Boost: <span>${['None','🟫 Mage','🩶 Sorcerer','🟡 Warlock','🔮 Wizard'][sp.boostTier||0]}</span>
+      </div>
+      <div class="pf-actions">
+        ${isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();openProfileEdit('${key}')">✏ EDIT PROFILE</button>` : ''}
+        ${sp.listPrice && !isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();claimSpace()">BUY — ${sp.listPrice} SOL</button>` : ''}
+        ${sp.x || prof.x ? `<button class="pf-btn" onclick="window.open('https://twitter.com/${sp.x||prof.x}','_blank')">𝕏 VISIT</button>` : ''}
+        ${prof.website ? `<button class="pf-btn" onclick="window.open('${prof.website}','_blank')">◆ LINK</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(ov);
+}
+
+function openProfileEdit(key){
+  // Switch to My Wall tab and open the edit form for this pixel
+  const myTab = document.querySelector('.stab[onclick*="mywall"]') ||
+                document.querySelectorAll('.stab')[1];
+  if(myTab) myTab.click();
+  setTimeout(() => {
+    const tile = document.querySelector(`[data-key="${key}"]`);
+    if(tile) { tile.click(); tile.scrollIntoView({behavior:'smooth'}); }
+    else openProfileEditModal(key);
+  }, 150);
+}
+
+function openProfileEditModal(key){
+  const [col, row] = key.split(',').map(Number);
+  const prof = getProfile(key);
+  const sp   = claimedSpaces[key] || {};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'profileEditModal';
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+
+  modal.innerHTML = `<div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <button class="modal-close" onclick="document.getElementById('profileEditModal').remove()">✕</button>
+    <div class="modal-title">✏ EDIT PIXEL PROFILE</div>
+    <div style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);margin-bottom:16px;">(${col}, ${row})</div>
+
+    <div class="pf-edit-form">
+      <div class="pf-edit-section">DISPLAY</div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">DISPLAY NAME</label>
+        <input class="pf-edit-input" id="pf_name" placeholder="Your name or alias" value="${prof.displayName||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">AVATAR URL</label>
+        <input class="pf-edit-input" id="pf_avatar" placeholder="https://..." value="${prof.avatar||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">BIO (max 160 chars)</label>
+        <input class="pf-edit-input" id="pf_desc" placeholder="Tell the wall about yourself..." maxlength="160" value="${prof.desc||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">PIXEL COLOR</label>
+        <div class="pf-color-row">
+          <div class="pf-color-preview" id="pf_colorPreview" style="background:${prof.color||sp.color||'#5b21b6'};"></div>
+          <input class="pf-edit-input" id="pf_color" placeholder="#5b21b6" value="${prof.color||sp.color||''}" oninput="document.getElementById('pf_colorPreview').style.background=this.value"/>
+        </div>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">LINK URL</label>
+        <input class="pf-edit-input" id="pf_website" placeholder="https://yoursite.com" value="${prof.website||''}"/>
+      </div>
+
+      <div class="pf-edit-section">SOCIALS</div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">𝕏 X / TWITTER HANDLE</label>
+        <input class="pf-edit-input" id="pf_x" placeholder="handle (no @)" value="${prof.x||sp.xHandle||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">✈ TELEGRAM</label>
+        <input class="pf-edit-input" id="pf_telegram" placeholder="username" value="${prof.telegram||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">◈ DISCORD</label>
+        <input class="pf-edit-input" id="pf_discord" placeholder="username#0000" value="${prof.discord||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">✉ EMAIL</label>
+        <input class="pf-edit-input" id="pf_email" placeholder="you@email.com" value="${prof.email||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">◉ GITHUB</label>
+        <input class="pf-edit-input" id="pf_github" placeholder="username" value="${prof.github||''}"/>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="aBtn aBtn-primary" style="flex:2;" onclick="saveProfileEdit('${key}')">✦ SAVE PROFILE</button>
+        <button class="aBtn aBtn-outline" style="flex:1;" onclick="document.getElementById('profileEditModal').remove()">CANCEL</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+}
+
+function saveProfileEdit(key){
+  const get = id => document.getElementById(id)?.value?.trim() || '';
+  const prof = {
+    displayName: get('pf_name'),
+    avatar:      get('pf_avatar'),
+    desc:        get('pf_desc'),
+    color:       get('pf_color') || '#5b21b6',
+    website:     get('pf_website'),
+    x:           get('pf_x'),
+    telegram:    get('pf_telegram'),
+    discord:     get('pf_discord'),
+    email:       get('pf_email'),
+    github:      get('pf_github'),
+  };
+
+  // Validate URL fields
+  if(prof.website && !prof.website.startsWith('http')){
+    showToast('Website URL must start with http'); return;
+  }
+  if(prof.avatar && !prof.avatar.startsWith('http')){
+    showToast('Avatar URL must start with http'); return;
+  }
+
+  saveProfile(key, prof);
+
+  // Update canvas color if changed
+  const [col, row] = key.split(',').map(Number);
+  if(claimedSpaces[key]){
+    claimedSpaces[key].color = prof.color;
+    claimedSpaces[key].xHandle = prof.x;
+    claimedSpaces[key].xAvatar = prof.avatar;
+    paintPixel(col, row, prof.color);
+    render();
+  }
+
+  // Update NFT metadata via Vercel API
+  if(claimedSpaces[key]?.nftMint){
+    updateNftMetadata(key, prof).catch(e => console.warn('Metadata update failed:', e));
+  }
+
+  document.getElementById('profileEditModal')?.remove();
+  showToast('✦ Profile saved!');
+  renderMySpaces();
+}
+
+async function updateNftMetadata(key, prof){
+  const sp = claimedSpaces[key];
+  if(!sp?.nftMint || !walletAddress) return;
+  try{
+    const res = await fetch('/api/update-cnft-metadata', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mintAddress: sp.nftMint,
+        ownerWallet: walletAddress,
+        col: sp.col, row: sp.row,
+        profile: prof,
+      })
+    });
+    const data = await res.json();
+    if(data.success) showToast('✦ NFT metadata updated!');
+  }catch(e){ console.warn('NFT metadata update error:', e); }
+}
+// --
 
 function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -2095,7 +2582,155 @@ document.getElementById('colorPicker').addEventListener('input',function(){
   }
 });
 
-// ── INIT ─────────────────────────────────────────────────
+// -- INIT -------------------------------------------------
+
+// -- MERGE / CLUSTER SYSTEM ----------------------------------------
+function updateMergeTab(){
+  const status=document.getElementById('mergeStatus');
+  const info=document.getElementById('mergeInfo');
+  const btn=document.getElementById('mergeBtnExecute');
+  if(!status||!btn) return;
+
+  if(!dragStart||!dragEnd){
+    status.textContent='Select pixels on the wall first.';
+    if(info) info.style.display='none';
+    btn.disabled=true; return;
+  }
+
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1, h=rect.r2-rect.r1+1;
+  const total=w*h;
+  const myAddr=shortAddr();
+  let owned=0, notOwned=0;
+
+  for(let col=rect.c1;col<=rect.c2;col++){
+    for(let row=rect.r1;row<=rect.r2;row++){
+      const key=col+','+row;
+      const sp=claimedSpaces[key];
+      if(sp&&sp.owner===myAddr) owned++;
+      else notOwned++;
+    }
+  }
+
+  if(info) info.style.display='block';
+  const selEl=document.getElementById('mergeSelInfo');
+  const ownEl=document.getElementById('mergeOwnedCount');
+  const szEl=document.getElementById('mergeSize');
+  if(selEl) selEl.textContent=`(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})`;
+  if(ownEl) ownEl.textContent=`${owned} / ${total}`;
+  if(szEl)  szEl.textContent=`${w}×${h} = ${total} pixels`;
+
+  if(total<4){
+    status.textContent='Minimum size is 2×2 (4 pixels).';
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else if(total>100){
+    status.textContent='Maximum size is 10×10 (100 pixels).';
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else if(notOwned>0){
+    status.textContent=`${notOwned} pixel${notOwned>1?'s':''} in selection not owned by you.`;
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else {
+    status.textContent=`Ready to merge ${total} pixels into 1 cluster NFT.`;
+    status.style.color='var(--green)'; btn.disabled=false;
+  }
+}
+
+async function executeMerge(){
+  if(!walletConnected||!dragStart||!dragEnd){return;}
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1, h=rect.r2-rect.r1+1;
+  const total=w*h;
+  if(total<4||total>100){showToast('Invalid merge size.');return;}
+
+  const btn=document.getElementById('mergeBtnExecute');
+  btn.disabled=true; btn.textContent='◈ MERGING...';
+  showToast('Sending merge transaction...');
+
+  // On-chain merge via smart contract merge_pixels instruction
+  // This marks all pixels as clustered=true and creates ClusterSpace PDA
+  // For now, record locally and call Vercel to mint cluster cNFT
+  try{
+    const myAddr=shortAddr();
+    const clusterKey=rect.c1+','+rect.r1;
+
+    // Mark all pixels as clustered locally
+    for(let col=rect.c1;col<=rect.c2;col++){
+      for(let row=rect.r1;row<=rect.r2;row++){
+        const key=col+','+row;
+        if(claimedSpaces[key]) claimedSpaces[key].clustered=true;
+      }
+    }
+
+    // Create cluster record
+    const cluster={
+      colStart:rect.c1, rowStart:rect.r1,
+      colEnd:rect.c2,   rowEnd:rect.r2,
+      width:w, height:h, pixelCount:total,
+      owner:myAddr, mergedAt:Date.now()
+    };
+    const myClusters=JSON.parse(localStorage.getItem('pw_clusters_'+walletAddress)||'[]');
+    myClusters.push(cluster);
+    localStorage.setItem('pw_clusters_'+walletAddress, JSON.stringify(myClusters));
+
+    saveToStorage();
+    render();
+    renderMyClusters();
+    showToast(`✦ ${w}×${h} cluster created! Minting NFT...`);
+
+    // Mint cluster cNFT
+    const r=await fetch('/api/mint-cnft',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        txSignature:'cluster',
+        buyerWallet:walletAddress,
+        col:rect.c1, row:rect.r1,
+        isCluster:true,
+        width:w, height:h
+      })
+    });
+    const d=await r.json();
+    if(d.success) showToast('✦ Cluster NFT minted!');
+
+  }catch(e){
+    console.error('Merge error:',e);
+    showToast('Merge error: '+e.message?.slice(0,50));
+  }finally{
+    btn.disabled=false; btn.textContent='◈ MERGE INTO CLUSTER NFT';
+  }
+}
+
+function renderMyClusters(){
+  const el=document.getElementById('myClusters');
+  if(!el||!walletAddress) return;
+  const clusters=JSON.parse(localStorage.getItem('pw_clusters_'+walletAddress)||'[]');
+  if(!clusters.length){el.textContent='No clusters yet.';return;}
+  el.innerHTML=clusters.map(cl=>`
+    <div style="border:1px solid rgba(91,33,182,.3);padding:8px;margin-bottom:6px;">
+      <div style="color:var(--cyan);font-size:13px;">${cl.width}×${cl.height} CLUSTER</div>
+      <div style="color:var(--muted);font-size:12px;">(${cl.colStart},${cl.rowStart}) → (${cl.colEnd},${cl.rowEnd})</div>
+      <div style="color:var(--muted);font-size:12px;">${cl.pixelCount} pixels merged</div>
+    </div>`).join('');
+}
+
+// Hook merge tab update into selection changes
+const _origUpdateSelInfo=updateSelInfo;
+function updateSelInfo(){
+  if(typeof _origUpdateSelInfo==='function') _origUpdateSelInfo();
+  // Update merge tab if active
+  const mergePanel=document.getElementById('tab-merge');
+  if(mergePanel&&mergePanel.classList.contains('active')) updateMergeTab();
+}
+
+// Also update when merge tab is opened
+const _origSwitchTab=switchTab;
+function switchTab(name,el){
+  _origSwitchTab(name,el);
+  if(name==='merge') updateMergeTab();
+  if(name==='mywall') renderMyClusters();
+}
+// -- END MERGE / CLUSTER -------------------------------------------
+
 window.addEventListener('load',async()=>{
   // Handle X OAuth callback (?xauth=success&wallet=...&handle=...&space=...)
   const params=new URLSearchParams(window.location.search);
@@ -2110,6 +2745,12 @@ window.addEventListener('load',async()=>{
       claimedSpaces[space].xHandle=handle;
       claimedSpaces[space].xName=name||handle;
       if(avatar) claimedSpaces[space].xAvatar=avatar;
+      // Persist X verification to profile storage
+      const prof=getProfile(space)||{};
+      prof.x=handle; prof.displayName=name||handle;
+      if(avatar) prof.avatar=avatar;
+      saveProfile(space, prof);
+      saveToStorage();
       // Pre-load avatar image
       if(avatar){ const img=new Image();img.src=avatar;imgCache[avatar]=img; }
       saveToStorage();
@@ -2136,7 +2777,7 @@ window.addEventListener('load',async()=>{
   document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 });
 
-// ── TOKENOMICS CHARTS ───────────────────────────────────────────
+// -- TOKENOMICS CHARTS -------------------------------------------
 (function initTokenomicsCharts(){
   if(typeof Chart === 'undefined') return;
 

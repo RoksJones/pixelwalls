@@ -16,10 +16,6 @@
       "memory": 256,
       "maxDuration": 10
     },
-    "api/mint-nft.js": {
-      "memory": 512,
-      "maxDuration": 30
-    },
     "api/mint-cluster.js": {
       "memory": 512,
       "maxDuration": 30
@@ -27,6 +23,14 @@
     "api/cluster-metadata.js": {
       "memory": 256,
       "maxDuration": 10
+    },
+    "api/mint-cnft.js": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "api/update-cnft-metadata.js": {
+      "memory": 256,
+      "maxDuration": 15
     }
   },
   "headers": [

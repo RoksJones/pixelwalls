@@ -1,0 +1,15 @@
+{
+  "name": "pixelwalls",
+  "version": "1.0.0",
+  "description": "Pixelwalls \u2014 The Eternal Wall on Solana",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@metaplex-foundation/js": "^0.20.1",
+    "@metaplex-foundation/mpl-bubblegum": "^0.7.0",
+    "@solana/web3.js": "^1.95.3",
+    "bs58": "^5.0.0"
+  }
+}
