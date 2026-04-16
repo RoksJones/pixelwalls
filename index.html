@@ -655,7 +655,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         </div>
         <div class="sb-card">
           <div style="font-family:'VT323',monospace;font-size:12px;color:rgba(157,140,204,.4);line-height:1.7;">
-            Levels and rewards announced by @pixelwallsxyz. Your invite tree is permanent — early supporters will be remembered by the Archmage.
+            Levels and rewards announced by @pixelwallsol. Your invite tree is permanent — early supporters will be remembered by the Archmage.
           </div>
         </div>
       </div>
@@ -780,7 +780,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 <footer>
   <div class="logo">✦ PIXELWALLS.XYZ ✦</div>
   <div class="links">
-    <a href="https://twitter.com/pixelwallsxyz" target="_blank">𝕏 @pixelwallsxyz</a>
+    <a href="https://twitter.com/pixelwallsol" target="_blank">𝕏 @PIXELWALLSOL</a>
     <a href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">PUMP.FUN</a>
     <a href="https://gmgn.ai/sol/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">GMGN</a>
     <a href="https://solscan.io/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">SOLSCAN</a>
@@ -802,14 +802,14 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:15px;color:var(--gold);line-height:1.8;">
       ✦ Contract LIVE on Solana mainnet<br/>
       ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
-      ✦ Follow <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="color:var(--cyan);">@pixelwallsxyz</a> for the launch alert
+      ✦ Follow <a href="https://twitter.com/pixelwallsol" target="_blank" style="color:var(--cyan);">@pixelwallsol</a> for the launch alert
     </div>
     <div style="display:flex;gap:8px;margin-top:4px;">
     <button class="aBtn aBtn-primary" style="flex:2;" onclick="executeClaim()">🔮 CONFIRM &amp; BUY</button>
     <button class="aBtn aBtn-outline" style="flex:1;" onclick="closeModal('claimModal')">CANCEL</button>
   </div>
   <div style="margin-top:8px;text-align:center;">
-    <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">𝕏 Follow @pixelwallsxyz for updates</a>
+    <a href="https://twitter.com/pixelwallsol" target="_blank" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">𝕏 Follow @pixelwallsol for updates</a>
   </div>
   </div>
 </div>
@@ -1786,16 +1786,25 @@ function saveWalletX(addr, data){
 function getMyX(){ return getWalletX(walletAddress); }
 
 function doXOAuth(){
-  if(!walletConnected){showToast('Connect wallet first!');return;}
+  if(!walletConnected||!walletAddress){showToast('Connect your Phantom wallet first!');return;}
+  // Safety check — never allow treasury/agent wallet to be used as user wallet
+  const TREASURY='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
+  const AGENT='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
+  if(walletAddress===TREASURY||walletAddress===AGENT){
+    showToast('Please connect your personal Phantom wallet, not the treasury wallet.');
+    return;
+  }
   const myX = getMyX();
   if(myX?.handle){
     showToast('Already verified as @'+myX.handle+'. Reverifying...');
   }
   const ref=new URLSearchParams(window.location.search).get('ref')||localStorage.getItem('pw_referrer')||'';
+  // Use non-www base URL for OAuth — matches X Developer Portal and Vercel config
+  const returnUrl='https://pixelwalls.xyz/';
   const state=encodeURIComponent(JSON.stringify({
     wallet: walletAddress,
     ref,
-    returnUrl: window.location.href
+    returnUrl
   }));
   window.location.href='/api/xlogin?state='+state;
 }
@@ -1963,7 +1972,7 @@ function showBoostConfirmModal(tierId, tier, key){
     </div>
     <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.8;">
       ✦ Contract LIVE on Solana mainnet<br/>
-      ✦ Follow <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="color:var(--cyan);">@pixelwallsxyz</a> for launch alert
+      ✦ Follow <a href="https://twitter.com/pixelwallsol" target="_blank" style="color:var(--cyan);">@pixelwallsol</a> for launch alert
     </div>
     <button class="aBtn aBtn-primary" onclick="applyBoost('${tierId}','${key}')">⚡ APPLY ${tier.name.toUpperCase()} BOOST</button>
     <button class="aBtn aBtn-outline" onclick="document.getElementById('boostModal').remove()">CANCEL</button>
@@ -2232,7 +2241,7 @@ function shareOnX(){
   const{current}=getLevelData(q);
   const text=encodeURIComponent(
     'I just claimed my eternal space on the blockchain 🧙\n\n'+
-    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwallsxyz\n\n':'')+
+    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwallsol\n\n':'')+
     'Pixelwalls — 1,000,000 permanent pixels on Solana.\nClaim yours before the price rises 👇\n\n'+
     link+'\n\n#Solana #Pixelwalls #PIXEL'
   );
