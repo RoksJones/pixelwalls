@@ -1,27 +1,30 @@
 // api/xcallback.js  — Pixelwalls X OAuth 2.0 callback (PKCE S256)
+// Reads PKCE verifier from cookie first, falls back to state payload
+// so it works even when cookies are dropped on cross-origin redirect.
 module.exports = async function handler(req, res) {
   const { code, state, error, error_description } = req.query;
 
-  // X returned an error
   if (error || !code) {
     const reason = encodeURIComponent(error_description || error || 'no_code');
     return res.redirect(302, `/?xauth=error&reason=${reason}`);
   }
 
-  // Parse state (wallet, space, ref, returnUrl)
+  // Parse state — contains wallet/space/ref AND embedded _v PKCE verifier
   let stateData = {};
-  try { stateData = JSON.parse(decodeURIComponent(state || '{}')); } catch (_) {}
+  try {
+    stateData = JSON.parse(decodeURIComponent(state || '{}'));
+  } catch (_) {}
 
-  // Read PKCE verifier from cookie
+  // Read PKCE verifier: cookie first, state fallback
   const cookies = {};
   (req.headers.cookie || '').split(';').forEach(pair => {
     const [k, ...v] = pair.trim().split('=');
     if (k) cookies[k.trim()] = v.join('=').trim();
   });
-  const codeVerifier = cookies['pkce_v'] || '';
+  const codeVerifier = cookies['pkce_v'] || stateData._v || '';
 
   if (!codeVerifier) {
-    console.error('No PKCE verifier cookie found');
+    console.error('No PKCE verifier in cookie or state');
     return res.redirect(302, '/?xauth=error&reason=pkce_missing');
   }
 
@@ -30,10 +33,11 @@ module.exports = async function handler(req, res) {
   const redirectUri  = process.env.X_REDIRECT_URI || 'https://pixelwalls.xyz/api/xcallback';
 
   if (!clientId || !clientSecret) {
+    console.error('Missing X_CLIENT_ID or X_CLIENT_SECRET env vars');
     return res.redirect(302, '/?xauth=error&reason=missing_env_vars');
   }
 
-  // ── Exchange auth code for access token ─────────────────────────
+  // Exchange auth code for access token
   let accessToken;
   try {
     const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
@@ -63,7 +67,7 @@ module.exports = async function handler(req, res) {
     return res.redirect(302, '/?xauth=error&reason=network');
   }
 
-  // ── Fetch user profile ──────────────────────────────────────────
+  // Fetch user profile
   let handle, name, avatar;
   try {
     const userRes = await fetch(
@@ -77,7 +81,6 @@ module.exports = async function handler(req, res) {
     }
     handle = ud.data.username;
     name   = ud.data.name || ud.data.username;
-    // Get full-size avatar instead of _normal (48×48)
     avatar = (ud.data.profile_image_url || '').replace('_normal', '_400x400');
   } catch (e) {
     console.error('User fetch error:', e.message);
@@ -88,10 +91,10 @@ module.exports = async function handler(req, res) {
     return res.redirect(302, '/?xauth=error&reason=no_handle');
   }
 
-  // ── Clear PKCE cookie ───────────────────────────────────────────
+  // Clear PKCE cookie
   res.setHeader('Set-Cookie', 'pkce_v=; HttpOnly; Secure; Max-Age=0; Path=/');
 
-  // ── Redirect back to site with verified data ────────────────────
+  // Redirect back with verified data — strip internal _v from state
   const out = new URLSearchParams({
     xauth:  'success',
     handle,
