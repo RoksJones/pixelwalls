@@ -1,6 +1,6 @@
-// api/xcallback.js  — Pixelwalls X OAuth 2.0 callback (PKCE S256)
-// Reads PKCE verifier from cookie first, falls back to state payload
-// so it works even when cookies are dropped on cross-origin redirect.
+// api/xcallback.js — Pixelwalls X OAuth 2.0 callback
+// X is tied to WALLET ADDRESS, not individual pixels.
+// One verification per wallet — all pixels auto-inherit the handle.
 module.exports = async function handler(req, res) {
   const { code, state, error, error_description } = req.query;
 
@@ -9,13 +9,13 @@ module.exports = async function handler(req, res) {
     return res.redirect(302, `/?xauth=error&reason=${reason}`);
   }
 
-  // Parse state — contains wallet/space/ref AND embedded _v PKCE verifier
+  // Parse state
   let stateData = {};
   try {
     stateData = JSON.parse(decodeURIComponent(state || '{}'));
   } catch (_) {}
 
-  // Read PKCE verifier: cookie first, state fallback
+  // PKCE verifier: cookie first, state._v fallback
   const cookies = {};
   (req.headers.cookie || '').split(';').forEach(pair => {
     const [k, ...v] = pair.trim().split('=');
@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
   const codeVerifier = cookies['pkce_v'] || stateData._v || '';
 
   if (!codeVerifier) {
-    console.error('No PKCE verifier in cookie or state');
+    console.error('No PKCE verifier found');
     return res.redirect(302, '/?xauth=error&reason=pkce_missing');
   }
 
@@ -33,11 +33,11 @@ module.exports = async function handler(req, res) {
   const redirectUri  = process.env.X_REDIRECT_URI || 'https://pixelwalls.xyz/api/xcallback';
 
   if (!clientId || !clientSecret) {
-    console.error('Missing X_CLIENT_ID or X_CLIENT_SECRET env vars');
+    console.error('Missing X env vars');
     return res.redirect(302, '/?xauth=error&reason=missing_env_vars');
   }
 
-  // Exchange auth code for access token
+  // Exchange code for access token
   let accessToken;
   try {
     const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
@@ -54,7 +54,6 @@ module.exports = async function handler(req, res) {
         code_verifier: codeVerifier,
       }).toString(),
     });
-
     const data = await tokenRes.json();
     if (!data.access_token) {
       console.error('Token exchange failed:', JSON.stringify(data));
@@ -94,17 +93,16 @@ module.exports = async function handler(req, res) {
   // Clear PKCE cookie
   res.setHeader('Set-Cookie', 'pkce_v=; HttpOnly; Secure; Max-Age=0; Path=/');
 
-  // Redirect back with verified data — strip internal _v from state
+  // Redirect back — wallet in params, no space needed
   const out = new URLSearchParams({
     xauth:  'success',
     handle,
     name,
     avatar: avatar || '',
     wallet: stateData.wallet || '',
-    space:  stateData.space  || '',
   });
 
   const returnBase = stateData.returnUrl || '/';
-  const separator  = returnBase.includes('?') ? '&' : '?';
-  return res.redirect(302, returnBase + separator + out.toString());
+  const sep = returnBase.includes('?') ? '&' : '?';
+  return res.redirect(302, returnBase + sep + out.toString());
 };
