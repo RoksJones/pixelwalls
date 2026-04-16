@@ -387,7 +387,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   </ul>
   <div class="nav-right">
     <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
-    <button class="nav-btn" id="xNavBtn" onclick="doXOAuth()" style="border-color:var(--muted);color:var(--muted);display:none;">𝕏 VERIFY X</button>
+    <button class="nav-btn" id="xNavBtn" onclick="doXOAuth()" style="border-color:#1d9bf0;color:#1d9bf0;display:none;">𝕏 VERIFY X</button>
     <button class="nav-btn nbb" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">BUY $PIXEL ▶</button>
   </div>
 </nav>
@@ -510,7 +510,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
           <div class="f-label">YOUR URL (optional)</div>
           <input class="f-input" id="urlInput" placeholder="https://yourproject.xyz"/>
           <button class="aBtn aBtn-primary" id="claimBtn" onclick="claimSpace()" disabled>🔮 CLAIM THIS SPACE</button>
-          <button class="aBtn aBtn-x" id="verifyXBtn" onclick="doXOAuth()" style="display:none;">𝕏 VERIFY X ACCOUNT</button>
+          <button class="aBtn" id="verifyXBtn" onclick="doXOAuth()" style="display:none;border-color:#1d9bf0;color:#1d9bf0;">𝕏 VERIFY X ACCOUNT</button>
           <button class="aBtn aBtn-danger" onclick="clearSelection()">✕ CLEAR</button>
         </div>
         <div class="sb-card">
@@ -1797,11 +1797,24 @@ function getMyX(){ return getWalletX(walletAddress); }
 
 function doXOAuth(){
   if(!walletConnected||!walletAddress){showToast('Connect your Phantom wallet first!');return;}
-  // Safety check — never allow treasury/agent wallet to be used as user wallet
-  const TREASURY='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
-  const AGENT='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
-  if(walletAddress===TREASURY||walletAddress===AGENT){
-    showToast('Please connect your personal Phantom wallet, not the treasury wallet.');
+  // Block ALL project wallets — these are treasury/team wallets not user wallets
+  const PROJECT_WALLETS=[
+    '9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk',
+    'HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC',
+    '8bBejAvXLwJ7PMFE13UPEpZxkiAQPtXCXXU9PzN2zJU8',
+    '7EqvsFDE4RtB1hHSUamPu18D47hDrPZMejkYHRpLnsKn',
+    'HJNvtQfKFteqUv8mGLDXmEmVTSJF6T6N8nuvHkgjtNLY',
+    'HPQCP9MNiLcDDFpK2g7R1J1WcNmjrr4uWpo22Vbng8sx',
+    '35V28Sp1LeGDg9zSp7EixDqro7P6DD3ntwTubkyLQmEh',
+    'FQ9JEFZ33nCqCNDSZ6vVhsS2r5WqttB3Q5sYdp5x3zzw',
+    '6m5Gbwbx6ZVDvTp2B8ugrpRtZdTkvCHhLbAGbD6Vc4XJ',
+    '34wENeqscrYxXEQeURBTLfAskpeVPFHu9RtGG66fGwj7',
+    'CqqThkHE4LLgBuAXAmhXkK2ypi2Ty5Kk6DZ52mxqnW3r',
+    'E5HKLHPYoXFZAXLt366qVQ8ekJFfqSeDJm7AkvqzxJsz',
+    'FyUN23ctu1qQA3XszJy7mWiSb4bNxTEGhJzQix5sFkby',
+  ];
+  if(PROJECT_WALLETS.includes(walletAddress)){
+    showToast('⚠️ Connect your personal Phantom wallet to verify X — not a project wallet.');
     return;
   }
   const myX = getMyX();
