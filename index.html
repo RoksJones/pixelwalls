@@ -857,6 +857,9 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 // Set DEVNET_MODE = false before going to production
 const DEVNET_MODE = false;
 // Override RPC: set window.HELIUS_RPC before script loads, or use env
+// Safe element getter — never throws on missing elements
+function el(id){ return document.getElementById(id); }
+function setDisabled(id, val){ const e=el(id); if(e) e.disabled=val; }
 const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
 const PROGRAM_ID='CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
 const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
@@ -954,7 +957,7 @@ async function doConnect(w){
     loadMySpaces();
     processReferralOnConnect(pk);
     // Enable verify button immediately on connect
-    document.getElementById('verifyXBtn').disabled=false;
+    // verifyXBtn moved to nav — handled by updateXNavBtn()
     showToast('✦ '+w.name+' connected: '+s);
     if(dragStart)refreshSidebar();
     // Show X verify button in nav
@@ -974,7 +977,7 @@ function disconnectWallet(){
   walletConnected=false;walletAddress=null;
   const btn=document.getElementById('walletBtn');
   btn.textContent='CONNECT WALLET';btn.classList.remove('connected');btn.onclick=connectWallet;
-  document.getElementById('claimBtn').disabled=true;
+  setDisabled('claimBtn',true);
   const xBtn2=document.getElementById('xNavBtn');
   if(xBtn2) xBtn2.style.display='none';
   showToast('Wallet disconnected.');
@@ -1355,8 +1358,8 @@ function clearSelection(){
   prev.innerHTML='';prev.style.background='';
   const pt=document.createElement('span');
   pt.textContent='Click or drag on the wall';prev.appendChild(pt);
-  document.getElementById('claimBtn').disabled=true;
-  document.getElementById('verifyXBtn').disabled=!walletConnected;
+  setDisabled('claimBtn',true);
+  // verifyXBtn moved to nav — handled by updateXNavBtn()
   updateSelInfo();
   renderWizardHall();render();
 }
@@ -1462,7 +1465,7 @@ function refreshSidebar(){
     document.getElementById('infoStatus').textContent='—';
     document.getElementById('infoStatus').style.color='';
     document.getElementById('infoPrice').textContent='—';
-    document.getElementById('claimBtn').disabled=true;
+    setDisabled('claimBtn',true);
     return;
   }
 
@@ -1500,7 +1503,7 @@ function refreshSidebar(){
     document.getElementById('infoStatus').textContent='ALL BLOCKED';
     document.getElementById('infoStatus').style.color='var(--red)';
     document.getElementById('infoPrice').textContent='—';
-    document.getElementById('claimBtn').disabled=true;
+    setDisabled('claimBtn',true);
     document.getElementById('claimBtn').textContent='🔒 ALL PIXELS OWNED';
   } else if(avail>0&&sale>0){
     document.getElementById('infoStatus').textContent=`${avail} AVAILABLE · ${sale} FOR SALE${blocked?' · '+blocked+' SKIPPED':''}`;
@@ -1508,26 +1511,26 @@ function refreshSidebar(){
     const p=+(getCurrentPrice()*avail).toFixed(4);
     const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
     document.getElementById('infoPrice').textContent=`${p} SOL + ${sp} SOL sale`;
-    document.getElementById('claimBtn').disabled=false;
+    setDisabled('claimBtn',false);
     document.getElementById('claimBtn').textContent=`🔮 BUY ${total} PIXELS`;
   } else if(avail>0){
     document.getElementById('infoStatus').textContent=avail===1?'AVAILABLE':`${avail} AVAILABLE${blocked?' · '+blocked+' SKIPPED':''}`;
     document.getElementById('infoStatus').style.color='var(--green)';
     const p=+(getCurrentPrice()*avail).toFixed(4);
     document.getElementById('infoPrice').textContent=p+' SOL ≈ $'+(p*SOL_USD).toFixed(2);
-    document.getElementById('claimBtn').disabled=false;
+    setDisabled('claimBtn',false);
     document.getElementById('claimBtn').textContent=`🔮 BUY ${avail} PIXEL${avail>1?'S':''}${blocked?' (SKIP '+blocked+')':''}`;
   } else if(sale>0){
     const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
     document.getElementById('infoStatus').textContent=`${sale} FOR SALE`;
     document.getElementById('infoStatus').style.color='#22d3ee';
     document.getElementById('infoPrice').textContent=sp+' SOL';
-    document.getElementById('claimBtn').disabled=false;
+    setDisabled('claimBtn',false);
     document.getElementById('claimBtn').textContent=`⚡ BUY ${sale} FOR SALE`;
   }
 
   // Verify X — any connected wallet can verify
-  document.getElementById('verifyXBtn').disabled=!walletConnected;
+  // verifyXBtn moved to nav — handled by updateXNavBtn()
 
   updateSelInfo();
   renderWizardHall();
