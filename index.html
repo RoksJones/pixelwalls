@@ -526,6 +526,10 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       </div>
       <!-- MY WALL TAB -->
       <div class="tab-panel" id="tab-mywall">
+        <div class="sb-card">
+          <div class="sb-title">✦ MY RANK</div>
+          <div id="myRankDisplay" style="font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:4px 0;">Connect wallet to see rank.</div>
+        </div>
         <div class="sb-card"><div class="sb-title">✦ MY SPACES</div><div id="myWallSummary" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);"></div></div>
         <div id="mySpacesGrid" class="my-spaces-grid"></div>
       </div>
@@ -2860,6 +2864,8 @@ window.addEventListener('load',async()=>{
 
 // -- TOKENOMICS CHARTS -------------------------------------------
 (function initTokenomicsCharts(){
+  // Only runs on tokenomics.html
+  if(!document.getElementById('tkSupplyChart')) return;
   if(typeof Chart === 'undefined') return;
 
   // Wallet bar rows
