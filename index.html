@@ -484,7 +484,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
         <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
         <button class="stab" onclick="switchTab('boost',this)">BOOST ⚡</button>
-        <button class="stab" onclick="switchTab('merge',this)">MERGE ◈</button>
+        <button class="stab" onclick="switchTab('merge',this);updateMergeTab();renderMyClusters();">MERGE ◈</button>
         <button class="stab" onclick="switchTab('invite',this)">INVITE</button>
       </div>
       <!-- SELECT TAB -->
@@ -510,7 +510,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
           <div class="f-label">YOUR URL (optional)</div>
           <input class="f-input" id="urlInput" placeholder="https://yourproject.xyz"/>
           <button class="aBtn aBtn-primary" id="claimBtn" onclick="claimSpace()" disabled>🔮 CLAIM THIS SPACE</button>
-          <!-- X verify moved to nav bar — tied to wallet not pixel -->
+          <button class="aBtn aBtn-x" id="verifyXBtn" onclick="doXOAuth()" style="display:none;">𝕏 VERIFY X ACCOUNT</button>
           <button class="aBtn aBtn-danger" onclick="clearSelection()">✕ CLEAR</button>
         </div>
         <div class="sb-card">
@@ -961,7 +961,8 @@ async function doConnect(w){
     loadMySpaces();
     processReferralOnConnect(pk);
     // Enable verify button immediately on connect
-    // verifyXBtn moved to nav — handled by updateXNavBtn()
+    const vxb=document.getElementById('verifyXBtn');
+    if(vxb) vxb.style.display='';
     showToast('✦ '+w.name+' connected: '+s);
     if(dragStart)refreshSidebar();
     // Show X verify button in nav
@@ -984,6 +985,8 @@ function disconnectWallet(){
   setDisabled('claimBtn',true);
   const xBtn2=document.getElementById('xNavBtn');
   if(xBtn2) xBtn2.style.display='none';
+  const vxb2=document.getElementById('verifyXBtn');
+  if(vxb2) vxb2.style.display='none';
   showToast('Wallet disconnected.');
 }
 async function tryAutoReconnect(){
@@ -2799,22 +2802,9 @@ function renderMyClusters(){
     </div>`).join('');
 }
 
-// Hook merge tab update into selection changes
-const _origUpdateSelInfo=updateSelInfo;
-function updateSelInfo(){
-  if(typeof _origUpdateSelInfo==='function') _origUpdateSelInfo();
-  // Update merge tab if active
-  const mergePanel=document.getElementById('tab-merge');
-  if(mergePanel&&mergePanel.classList.contains('active')) updateMergeTab();
-}
+// Merge tab updates on tab click, not on every selection change
 
-// Also update when merge tab is opened
-const _origSwitchTab=switchTab;
-function switchTab(name,el){
-  _origSwitchTab(name,el);
-  if(name==='merge') updateMergeTab();
-  if(name==='mywall') renderMyClusters();
-}
+// Merge tab updates handled directly in the tab button onclick
 // -- END MERGE / CLUSTER -------------------------------------------
 
 window.addEventListener('load',async()=>{
