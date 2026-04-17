@@ -58,6 +58,10 @@
   ],
   "rewrites": [
     {
+      "source": "/marketplace.html",
+      "destination": "/marketplace.html"
+    },
+    {
       "source": "/tokenomics.html",
       "destination": "/tokenomics.html"
     },
