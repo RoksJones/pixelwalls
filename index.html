@@ -1846,7 +1846,12 @@ function applyDexData(pair){
 }
 
 async function fetchTokenData(){
-  const PAIR_ADDR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
+  // All three liquidity pools
+  const POOLS=[
+    'HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE', // DexScreener pair
+    'A2o487PSnxgiHE8TuWW3tySUQHdRsXEi5o9PaSJdPMcW', // Meteora DAMM v2
+    'GMmywMEB35GrCadf5TqxN5GU9vVQT3VheiEE1dF4CmBp', // Pool 3
+  ];
 
   async function tryFetch(url){
     try{
@@ -1856,28 +1861,59 @@ async function fetchTokenData(){
     return null;
   }
 
-  // 1. Direct pair endpoint
-  let d=await tryFetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${PAIR_ADDR}`);
-  if(d){const pair=d.pair||d.pairs?.[0]||d;if(pair&&pair.priceUsd){applyDexData(pair);return;}}
+  // Fetch all pools simultaneously
+  const pairAddrs=POOLS.join(',');
+  let bestPair=null;
+  let totalLiquidityUsd=0;
+  let totalVolume24h=0;
 
-  // 2. Tokens v1
-  d=await tryFetch(`https://api.dexscreener.com/tokens/v1/solana/${CA}`);
-  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
-
-  // 3. Token pairs v1
-  d=await tryFetch(`https://api.dexscreener.com/token-pairs/v1/solana/${CA}`);
-  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
-
-  // 4. Legacy
-  d=await tryFetch(`https://api.dexscreener.com/latest/dex/tokens/${CA}`);
-  if(d&&d.pairs?.[0]){applyDexData(d.pairs[0]);return;}
-
-  // 5. pump.fun fallback
-  d=await tryFetch(`https://frontend-api.pump.fun/coins/${CA}`);
+  // Fetch all three pools in one request (DexScreener supports comma-separated pairs)
+  const d=await tryFetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${pairAddrs}`);
   if(d){
-    if(d.usd_market_cap){const mc='$'+abbreviate(d.usd_market_cap);document.getElementById('dexMcap').textContent=mc;document.getElementById('statMcap').textContent=mc;}
-    if(d.virtual_sol_reserves&&d.virtual_token_reserves){const p=(d.virtual_sol_reserves/d.virtual_token_reserves)*(1/1e9)*(1e6);const fmt='$'+p.toFixed(8);document.getElementById('mcap').textContent=fmt;document.getElementById('statPrice').textContent=fmt;}
-    if(d.volume_24h)document.getElementById('vol24').textContent='$'+abbreviate(d.volume_24h);
+    const pairs=d.pairs||[];
+    if(pairs.length){
+      // Sum liquidity and volume across all pools
+      pairs.forEach(p=>{
+        if(p.liquidity?.usd) totalLiquidityUsd+=parseFloat(p.liquidity.usd)||0;
+        if(p.volume?.h24)    totalVolume24h+=parseFloat(p.volume.h24)||0;
+      });
+      // Use the highest-liquidity pair for price/mcap data
+      bestPair=pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+    }
+  }
+
+  // Fallback: fetch token pairs by CA
+  if(!bestPair){
+    const d2=await tryFetch(`https://api.dexscreener.com/tokens/v1/solana/${CA}`);
+    if(d2){
+      const arr=Array.isArray(d2)?d2:(d2.pairs||[]);
+      if(arr.length){
+        arr.forEach(p=>{
+          if(p.liquidity?.usd) totalLiquidityUsd+=parseFloat(p.liquidity.usd)||0;
+          if(p.volume?.h24)    totalVolume24h+=parseFloat(p.volume.h24)||0;
+        });
+        bestPair=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];
+      }
+    }
+  }
+
+  if(bestPair){
+    // Override liquidity and volume with combined totals
+    const pairWithTotals={
+      ...bestPair,
+      liquidity:{usd:totalLiquidityUsd||bestPair.liquidity?.usd||0},
+      volume:{...(bestPair.volume||{}), h24:totalVolume24h||bestPair.volume?.h24||0},
+    };
+    applyDexData(pairWithTotals);
+    return;
+  }
+
+  // pump.fun fallback
+  const dp=await tryFetch(`https://frontend-api.pump.fun/coins/${CA}`);
+  if(dp){
+    if(dp.usd_market_cap){const mc='$'+abbreviate(dp.usd_market_cap);document.getElementById('dexMcap').textContent=mc;document.getElementById('statMcap').textContent=mc;}
+    if(dp.virtual_sol_reserves&&dp.virtual_token_reserves){const p=(dp.virtual_sol_reserves/dp.virtual_token_reserves)*(1/1e9)*(1e6);const fmt='$'+p.toFixed(8);document.getElementById('mcap').textContent=fmt;document.getElementById('statPrice').textContent=fmt;}
+    if(dp.volume_24h)document.getElementById('vol24').textContent='$'+abbreviate(dp.volume_24h);
   }
   // CORS errors are expected when testing via file:// — APIs will work on https://pixelwalls.xyz
 }
