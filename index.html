@@ -915,7 +915,7 @@ function updateRankDisplay(){
   const r=getRankFromBalance(pixelBalance);
   el.innerHTML=`<span style="color:${r.color};font-size:16px;">${r.title}</span> <span style="color:var(--muted);font-size:12px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL</span>`;
 }
-const GRID=1000, SOL_USD=170;
+const GRID=1000; let SOL_USD=170; // updated by fetchSolPrice()
 const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
 
 // -- WALLET ------------------------------------------------
@@ -1868,6 +1868,53 @@ async function fetchTokenData(){
   // CORS errors are expected when testing via file:// — APIs will work on https://pixelwalls.xyz
 }
 
+async function fetchSolPrice(){
+  try{
+    // CoinGecko free API — no key needed
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
+      {headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error('CoinGecko failed');
+    const d=await r.json();
+    const price=d?.solana?.usd;
+    if(price && typeof price==='number' && price>0){
+      SOL_USD=price;
+      // Refresh any displayed USD prices
+      updateSolPriceDisplay();
+      return price;
+    }
+  }catch(e){
+    // Fallback: try Jupiter price API
+    try{
+      const r2=await fetch('https://lite.jupiterapi.com/price?ids=So11111111111111111111111111111111111111112');
+      if(r2.ok){
+        const d2=await r2.json();
+        const price2=d2?.data?.['So11111111111111111111111111111111111111112']?.price;
+        if(price2&&price2>0){ SOL_USD=price2; updateSolPriceDisplay(); return price2; }
+      }
+    }catch(e2){}
+  }
+  return SOL_USD; // return existing value if both fail
+}
+
+function updateSolPriceDisplay(){
+  // Update the claim modal USD display if open
+  const claimUsd=document.getElementById('claimUsd');
+  if(claimUsd && claimUsd.textContent && claimUsd.textContent.includes('≈ $')){
+    const priceText=document.getElementById('claimPrice')?.textContent||'0';
+    const sol=parseFloat(priceText)||0;
+    if(sol>0) claimUsd.textContent='≈ $'+(sol*SOL_USD).toFixed(2)+' · 90% treasury · 10% agent';
+  }
+  // Update sidebar price display
+  const infoPrice=document.getElementById('infoPrice');
+  if(infoPrice && infoPrice.textContent && infoPrice.textContent.includes('SOL ≈')){
+    const parts=infoPrice.textContent.split(' SOL ≈');
+    if(parts.length>1){
+      const sol=parseFloat(parts[0])||0;
+      if(sol>0) infoPrice.textContent=parts[0]+' SOL ≈ $'+(sol*SOL_USD).toFixed(2);
+    }
+  }
+}
+
 
 // -- BOOST SYSTEM -----------------------------------------
 const BOOST_TIERS = {
@@ -2741,6 +2788,11 @@ function renderMyClusters(){
 // -- END MERGE / CLUSTER -------------------------------------------
 
 window.addEventListener('load',async()=>{
+  // Fetch real SOL price immediately and refresh every 60s
+  fetchSolPrice();
+  setInterval(fetchSolPrice, 60_000);
+  fetchTokenData();
+  setInterval(fetchTokenData, 30_000);
   // Handle X OAuth callback (?xauth=success&wallet=...&handle=...&space=...)
   const params=new URLSearchParams(window.location.search);
   // xauth handler removed
