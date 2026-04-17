@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>$PIXEL Marketplace — Pixelwalls</title>
+<meta name="description" content="Buy and sell pixel spaces on the Pixelwalls eternal wall. Browse all active listings."/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%238b5cf6'/><text y='24' font-size='20'>✦</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --void:#0a0612;--deep:#110d22;--purple:#2d1b69;--violet:#5b21b6;
+  --lav:#8b5cf6;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;
+  --green:#4ade80;--white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--white);font-family:'Press Start 2P',monospace;overflow-x:hidden;min-height:100vh;}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:56px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(91,33,182,.4);backdrop-filter:blur(8px);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:28px;height:28px;background:var(--violet);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:4px;}
+.logo-mark span{background:var(--gold);display:block;}
+.logo-text{font-size:10px;color:var(--gold);letter-spacing:1px;}
+.nav-right{display:flex;gap:8px;align-items:center;}
+.nav-btn{background:transparent;border:1px solid;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;cursor:pointer;letter-spacing:1px;transition:all .2s;text-decoration:none;display:inline-block;}
+.nav-btn-lav{border-color:var(--lav);color:var(--lav);}
+.nav-btn-lav:hover{background:var(--lav);color:var(--void);}
+.nav-btn-gold{border-color:var(--gold);color:var(--gold);}
+.nav-btn-gold:hover{background:rgba(251,191,36,.12);}
+
+/* HERO */
+.hero{padding:52px 28px 36px;text-align:center;background:linear-gradient(180deg,rgba(43,27,105,.25) 0%,transparent 100%);}
+.hero-label{font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:14px;}
+.hero-title{font-size:clamp(14px,3vw,22px);line-height:1.5;margin-bottom:16px;background:linear-gradient(135deg,var(--gold),var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-family:'VT323',monospace;font-size:18px;color:var(--muted);max-width:600px;margin:0 auto 28px;line-height:1.7;}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:36px;}
+.stat-pill{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);padding:10px 20px;text-align:center;}
+.stat-pill .num{font-family:'VT323',monospace;font-size:24px;color:var(--cyan);}
+.stat-pill .lbl{font-size:6px;color:var(--muted);letter-spacing:1px;margin-top:3px;}
+
+/* FILTERS */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;max-width:1200px;margin:0 auto 24px;padding:0 28px;}
+.filter-btn{background:transparent;border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:8px 14px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.filter-btn:hover,.filter-btn.active{border-color:var(--lav);color:var(--lav);background:rgba(91,33,182,.15);}
+.filter-sep{color:rgba(91,33,182,.4);font-size:18px;}
+.search-input{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);color:var(--white);font-family:'VT323',monospace;font-size:16px;padding:8px 14px;outline:none;transition:border-color .2s;min-width:200px;}
+.search-input:focus{border-color:var(--lav);}
+.search-input::placeholder{color:rgba(157,140,204,.4);}
+.sort-select{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:8px 12px;cursor:pointer;outline:none;}
+.sort-select option{background:#110d22;}
+
+/* GRID */
+.grid-wrap{max-width:1200px;margin:0 auto;padding:0 28px 60px;}
+.listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+
+/* LISTING CARD */
+.listing-card{background:rgba(17,13,34,.92);border:1px solid rgba(91,33,182,.3);transition:all .25s;cursor:pointer;position:relative;overflow:hidden;}
+.listing-card:hover{border-color:var(--lav);transform:translateY(-2px);}
+.listing-card.boosted-wizard{border-color:var(--pink);animation:border-rainbow 3s linear infinite;}
+.listing-card.boosted-gold{border-color:var(--gold);}
+.listing-card.boosted-silver{border-color:var(--cyan);}
+@keyframes border-rainbow{0%{border-color:#e879f9}33%{border-color:#22d3ee}66%{border-color:#fbbf24}100%{border-color:#e879f9}}
+
+.card-pixel-preview{width:100%;height:140px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.card-pixel-img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;}
+.card-pixel-color{width:100%;height:100%;}
+.card-coord-badge{position:absolute;top:8px;left:8px;background:rgba(10,6,18,.8);border:1px solid rgba(91,33,182,.5);font-family:'VT323',monospace;font-size:13px;color:var(--cyan);padding:3px 8px;}
+.card-boost-badge{position:absolute;top:8px;right:8px;font-size:6px;padding:3px 7px;letter-spacing:1px;border:1px solid;}
+.boost-wizard{background:rgba(232,121,249,.2);border-color:var(--pink);color:var(--pink);}
+.boost-gold{background:rgba(251,191,36,.2);border-color:var(--gold);color:var(--gold);}
+.boost-silver{background:rgba(34,211,238,.2);border-color:var(--cyan);color:var(--cyan);}
+.boost-bronze{background:rgba(139,92,246,.2);border-color:var(--lav);color:var(--lav);}
+
+.card-body{padding:14px;}
+.card-owner{font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-owner .x-handle{color:var(--cyan);}
+.card-size{font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:10px;}
+.card-price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+.card-price-sol{font-family:'VT323',monospace;font-size:24px;color:var(--gold);}
+.card-price-usd{font-family:'VT323',monospace;font-size:15px;color:var(--muted);}
+.card-buy-btn{width:100%;background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.6));border:1px solid var(--lav);color:var(--white);font-family:'Press Start 2P',monospace;font-size:7px;padding:10px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.card-buy-btn:hover{background:linear-gradient(135deg,var(--lav),var(--pink));border-color:var(--pink);}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:80px 28px;grid-column:1/-1;}
+.empty-icon{font-size:48px;margin-bottom:20px;opacity:.4;}
+.empty-title{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.empty-sub{font-family:'VT323',monospace;font-size:18px;color:rgba(157,140,204,.6);line-height:1.7;}
+
+/* LOADING */
+.loading-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.skeleton{background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.2);height:280px;animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* PAGINATION */
+.pagination{display:flex;gap:8px;justify-content:center;margin-top:32px;flex-wrap:wrap;}
+.page-btn{background:transparent;border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 14px;cursor:pointer;transition:all .2s;}
+.page-btn:hover,.page-btn.active{border-color:var(--lav);color:var(--lav);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(17,13,34,.95);border:1px solid var(--lav);font-family:'VT323',monospace;font-size:16px;color:var(--cyan);padding:10px 20px;z-index:999;transition:transform .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* FOOTER */
+footer{text-align:center;padding:40px 28px;border-top:1px solid rgba(91,33,182,.3);font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.8;}
+footer a{color:var(--lav);text-decoration:none;}
+
+@media(max-width:600px){
+  nav{padding:0 14px;}
+  .hero{padding:36px 14px 24px;}
+  .filters{padding:0 14px;}
+  .grid-wrap{padding:0 14px 40px;}
+  .listings-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:400px){
+  .listings-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <span class="logo-text">PIXELWALLS</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-btn nav-btn-lav" href="index.html#wall">← THE WALL</a>
+    <a class="nav-btn nav-btn-gold" href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">BUY $PIXEL ▶</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <p class="hero-label">✦ THE ETERNAL WALL ✦</p>
+  <h1 class="hero-title">$PIXEL MARKETPLACE</h1>
+  <p class="hero-sub">Buy and sell permanent pixel spaces on the wall. Every listing is on-chain. Every pixel lasts forever.</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-pill"><div class="num" id="statListings">—</div><div class="lbl">ACTIVE LISTINGS</div></div>
+  <div class="stat-pill"><div class="num" id="statFloor">—</div><div class="lbl">FLOOR PRICE</div></div>
+  <div class="stat-pill"><div class="num" id="statVolume">—</div><div class="lbl">TOTAL LISTED VALUE</div></div>
+  <div class="stat-pill"><div class="num" id="statClaimed">—</div><div class="lbl">PIXELS CLAIMED</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="setFilter('all',this)">ALL</button>
+  <button class="filter-btn" onclick="setFilter('single',this)">SINGLE PIXELS</button>
+  <button class="filter-btn" onclick="setFilter('cluster',this)">CLUSTERS</button>
+  <span class="filter-sep">|</span>
+  <button class="filter-btn" onclick="setFilter('wizard',this)">🔮 WIZARD ONLY</button>
+  <button class="filter-btn" onclick="setFilter('boosted',this)">⚡ BOOSTED</button>
+  <span class="filter-sep">|</span>
+  <input class="search-input" id="searchInput" placeholder="Search by coord, owner..." oninput="applyFilters()"/>
+  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+    <option value="price_asc">PRICE: LOW → HIGH</option>
+    <option value="price_desc">PRICE: HIGH → LOW</option>
+    <option value="newest">NEWEST FIRST</option>
+    <option value="boost_desc">BOOST TIER</option>
+  </select>
+</div>
+
+<div class="grid-wrap">
+  <div id="listingsContainer">
+    <div class="loading-grid" id="loadingSkeletons">
+      <div class="skeleton"></div><div class="skeleton"></div>
+      <div class="skeleton"></div><div class="skeleton"></div>
+      <div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <div style="font-size:10px;color:var(--gold);margin-bottom:12px;">✦ PIXELWALLS.XYZ ✦</div>
+  <div style="margin-bottom:10px;">
+    <a href="index.html">THE WALL</a> &nbsp;·&nbsp;
+    <a href="tokenomics.html">TOKENOMICS</a> &nbsp;·&nbsp;
+    <a href="whitepaper.html">WHITE PAPER</a> &nbsp;·&nbsp;
+    <a href="https://twitter.com/pixelwallsxyz" target="_blank">@PIXELWALLSXYZ</a>
+  </div>
+  <div>$PIXEL is a meme token. DYOR. Not financial advice. The wall is eternal.</div>
+</footer>
+
+<script>
+const CA   = '7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const PROGRAM_ID = 'CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
+let SOL_USD = 170;
+const PER_PAGE = 24;
+let currentPage = 1;
+let currentFilter = 'all';
+let allListings = [];
+let filtered = [];
+
+// ── FETCH SOL PRICE ───────────────────────────────────────────────
+async function fetchSolPrice(){
+  try{
+    const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+CA);
+    if(!r.ok) return;
+    const d=await r.json();
+    const arr=Array.isArray(d)?d:(d.pairs||[]);
+    if(arr.length){
+      const p=arr[0];
+      if(p.priceUsd&&p.priceNative){
+        const sol=parseFloat(p.priceUsd)/parseFloat(p.priceNative);
+        if(sol>10&&sol<10000) SOL_USD=Math.round(sol*100)/100;
+      }
+    }
+  }catch(e){}
+}
+
+// ── LOAD LISTINGS FROM LOCALSTORAGE + ON-CHAIN ────────────────────
+// Listings are stored in localStorage across all wallets that have
+// connected to pixelwalls.xyz on this browser. For production this
+// will be replaced with an RPC call to read all PixelSpace PDAs
+// with listPrice > 0.
+function loadListings(){
+  const listings = [];
+  // Read all localStorage keys for all wallets
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.startsWith('pw_')) continue;
+    if(key.startsWith('pw_prof_')||key.startsWith('pw_xwallet_')||
+       key.startsWith('pw_ref')||key.startsWith('pw_inv')) continue;
+    try{
+      const data=JSON.parse(localStorage.getItem(key)||'[]');
+      if(Array.isArray(data)){
+        data.forEach(([k,v])=>{
+          if(v&&v.listPrice&&parseFloat(v.listPrice)>0){
+            const prof=getProfile(k);
+            listings.push({
+              key:k,
+              col:v.col||parseInt(k.split(',')[0]),
+              row:v.row||parseInt(k.split(',')[1]),
+              owner:v.owner||'Unknown',
+              xHandle:v.xHandle||prof?.x||null,
+              xAvatar:v.xAvatar||prof?.avatar||null,
+              color:v.color||prof?.color||'#5b21b6',
+              imageDataUrl:v.imageDataUrl||null,
+              listPrice:parseFloat(v.listPrice),
+              boostTier:v.boostTier||0,
+              w:v.w||1, h:v.h||1,
+              listedAt:v.listedAt||0,
+            });
+          }
+        });
+      }
+    }catch(e){}
+  }
+  // Deduplicate by key
+  const seen=new Set();
+  return listings.filter(l=>{ if(seen.has(l.key)) return false; seen.add(l.key); return true; });
+}
+
+function getProfile(key){
+  try{ return JSON.parse(localStorage.getItem('pw_prof_'+key)||'null'); }
+  catch(e){ return null; }
+}
+
+// ── FILTER & SORT ─────────────────────────────────────────────────
+function setFilter(f, btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  currentPage=1;
+  applyFilters();
+}
+
+function applyFilters(){
+  const search=document.getElementById('searchInput').value.toLowerCase().trim();
+  const sort=document.getElementById('sortSelect').value;
+
+  filtered=allListings.filter(l=>{
+    // Filter type
+    if(currentFilter==='single'&&(l.w>1||l.h>1)) return false;
+    if(currentFilter==='cluster'&&(l.w===1&&l.h===1)) return false;
+    if(currentFilter==='wizard'&&l.boostTier!==4) return false;
+    if(currentFilter==='boosted'&&!l.boostTier) return false;
+    // Search
+    if(search){
+      const coord=`${l.col},${l.row}`;
+      const owner=(l.owner||'').toLowerCase();
+      const handle=(l.xHandle||'').toLowerCase();
+      if(!coord.includes(search)&&!owner.includes(search)&&!handle.includes(search)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a,b)=>{
+    if(sort==='price_asc')  return a.listPrice-b.listPrice;
+    if(sort==='price_desc') return b.listPrice-a.listPrice;
+    if(sort==='newest')     return (b.listedAt||0)-(a.listedAt||0);
+    if(sort==='boost_desc') return (b.boostTier||0)-(a.boostTier||0);
+    return 0;
+  });
+
+  renderStats();
+  renderPage(1);
+}
+
+// ── RENDER STATS ──────────────────────────────────────────────────
+function renderStats(){
+  const count=filtered.length;
+  document.getElementById('statListings').textContent=count.toLocaleString();
+  if(count>0){
+    const floor=Math.min(...filtered.map(l=>l.listPrice));
+    const total=filtered.reduce((s,l)=>s+l.listPrice,0);
+    document.getElementById('statFloor').textContent=floor.toFixed(4)+' SOL';
+    document.getElementById('statVolume').textContent=total.toFixed(2)+' SOL';
+  } else {
+    document.getElementById('statFloor').textContent='—';
+    document.getElementById('statVolume').textContent='—';
+  }
+}
+
+// ── RENDER PAGE ───────────────────────────────────────────────────
+function renderPage(page){
+  currentPage=page;
+  const start=(page-1)*PER_PAGE;
+  const end=start+PER_PAGE;
+  const pageItems=filtered.slice(start,end);
+
+  const container=document.getElementById('listingsContainer');
+
+  if(!filtered.length){
+    container.innerHTML=`<div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <div class="empty-title">NO LISTINGS FOUND</div>
+      <div class="empty-sub">No pixels are listed for sale right now.<br/>
+      Be the first to list yours on the wall.</div>
+      <a href="index.html#wall" style="display:inline-block;margin-top:20px;border:1px solid var(--gold);color:var(--gold);font-size:7px;padding:12px 20px;font-family:'Press Start 2P',monospace;letter-spacing:1px;text-decoration:none;">← VISIT THE WALL</a>
+    </div>`;
+    renderPagination(0);
+    return;
+  }
+
+  const grid=document.createElement('div');
+  grid.className='listings-grid';
+  pageItems.forEach(l=>grid.appendChild(makeCard(l)));
+  container.innerHTML='';
+  container.appendChild(grid);
+  renderPagination(Math.ceil(filtered.length/PER_PAGE));
+}
+
+// ── MAKE CARD ─────────────────────────────────────────────────────
+function makeCard(l){
+  const card=document.createElement('div');
+  card.className='listing-card';
+  const boostNames=['','Mage','Sorcerer','Warlock','Wizard'];
+  const boostClasses=['','boosted-bronze','boosted-silver','boosted-gold','boosted-wizard'];
+  if(l.boostTier) card.classList.add(boostClasses[l.boostTier]);
+
+  const usd=(l.listPrice*SOL_USD).toFixed(2);
+  const ownerShort=l.owner.length>12?l.owner.slice(0,6)+'...'+l.owner.slice(-4):l.owner;
+  const sizeLabel=l.w>1||l.h>1?`${l.w}×${l.h} CLUSTER`:`1×1 PIXEL`;
+
+  // Preview — image or color
+  let previewHtml='';
+  if(l.imageDataUrl){
+    previewHtml=`<img class="card-pixel-img" src="${l.imageDataUrl}" alt="Pixel (${l.col},${l.row})"/>`;
+  } else {
+    previewHtml=`<div class="card-pixel-color" style="background:${l.color||'#5b21b6'};"></div>`;
+  }
+
+  const boostBadge=l.boostTier?`<div class="card-boost-badge boost-${['','bronze','silver','gold','wizard'][l.boostTier]}">⚡ ${boostNames[l.boostTier].toUpperCase()}</div>`:'';
+  const xLine=l.xHandle?`<span class="x-handle">@${l.xHandle}</span>`:ownerShort;
+
+  card.innerHTML=`
+    <div class="card-pixel-preview">
+      ${previewHtml}
+      <div class="card-coord-badge">(${l.col},${l.row})</div>
+      ${boostBadge}
+    </div>
+    <div class="card-body">
+      <div class="card-owner">${xLine}</div>
+      <div class="card-size">${sizeLabel}</div>
+      <div class="card-price-row">
+        <span class="card-price-sol">${l.listPrice} SOL</span>
+        <span class="card-price-usd">≈$${usd}</span>
+      </div>
+      <button class="card-buy-btn" onclick="buyListing(event,'${l.key}',${l.listPrice})">
+        🔮 BUY NOW
+      </button>
+    </div>`;
+
+  card.addEventListener('click', e=>{
+    if(e.target.classList.contains('card-buy-btn')) return;
+    viewListing(l);
+  });
+  return card;
+}
+
+// ── PAGINATION ────────────────────────────────────────────────────
+function renderPagination(total){
+  const pag=document.getElementById('pagination');
+  pag.innerHTML='';
+  if(total<=1) return;
+  for(let i=1;i<=total;i++){
+    const btn=document.createElement('button');
+    btn.className='page-btn'+(i===currentPage?' active':'');
+    btn.textContent=i;
+    btn.onclick=()=>{ renderPage(i); window.scrollTo({top:0,behavior:'smooth'}); };
+    pag.appendChild(btn);
+  }
+}
+
+// ── BUY LISTING ───────────────────────────────────────────────────
+function buyListing(e, key, price){
+  e.stopPropagation();
+  // Redirect to wall with the pixel pre-selected
+  const [col,row]=key.split(',');
+  window.location.href=`index.html#wall?buy=${col},${row}&price=${price}`;
+}
+
+// ── VIEW LISTING ──────────────────────────────────────────────────
+function viewListing(l){
+  // Show a detail modal
+  const existing=document.getElementById('listingModal');
+  if(existing) existing.remove();
+
+  const usd=(l.listPrice*SOL_USD).toFixed(2);
+  const boostNames=['','Mage','Sorcerer','Warlock','Wizard'];
+
+  const modal=document.createElement('div');
+  modal.id='listingModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(10,6,18,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.onclick=e=>{ if(e.target===modal) modal.remove(); };
+
+  const previewHtml=l.imageDataUrl
+    ?`<img src="${l.imageDataUrl}" style="width:100%;height:200px;object-fit:cover;image-rendering:pixelated;" alt="Pixel"/>`
+    :`<div style="width:100%;height:200px;background:${l.color||'#5b21b6'};"></div>`;
+
+  modal.innerHTML=`<div style="background:#110d22;border:1px solid rgba(91,33,182,.5);max-width:480px;width:100%;max-height:90vh;overflow-y:auto;">
+    ${previewHtml}
+    <div style="padding:20px;">
+      <button onclick="document.getElementById('listingModal').remove()" style="position:absolute;top:8px;right:8px;background:transparent;border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:7px;padding:6px 10px;cursor:pointer;">✕</button>
+      <div style="font-size:8px;color:var(--cyan);margin-bottom:6px;">PIXEL (${l.col}, ${l.row})</div>
+      ${l.xHandle?`<div style="font-family:'VT323',monospace;font-size:18px;color:var(--white);margin-bottom:4px;">@${l.xHandle}</div>`:''}
+      <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:12px;">${l.owner}</div>
+      ${l.boostTier?`<div style="font-size:7px;color:var(--gold);margin-bottom:12px;">⚡ ${boostNames[l.boostTier].toUpperCase()} BOOST</div>`:''}
+      <div style="font-family:'VT323',monospace;font-size:32px;color:var(--gold);margin-bottom:4px;">${l.listPrice} SOL</div>
+      <div style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);margin-bottom:16px;">≈ $${usd} USD</div>
+      <button onclick="buyListing(event,'${l.key}',${l.listPrice})" style="width:100%;background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.6));border:1px solid var(--lav);color:var(--white);font-family:'Press Start 2P',monospace;font-size:7px;padding:14px;cursor:pointer;letter-spacing:1px;">🔮 BUY THIS PIXEL</button>
+      <button onclick="document.getElementById('listingModal').remove()" style="width:100%;margin-top:8px;background:transparent;border:1px solid rgba(91,33,182,.3);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:7px;padding:10px;cursor:pointer;letter-spacing:1px;">CLOSE</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('load',async()=>{
+  await fetchSolPrice();
+  allListings=loadListings();
+
+  // Update claimed count from localStorage (approximate)
+  let claimedCount=0;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.startsWith('pw_')||key.startsWith('pw_prof_')||key.startsWith('pw_xwallet_')||key.startsWith('pw_ref')||key.startsWith('pw_inv')) continue;
+    try{
+      const d=JSON.parse(localStorage.getItem(key)||'[]');
+      if(Array.isArray(d)) claimedCount+=d.length;
+    }catch(e){}
+  }
+  document.getElementById('statClaimed').textContent=claimedCount.toLocaleString()||'—';
+
+  // Remove loading skeletons
+  const skeletons=document.getElementById('loadingSkeletons');
+  if(skeletons) skeletons.remove();
+
+  applyFilters();
+
+  // TODO: Replace localStorage fetch with on-chain RPC call after contract deploys
+  // const connection = new Connection(HELIUS_RPC);
+  // const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
+  //   filters: [{ dataSize: 96+8 }, { memcmp: { offset: 8+2+2+32+32, bytes: bs58.encode(Buffer.from([1])) } }]
+  // });
+  // Parse PDAs where listPrice > 0
+});
+</script>
+</body>
+</html>
