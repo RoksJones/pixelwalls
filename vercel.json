@@ -58,14 +58,6 @@
   ],
   "rewrites": [
     {
-      "source": "/tokenomics.html",
-      "destination": "/tokenomics.html"
-    },
-    {
-      "source": "/whitepaper.html",
-      "destination": "/whitepaper.html"
-    },
-    {
       "source": "/api/metadata/:col/:row",
       "destination": "/api/metadata"
     },
@@ -90,7 +82,7 @@
       "destination": "/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/)[^.]*)",
       "destination": "/index.html"
     }
   ],
