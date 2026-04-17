@@ -58,6 +58,14 @@
   ],
   "rewrites": [
     {
+      "source": "/tokenomics.html",
+      "destination": "/tokenomics.html"
+    },
+    {
+      "source": "/whitepaper.html",
+      "destination": "/whitepaper.html"
+    },
+    {
       "source": "/api/metadata/:col/:row",
       "destination": "/api/metadata"
     },
@@ -84,19 +92,6 @@
     {
       "source": "/((?!api/)[^.]*)",
       "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.pixelwalls.xyz"
-        }
-      ],
-      "destination": "https://pixelwalls.xyz/:path*",
-      "permanent": true
     }
   ]
 }
