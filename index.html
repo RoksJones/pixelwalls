@@ -984,6 +984,7 @@ async function tryAutoReconnect(){
       const btn=document.getElementById('walletBtn');
       btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
       loadMySpaces();
+      loadBoosts();
       const xBtnR=document.getElementById('xNavBtn');
       if(xBtnR) xBtnR.style.display='';
       updateXNavBtn();
@@ -1011,8 +1012,25 @@ function spaceKey(c,r){return c+','+r;}
 function saveToStorage(){
   if(!walletAddress)return;
   try{
-    const mine=Object.entries(claimedSpaces).filter(([,v])=>v.owner===shortAddr()).map(([k,v])=>[k,{...v,imageDataUrl:null}]);
+    const mine=Object.entries(claimedSpaces)
+      .filter(([,v])=>v.owner===shortAddr())
+      .map(([k,v])=>[k,{
+        ...v,
+        imageDataUrl:null,
+        // Explicitly preserve boost data — never strip it
+        boostTier:    v.boostTier||0,
+        boostActivatedAt: v.boostActivatedAt||0,
+      }]);
     localStorage.setItem('pw_'+walletAddress,JSON.stringify(mine));
+    // Also update pw_boosts global store for any boosted pixels
+    mine.forEach(([k,v])=>{
+      if(v.boostTier>0){
+        const tierNames=['','bronze','silver','gold','wizard'];
+        const existing=JSON.parse(localStorage.getItem('pw_boosts')||'{}');
+        existing[k]={tier:tierNames[v.boostTier], activatedAt:v.boostActivatedAt||0};
+        localStorage.setItem('pw_boosts',JSON.stringify(existing));
+      }
+    });
   }catch(e){}
 }
 function loadFromStorage(){
@@ -1020,7 +1038,19 @@ function loadFromStorage(){
   try{
     const raw=localStorage.getItem('pw_'+walletAddress);
     if(!raw)return;
-    JSON.parse(raw).forEach(([k,v])=>{if(!claimedSpaces[k]){claimedSpaces[k]=v;totalClaimed++;totalVol+=parseFloat(v.price||0);}});
+    JSON.parse(raw).forEach(([k,v])=>{
+      if(!claimedSpaces[k]){
+        claimedSpaces[k]=v;
+        totalClaimed++;
+        totalVol+=parseFloat(v.price||0);
+        // Restore boost canvas effect if pixel has a boost tier
+        if(v.boostTier&&v.boostTier>0){
+          const tierNames=['','bronze','silver','gold','wizard'];
+          boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze', activatedAt:v.boostActivatedAt||0};
+        }
+      }
+    });
+    loadBoosts(); // merge any globally saved boosts
     paintAll();updateStats();render();
   }catch(e){}
 }
@@ -1543,15 +1573,47 @@ function refreshSidebar(){
 
 // -- IMAGE UPLOAD ------------------------------------------
 let pendingImageDataUrl=null;
+function scaleImageToPixel(dataUrl, pixelW, pixelH, callback){
+  // Resize image to max 512x512 for clean storage
+  // aspect ratio is preserved, square crop centred
+  const SIZE = 512;
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    // Cover crop — fill square
+    const scale = Math.max(SIZE/img.width, SIZE/img.height);
+    const sw = img.width  * scale;
+    const sh = img.height * scale;
+    const sx = (SIZE - sw) / 2;
+    const sy = (SIZE - sh) / 2;
+    ctx.drawImage(img, sx, sy, sw, sh);
+    callback(canvas.toDataURL('image/jpeg', 0.82));
+  };
+  img.onerror = () => callback(dataUrl);
+  img.src = dataUrl;
+}
+
 function handleImageUpload(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
   reader.onload=ev=>{
-    pendingImageDataUrl=ev.target.result;
-    const prev=document.getElementById('uploadPreview');
-    prev.src=pendingImageDataUrl;prev.style.display='block';
-    document.getElementById('uploadText').style.display='none';
-    if(dragStart)refreshSidebar();
+    const raw=ev.target.result;
+    // Get pixel dimensions from current selection
+    const rect=dragStart&&dragEnd?getSelRect():{c1:0,r1:0,c2:0,r2:0};
+    const pw=Math.max(1,(rect.c2-rect.c1)+1);
+    const ph=Math.max(1,(rect.r2-rect.r1)+1);
+    scaleImageToPixel(raw, pw, ph, scaled=>{
+      pendingImageDataUrl=scaled;
+      const prev=document.getElementById('uploadPreview');
+      prev.src=scaled;prev.style.display='block';
+      document.getElementById('uploadText').style.display='none';
+      if(dragStart)refreshSidebar();
+    });
   };
   reader.readAsDataURL(file);
 }
@@ -2001,15 +2063,56 @@ function showBoostConfirmModal(tierId, tier, key){
 
 function applyBoost(tierId, key){
   const tier = BOOST_TIERS[tierId];
-  boostedSpaces[key] = { tier: tierId, activatedAt: Date.now() };
+  const tierNum = {bronze:1,silver:2,gold:3,wizard:4}[tierId]||0;
+
+  // Store in boostedSpaces (canvas effects)
+  const boostActivatedAt = Date.now();
+  boostedSpaces[key] = { tier: tierId, activatedAt: boostActivatedAt };
+
+  // Store boostTier on the pixel itself so it survives reconnects
+  if(claimedSpaces[key]){
+    claimedSpaces[key].boostTier = tierNum;
+    claimedSpaces[key].boostActivatedAt = boostActivatedAt;
+  }
+
+  // Persist both to localStorage
+  saveBoosts();
+  saveToStorage();
+
+  saveBoosts();  // persist to pw_boosts global store
   document.getElementById('boostModal')?.remove();
   renderActiveBoosts();
   render();
-  showToast(`⚡ ${tier.name} Boost applied! Effect active on the wall.`);
-  // Wizard boost → register in Hall of Fame permanently
-  if(tierId === 'wizard'){
-    registerWizardBoost(key);
-  }
+  showToast(`⚡ ${tier.name} Boost applied! Effect is permanent on the wall.`);
+  if(tierId === 'wizard') registerWizardBoost(key);
+}
+
+function saveBoosts(){
+  try{
+    // Save ALL boosts globally (not wallet-specific — boosts are permanent on the pixel)
+    const existing = JSON.parse(localStorage.getItem('pw_boosts')||'{}');
+    Object.assign(existing, boostedSpaces);
+    localStorage.setItem('pw_boosts', JSON.stringify(existing));
+  }catch(e){}
+}
+
+function loadBoosts(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('pw_boosts')||'{}');
+    const tierMap = {bronze:1,silver:2,gold:3,wizard:4};
+    Object.assign(boostedSpaces, saved);
+    // Sync boostTier back to ANY pixel in claimedSpaces that has a boost
+    Object.entries(saved).forEach(([key,bv])=>{
+      if(claimedSpaces[key]){
+        // Restore boost — never downgrade an existing boost
+        const existingTier = claimedSpaces[key].boostTier||0;
+        const savedTier = tierMap[bv.tier]||0;
+        claimedSpaces[key].boostTier = Math.max(existingTier, savedTier);
+        claimedSpaces[key].boostActivatedAt = bv.activatedAt||0;
+      }
+      // If pixel not in claimedSpaces, the boost still renders via boostedSpaces
+    });
+  }catch(e){}
 }
 
 function renderActiveBoosts(){
@@ -2519,6 +2622,28 @@ function openProfileEdit(key){
   }, 150);
 }
 
+
+function handleProfileImageUpload(e, key){
+  const file=e.target.files[0];if(!file)return;
+  const sp=claimedSpaces[key]||{};
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    scaleImageToPixel(ev.target.result, 1, 1, scaled=>{
+      // Save to this pixel
+      if(claimedSpaces[key]) claimedSpaces[key].imageDataUrl=scaled;
+      // Update preview in modal so owner sees it immediately
+      const preview=document.getElementById('pf_imgPreview');
+      if(preview) preview.innerHTML=`<img src="${scaled}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;"/>`;
+      // Paint on wall canvas immediately
+      const [col,row]=key.split(',').map(Number);
+      loadImg(scaled);
+      render();
+      saveToStorage();
+      showToast('✦ Photo updated!');
+    });
+  };
+  reader.readAsDataURL(file);
+}
 function openProfileEditModal(key){
   const [col, row] = key.split(',').map(Number);
   const prof = getProfile(key);
@@ -2543,7 +2668,14 @@ function openProfileEditModal(key){
       </div>
 
       <div class="pf-edit-row">
-        <label class="pf-edit-label">AVATAR URL</label>
+        <label class="pf-edit-label">PIXEL IMAGE</label>
+        <div id="pf_imgPreview" style="width:100%;height:120px;border:1px dashed rgba(91,33,182,.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px;overflow:hidden;cursor:pointer;background:rgba(17,13,34,.8);" onclick="document.getElementById('pf_imgFile').click()">
+          ${sp.imageDataUrl
+            ? `<img src="${sp.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;image-rendering:pixelated;"/>`
+            : `<span style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);">CLICK TO UPLOAD IMAGE</span>`}
+        </div>
+        <input type="file" id="pf_imgFile" accept="image/*" style="display:none;" onchange="handleProfileImageUpload(event,'${key}')"/>
+        <label class="pf-edit-label" style="margin-top:8px;">OR AVATAR URL</label>
         <input class="pf-edit-input" id="pf_avatar" placeholder="https://..." value="${prof.avatar||''}"/>
       </div>
 
@@ -2896,7 +3028,7 @@ const DEV_CENTER = {col:499, row:499, key:'499,499'};
 function activateDevCenter(){
   if(!walletAddress || walletAddress !== DEV_TEST_WALLET) return;
   const key = DEV_CENTER.key;
-  if(claimedSpaces[key]) return; // already set
+  if(claimedSpaces[key]?.txSig==='dev-test-pixel') return; // already set
 
   // Pre-populate center pixel for testing
   claimedSpaces[key] = {
@@ -2911,6 +3043,8 @@ function activateDevCenter(){
     devTest: true,
   };
   paintPixel(499, 499, '#e879f9');
+  totalClaimed++;
+  saveToStorage(); // persist so it survives page refresh
   render();
   showToast('✦ Dev pixel set at (499,499) — center of the wall!');
 
@@ -2943,6 +3077,21 @@ function jumpToCenter(){
 // ── END DEV TEST ──────────────────────────────────────────────────
 
 window.addEventListener('load',async()=>{
+  // Handle /profile/col/row URL — auto-open profile overlay
+  const profileMatch = window.location.pathname.match(/\/profile\/(\d+)[\/,](\d+)/);
+  if(profileMatch){
+    const pcol=parseInt(profileMatch[1]), prow=parseInt(profileMatch[2]);
+    // Wait for storage to load then show profile
+    setTimeout(()=>{
+      // Jump to the pixel first
+      zoom=8;
+      panX=pcol-(1000/zoom)/2;
+      panY=prow-(1000/zoom)/2;
+      clampPan(); render();
+      // Show profile overlay
+      showPixelProfile(pcol, prow);
+    }, 800);
+  }
   // Fetch real SOL price immediately and refresh every 60s
   fetchSolPrice();
   setInterval(fetchSolPrice, 60_000);
