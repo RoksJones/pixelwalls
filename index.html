@@ -10,247 +10,2955 @@
 <meta name="twitter:card" content="summary_large_image"/>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
 <style>
-/* Your existing CSS remains unchanged — kept for brevity */
 :root{--void:#0a0612;--deep:#110d22;--purple:#2d1b69;--violet:#5b21b6;--lav:#8b5cf6;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;--green:#4ade80;--white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;}
-/* ... (all your original styles here - no changes needed) ... */
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--white);font-family:'Press Start 2P',monospace;overflow-x:hidden;}
+.pixel-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(91,33,182,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(91,33,182,.04) 1px,transparent 1px);background-size:32px 32px;}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;animation:twinkle var(--d,3s) var(--del,0s) infinite;}
+@keyframes twinkle{0%,100%{opacity:.15}50%{opacity:1;transform:scale(1.5)}}
+.fp{position:fixed;width:6px;height:6px;pointer-events:none;z-index:0;opacity:0;animation:fp-rise var(--d,10s) var(--del,0s) linear infinite;}
+@keyframes fp-rise{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.5}90%{opacity:.3}100%{transform:translateY(-100px) rotate(720deg);opacity:0}}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(91,33,182,.4);backdrop-filter:blur(12px);gap:10px;}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0;}
+.logo-text{font-size:10px;color:var(--gold);letter-spacing:1px;}
+.nav-links{display:flex;gap:18px;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:7px;letter-spacing:1px;transition:color .2s;white-space:nowrap;}
+.nav-links a:hover{color:var(--lav);}
+.nav-right{display:flex;gap:6px;flex-shrink:0;}
+.nav-btn{background:transparent;border:1px solid;font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 11px;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;}
+.nbw{border-color:var(--lav);color:var(--lav);}.nbw:hover,.nbw.connected{background:var(--lav);color:var(--void);}
+.nbb{border-color:var(--gold);color:var(--gold);}.nbb:hover{background:rgba(251,191,36,.12);}
+
+/* HERO */
+.hero{position:relative;z-index:1;text-align:center;padding:52px 28px 36px;display:flex;flex-direction:column;align-items:center;}
+.wizard-wrap{position:relative;margin-bottom:26px;display:inline-flex;align-items:center;justify-content:center;}
+.wizard-svg{animation:wfloat 3s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(139,92,246,.7));image-rendering:pixelated;}
+@keyframes wfloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-12px) rotate(1deg)}}
+.magic-ring{position:absolute;border-radius:50%;border:1px solid;top:50%;left:50%;animation:ring-out 2.5s ease-out infinite;}
+@keyframes ring-out{0%{width:100px;height:100px;margin:-50px 0 0 -50px;opacity:.8}100%{width:280px;height:280px;margin:-140px 0 0 -140px;opacity:0}}
+.hero-badge{display:inline-block;background:rgba(232,121,249,.1);border:1px solid rgba(232,121,249,.4);color:var(--pink);font-size:7px;padding:7px 15px;margin-bottom:18px;letter-spacing:2px;animation:bglow 2s ease-in-out infinite;}
+@keyframes bglow{0%,100%{box-shadow:0 0 8px rgba(232,121,249,.2)}50%{box-shadow:0 0 24px rgba(232,121,249,.5)}}
+.hero-title{font-size:clamp(16px,3.5vw,30px);line-height:1.5;margin-bottom:14px;background:linear-gradient(135deg,var(--gold) 0%,var(--pink) 50%,var(--cyan) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-family:'VT323',monospace;font-size:21px;color:var(--muted);margin-bottom:30px;max-width:580px;line-height:1.6;}
+.hero-sub em{color:var(--gold);font-style:normal;}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-primary{background:linear-gradient(135deg,var(--violet),var(--pink));border:none;color:white;font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 24px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(139,92,246,.5);}
+.btn-outline{background:transparent;border:2px solid var(--gold);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:8px;padding:12px 24px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn-outline:hover{background:rgba(251,191,36,.1);transform:translateY(-2px);}
+
+/* STATS */
+.stats-strip{position:relative;z-index:1;display:flex;justify-content:center;gap:36px;flex-wrap:wrap;padding:18px 28px;background:rgba(17,13,34,.7);border-top:1px solid rgba(91,33,182,.3);border-bottom:1px solid rgba(91,33,182,.3);}
+.stat-pill .num{font-family:'VT323',monospace;font-size:26px;color:var(--cyan);}
+.stat-pill .lbl{font-size:6px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-align:center;}
+
+/* TICKER */
+.ticker{overflow:hidden;background:rgba(45,27,105,.4);padding:9px 0;border-bottom:1px solid rgba(91,33,182,.2);}
+.ticker-inner{display:flex;gap:60px;animation:scroll 28s linear infinite;white-space:nowrap;}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.tick{font-size:7px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;flex-shrink:0;}
+.tick .sym{color:var(--gold);}.tick .up{color:var(--green);}
+
+/* WALL */
+.wall-section{position:relative;z-index:1;padding:44px 0;background:rgba(17,13,34,.3);}
+.s-label{text-align:center;font-size:7px;color:var(--lav);letter-spacing:4px;margin-bottom:12px;}
+.s-title{text-align:center;font-size:clamp(13px,2.5vw,18px);margin-bottom:28px;line-height:1.6;}
+.wall-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:0 0 14px;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
+.ctrl-label{font-size:7px;color:var(--muted);}
+.ctrl-input{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.5);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;padding:7px 9px;width:76px;outline:none;text-align:center;}
+.ctrl-input:focus{border-color:var(--lav);}
+.qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:6px 8px;cursor:pointer;transition:all .2s;}
+.qbtn:hover,.qbtn.active{background:rgba(91,33,182,.4);border-color:var(--lav);color:var(--white);}
+.zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
+.zoom-hint span{color:var(--lav);}
+.wall-wrap{display:flex;gap:0;padding:0;max-width:1400px;margin:0 auto;width:100%;}
+.canvas-area{position:relative;flex:1;min-width:0;}
+#wallCanvas{display:block;cursor:crosshair;border:1px solid rgba(91,33,182,.4);}
+
+/* SIDEBAR */
+.sidebar{width:300px;flex-shrink:0;background:rgba(17,13,34,.92);border-left:1px solid rgba(91,33,182,.3);display:flex;flex-direction:column;max-height:920px;overflow-y:auto;}
+.sidebar-tabs{display:flex;border-bottom:1px solid rgba(91,33,182,.3);}
+.stab{flex:1;padding:11px 4px;font-size:7px;color:var(--muted);text-align:center;cursor:pointer;border:none;border-right:1px solid rgba(91,33,182,.2);background:none;font-family:'Press Start 2P',monospace;transition:all .2s;}
+.stab:last-child{border-right:none;}
+.stab.active{color:var(--gold);background:rgba(45,27,105,.4);}
+.stab:hover:not(.active){color:var(--lav);}
+.tab-panel{display:none;flex-direction:column;}
+.tab-panel.active{display:flex;}
+.sb-card{padding:14px;border-bottom:1px solid rgba(91,33,182,.2);}
+.sb-title{font-size:7px;color:var(--gold);margin-bottom:10px;letter-spacing:1px;}
+.space-preview{width:100%;height:86px;border:1px solid rgba(91,33,182,.4);display:flex;align-items:center;justify-content:center;font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:10px;overflow:hidden;position:relative;}
+.info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.info-key{font-size:6px;color:var(--muted);}
+.info-val{font-family:'VT323',monospace;font-size:15px;}
+.f-label{font-size:6px;color:var(--muted);margin-bottom:3px;letter-spacing:1px;}
+.f-input{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);color:var(--white);font-family:'VT323',monospace;font-size:15px;padding:7px 9px;margin-bottom:9px;outline:none;}
+.f-input:focus{border-color:var(--lav);}
+.upload-area{width:100%;height:64px;border:1px dashed rgba(139,92,246,.5);display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:9px;transition:all .2s;position:relative;overflow:hidden;}
+.upload-area:hover{border-color:var(--lav);color:var(--lav);}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.aBtn{width:100%;padding:10px;font-family:'Press Start 2P',monospace;font-size:7px;cursor:pointer;letter-spacing:1px;transition:all .2s;border:none;margin-bottom:7px;}
+.aBtn-primary{background:linear-gradient(135deg,var(--violet),var(--pink));color:white;}
+.aBtn-primary:hover{box-shadow:0 4px 14px rgba(139,92,246,.4);transform:translateY(-1px);}
+.aBtn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);}
+.aBtn-outline:hover{background:rgba(251,191,36,.1);}
+.aBtn-x{background:transparent;border:1px solid #1DA1F2;color:#1DA1F2;}
+.aBtn-x:hover{background:rgba(29,161,242,.08);}
+.aBtn-danger{background:transparent;border:1px solid var(--red);color:var(--red);font-size:6px;}
+.aBtn:disabled{opacity:.28;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+/* MY SPACES */
+.my-spaces-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:10px;}
+.space-tile{background:rgba(45,27,105,.25);border:1px solid rgba(91,33,182,.3);cursor:pointer;transition:all .2s;overflow:hidden;}
+.space-tile:hover{border-color:var(--lav);transform:scale(1.03);}
+.space-tile-img{width:100%;height:60px;object-fit:cover;display:block;}
+.space-tile-color{width:100%;height:60px;display:block;}
+.space-tile-info{padding:5px;font-family:'VT323',monospace;font-size:12px;}
+.space-tile-coord{color:var(--cyan);}
+.space-tile-size{color:var(--muted);font-size:11px;}
+.no-spaces{padding:22px;text-align:center;font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;}
+
+/* TIER */
+.tier-row{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:2.1;}
+.tier-now{color:var(--green);}
+
+/* TOKEN */
+.section{position:relative;z-index:1;padding:48px 28px;}
+.pump-card{max-width:560px;margin:0 auto;background:rgba(17,13,34,.95);border:1px solid rgba(232,121,249,.3);padding:32px;position:relative;}
+.pump-card::before{content:'';position:absolute;inset:-1px;z-index:-1;background:linear-gradient(135deg,var(--violet),var(--pink),var(--cyan),var(--violet));background-size:300% 300%;animation:bspin 5s linear infinite;}
+@keyframes bspin{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.ca-box{background:rgba(0,0,0,.5);border:1px solid rgba(91,33,182,.4);padding:11px;font-family:'VT323',monospace;font-size:13px;color:var(--cyan);word-break:break-all;margin:14px 0;cursor:pointer;transition:border-color .2s;}
+.ca-box:hover{border-color:var(--cyan);}
+.live-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0;}
+.ls{background:rgba(45,27,105,.3);border:1px solid rgba(91,33,182,.2);padding:11px 6px;text-align:center;}
+.ls .n{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
+.ls .l{font-size:6px;color:var(--muted);margin-top:2px;letter-spacing:1px;}
+.ext-links{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+.ext-link{flex:1;min-width:90px;padding:8px;font-family:'Press Start 2P',monospace;font-size:6px;cursor:pointer;letter-spacing:1px;text-align:center;text-decoration:none;border:1px solid;transition:all .2s;display:block;}
+.ext-link:hover{opacity:.75;}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;max-width:860px;margin:0 auto;}
+.f-card{background:rgba(17,13,34,.8);border:1px solid rgba(91,33,182,.3);padding:22px 18px;position:relative;transition:all .3s;}
+.f-card:hover{border-color:rgba(139,92,246,.6);transform:translateY(-3px);}
+.f-card::before{content:'';position:absolute;top:0;left:0;width:12px;height:12px;border-top:2px solid var(--lav);border-left:2px solid var(--lav);}
+.f-card::after{content:'';position:absolute;bottom:0;right:0;width:12px;height:12px;border-bottom:2px solid var(--lav);border-right:2px solid var(--lav);}
+.f-icon{font-size:22px;margin-bottom:10px;display:block;}
+.f-name{font-size:7px;color:var(--gold);margin-bottom:8px;letter-spacing:1px;}
+.f-desc{font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.5;}
+
+/* HOW */
+.steps{display:flex;max-width:880px;margin:0 auto;flex-wrap:wrap;}
+.step-item{flex:1;min-width:150px;padding:22px 16px;text-align:center;border-right:1px solid rgba(91,33,182,.2);}
+.step-item:last-child{border-right:none;}
+.step-num{width:38px;height:38px;border-radius:50%;background:rgba(45,27,105,.6);border:2px solid var(--lav);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--lav);margin:0 auto 12px;}
+.step-name{font-size:7px;color:var(--gold);margin-bottom:7px;line-height:1.6;}
+.step-desc{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.5;}
+
+/* LORE */
+.scroll-paper{max-width:640px;margin:0 auto;background:rgba(17,13,34,.7);border:1px solid rgba(251,191,36,.2);padding:32px;position:relative;font-family:'VT323',monospace;font-size:18px;color:var(--muted);line-height:1.9;}
+.scroll-paper em{color:var(--gold);font-style:normal;}
+.scroll-paper::before{content:'✦';position:absolute;top:11px;left:11px;color:var(--gold);}
+.scroll-paper::after{content:'✦';position:absolute;bottom:11px;right:11px;color:var(--gold);}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid rgba(91,33,182,.3);padding:32px;text-align:center;}
+footer .logo{font-size:11px;color:var(--gold);margin-bottom:13px;}
+footer .links{display:flex;gap:18px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+footer .links a{color:var(--lav);text-decoration:none;font-size:7px;transition:color .2s;}
+footer .links a:hover{color:var(--white);}
+footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204,.4);max-width:580px;margin:0 auto;}
+
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:1000;align-items:center;justify-content:center;padding:18px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--deep);border:2px solid var(--lav);padding:30px;max-width:400px;width:100%;position:relative;max-height:90vh;overflow-y:auto;}
+.modal-close{position:absolute;top:11px;right:14px;background:none;border:none;color:var(--muted);font-family:'Press Start 2P',monospace;font-size:11px;cursor:pointer;}
+.modal-close:hover{color:var(--white);}
+.modal-title{font-size:9px;color:var(--gold);margin-bottom:16px;line-height:1.5;}
+.price-showcase{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);padding:18px;text-align:center;margin:12px 0;}
+.price-sol{font-family:'VT323',monospace;font-size:36px;color:var(--gold);}
+.price-usd{font-size:7px;color:var(--muted);margin-top:4px;}
+.checklist{margin:12px 0;display:flex;flex-direction:column;gap:6px;}
+.check-item{font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;gap:7px;}
+.check-item::before{content:'✦';color:var(--lav);flex-shrink:0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;z-index:2000;background:rgba(45,27,105,.97);border:1px solid var(--lav);padding:11px 16px;font-size:7px;color:var(--white);max-width:272px;line-height:1.7;transform:translateX(200%);transition:transform .35s ease;}
+.toast.show{transform:translateX(0);}
+
+
+/* ── BOOST TIERS ─────────────────────────────────────────── */
+.boost-tiers{display:flex;flex-direction:column;gap:7px;}
+.boost-tier{border:1px solid;padding:10px 12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.boost-tier:hover{transform:translateX(3px);}
+.boost-tier-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.boost-tier-name{font-size:7px;letter-spacing:1px;}
+.boost-tier-cost{font-family:'VT323',monospace;font-size:15px;}
+.boost-tier-desc{font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.4;}
+.boost-tier-badge{position:absolute;top:0;right:0;font-size:5px;padding:3px 6px;letter-spacing:1px;}
+
+/* Tier colours */
+.tier-bronze{border-color:#cd7f32;}.tier-bronze .boost-tier-name{color:#cd7f32;}.tier-bronze .boost-tier-cost{color:#cd7f32;}
+.tier-silver{border-color:#c0c0c0;}.tier-silver .boost-tier-name{color:#c0c0c0;}.tier-silver .boost-tier-cost{color:#c0c0c0;}
+.tier-gold{border-color:#fbbf24;}.tier-gold .boost-tier-name{color:#fbbf24;}.tier-gold .boost-tier-cost{color:#fbbf24;}
+.tier-wizard{border-color:#e879f9;}.tier-wizard .boost-tier-name{color:#e879f9;}.tier-wizard .boost-tier-cost{color:#e879f9;}
+
+/* Canvas boost animations */
+@keyframes boost-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes boost-rainbow{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+
+
+/* ── PROFILE POPUP ──────────────────────────────────────────── */
+.profile-popup{
+  position:fixed;z-index:500;
+  background:rgba(17,13,34,.97);
+  border:1px solid rgba(139,92,246,.5);
+  padding:16px;width:220px;
+  pointer-events:auto;
+  animation:popup-in .15s ease-out;
+}
+@keyframes popup-in{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.profile-popup-avatar{width:48px;height:48px;border-radius:50%;border:2px solid var(--lav);object-fit:cover;display:block;margin-bottom:8px;}
+.profile-popup-avatar-placeholder{width:48px;height:48px;border-radius:50%;border:2px solid var(--lav);background:rgba(91,33,182,.4);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px;}
+.profile-popup-handle{font-size:9px;color:var(--gold);margin-bottom:2px;}
+.profile-popup-wallet{font-family:'VT323',monospace;font-size:13px;color:var(--muted);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;}
+.profile-popup-meta{font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.6;}
+.profile-popup-meta span{color:var(--cyan);}
+.profile-popup-actions{display:flex;gap:6px;margin-top:10px;}
+.profile-popup-btn{flex:1;padding:6px 4px;font-family:'Press Start 2P',monospace;font-size:5px;cursor:pointer;letter-spacing:.5px;border:none;transition:all .2s;}
+
+/* ── INVITE / REFERRAL ──────────────────────────────────────── */
+.invite-card{background:rgba(17,13,34,.9);border:1px solid rgba(251,191,36,.3);padding:16px;margin:0 0 14px;}
+.invite-link-box{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.4);padding:8px 10px;font-family:'VT323',monospace;font-size:13px;color:var(--cyan);word-break:break-all;cursor:pointer;margin:8px 0;}
+.invite-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;}
+.invite-stat{background:rgba(45,27,105,.3);padding:8px;text-align:center;}
+.invite-stat .n{font-family:'VT323',monospace;font-size:20px;color:var(--gold);}
+.invite-stat .l{font-size:5px;color:var(--muted);letter-spacing:.5px;}
+
+
+/* ── WIZARD HALL OF FAME ─────────────────────────────────────────── */
+.wizard-hall{position:relative;z-index:1;padding:52px 28px;background:rgba(10,6,18,.6);}
+.wizard-hall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;max-width:1100px;margin:0 auto;}
+.wizard-card{background:rgba(17,13,34,.9);border:2px solid;padding:18px 16px;position:relative;overflow:hidden;transition:all .3s;cursor:pointer;}
+.wizard-card::before{content:'';position:absolute;inset:-1px;z-index:-1;background:linear-gradient(135deg,#e879f9,#22d3ee,#fbbf24,#e879f9);background-size:300% 300%;animation:bspin 3s linear infinite;border-radius:inherit;}
+.wizard-card:hover{transform:translateY(-3px);box-shadow:0 0 40px rgba(232,121,249,.4);}
+.wiz-rank{position:absolute;top:8px;right:10px;font-size:6px;color:rgba(232,121,249,.6);letter-spacing:2px;}
+.wiz-pixel-preview{width:56px;height:56px;border:2px solid #e879f9;flex-shrink:0;overflow:hidden;image-rendering:pixelated;animation:boost-rainbow 3s linear infinite;}
+@keyframes boost-rainbow{0%{filter:hue-rotate(0deg) brightness(1.2)}100%{filter:hue-rotate(360deg) brightness(1.2)}}
+.wiz-info{flex:1;min-width:0;}
+.wiz-name{font-size:8px;color:#e879f9;margin-bottom:5px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wiz-handle{font-family:'VT323',monospace;font-size:16px;color:var(--cyan);margin-bottom:3px;}
+.wiz-coord{font-family:'VT323',monospace;font-size:14px;color:var(--muted);}
+.wiz-clicks{font-family:'VT323',monospace;font-size:14px;color:var(--gold);}
+.wiz-badge{display:inline-block;background:rgba(232,121,249,.15);border:1px solid rgba(232,121,249,.4);color:#e879f9;font-size:5px;padding:2px 8px;letter-spacing:2px;margin-top:5px;}
+.wiz-empty{text-align:center;font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:40px;grid-column:1/-1;line-height:2;}
+
+
+
+
+/* ── SNS.ID STYLE PIXEL PROFILE ─────────────────────────────────── */
+.pixel-profile-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(10,6,18,.85);
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;
+}
+.pixel-profile{
+  background:#110d22;
+  border:1px solid rgba(91,33,182,.5);
+  width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  position:relative;
+}
+.pf-banner{
+  height:110px;
+  background:linear-gradient(135deg,#2d1b69,#1d0940,#0a0612);
+  position:relative;overflow:hidden;
+}
+.pf-banner-pixel{
+  position:absolute;inset:0;
+  display:grid;grid-template-columns:repeat(8,1fr);
+  grid-template-rows:repeat(3,1fr);opacity:.3;
+}
+.pf-banner-pixel span{display:block;}
+.pf-avatar-wrap{
+  position:absolute;bottom:-32px;left:20px;
+}
+.pf-avatar{
+  width:72px;height:72px;border-radius:0;
+  border:3px solid #110d22;
+  background:rgba(91,33,182,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;overflow:hidden;image-rendering:pixelated;
+}
+.pf-avatar img{width:100%;height:100%;object-fit:cover;}
+.pf-close{
+  position:absolute;top:8px;right:8px;
+  background:rgba(10,6,18,.6);border:1px solid rgba(91,33,182,.4);
+  color:#9d8ccc;font-family:'Press Start 2P',monospace;font-size:8px;
+  padding:6px 10px;cursor:pointer;
+}
+.pf-body{padding:44px 20px 20px;}
+.pf-name{font-size:12px;color:#f5f0ff;margin-bottom:4px;}
+.pf-coord{font-family:'VT323',monospace;font-size:16px;color:#9d8ccc;margin-bottom:6px;}
+.pf-rank{font-size:7px;margin-bottom:12px;letter-spacing:1px;}
+.pf-desc{
+  font-family:'VT323',monospace;font-size:16px;color:#9d8ccc;
+  line-height:1.6;margin-bottom:14px;padding-bottom:14px;
+  border-bottom:1px solid rgba(91,33,182,.3);
+}
+.pf-socials{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.pf-social-btn{
+  display:flex;align-items:center;gap:5px;
+  border:1px solid rgba(91,33,182,.3);
+  padding:5px 10px;cursor:pointer;transition:all .2s;
+  font-family:'VT323',monospace;font-size:14px;color:#9d8ccc;
+  text-decoration:none;
+}
+.pf-social-btn:hover{border-color:var(--lav);color:var(--white);}
+.pf-meta{
+  font-family:'VT323',monospace;font-size:14px;color:#9d8ccc;
+  line-height:1.8;margin-bottom:14px;
+  padding:10px;background:rgba(91,33,182,.08);
+}
+.pf-meta span{color:var(--cyan);}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.pf-btn{
+  flex:1;min-width:100px;
+  border:1px solid rgba(91,33,182,.4);
+  background:transparent;color:#9d8ccc;
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  padding:10px 8px;cursor:pointer;letter-spacing:.5px;transition:all .2s;
+}
+.pf-btn:hover{background:rgba(91,33,182,.2);color:var(--white);}
+.pf-btn.primary{border-color:var(--gold);color:var(--gold);}
+.pf-btn.primary:hover{background:rgba(251,191,36,.15);}
+.pf-btn.danger{border-color:var(--red);color:var(--red);}
+
+/* Profile EDIT form inside My Wall tab */
+.pf-edit-form{padding:14px;}
+.pf-edit-section{font-size:7px;color:var(--cyan);letter-spacing:2px;margin:16px 0 10px;}
+.pf-edit-row{margin-bottom:10px;}
+.pf-edit-label{font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:5px;display:block;}
+.pf-edit-input{
+  width:100%;background:rgba(0,0,0,.3);
+  border:1px solid rgba(91,33,182,.3);
+  color:var(--white);font-family:'VT323',monospace;font-size:15px;
+  padding:8px 10px;outline:none;transition:border-color .2s;
+}
+.pf-edit-input:focus{border-color:var(--lav);}
+.pf-edit-input::placeholder{color:rgba(157,140,204,.4);}
+.pf-color-row{display:flex;gap:8px;align-items:center;}
+.pf-color-preview{width:36px;height:36px;border:1px solid rgba(91,33,182,.3);flex-shrink:0;}
+
+@media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
 </style>
 </head>
 <body>
-<!-- Your entire HTML body remains exactly the same until the script section -->
-<!-- ... (nav, hero, stats, ticker, wall, token section, etc.) ... -->
+<div class="pixel-bg"></div>
+<div class="stars" id="stars"></div>
+<div class="fp" style="left:7%;--d:9s;--del:0s;background:#8b5cf6;"></div>
+<div class="fp" style="left:23%;--d:7s;--del:2s;background:#e879f9;"></div>
+<div class="fp" style="left:60%;--d:11s;--del:1s;background:#fbbf24;"></div>
+<div class="fp" style="left:82%;--d:8s;--del:3s;background:#22d3ee;"></div>
 
-<!-- In the TOKEN section, I added a Total Liquidity row for the 3 pools -->
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:860px;margin:0 auto 28px;padding:0 4px;">
-  <!-- existing ls blocks ... -->
-  <div class="ls" style="padding:16px 10px;">
-    <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">TOTAL LIQUIDITY</div>
-    <div class="n" id="totalLiq" style="font-size:18px;color:var(--pink);">—</div>
-    <div style="font-size:6px;color:var(--muted);margin-top:4px;">
-      <a href="https://solscan.io/account/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank" style="color:var(--cyan);">Main Pair</a> • 
-      <a href="https://solscan.io/account/GMmywMEB35GrCadf5TqxN5GU9vVQT3VheiEE1dF4CmBp" target="_blank" style="color:var(--cyan);">Pool 1</a> • 
-      <a href="https://solscan.io/account/A2o487PSnxgiHE8TuWW3tySUQHdRsXEi5o9PaSJdPMcW" target="_blank" style="color:var(--cyan);">Pool 2</a>
+<nav>
+  <a class="nav-logo" href="#">
+    <svg width="32" height="32" viewBox="0 0 16 16" style="image-rendering:pixelated;">
+      <rect x="7" y="1" width="2" height="2" fill="#fbbf24"/><rect x="6" y="3" width="4" height="2" fill="#fbbf24"/>
+      <rect x="5" y="5" width="6" height="2" fill="#8b5cf6"/><rect x="4" y="7" width="8" height="1" fill="#5b21b6"/>
+      <rect x="3" y="8" width="10" height="1" fill="#2d1b69"/><rect x="7" y="2" width="2" height="1" fill="#fff"/>
+      <rect x="5" y="9" width="2" height="2" fill="#22d3ee"/><rect x="9" y="9" width="2" height="2" fill="#22d3ee"/>
+      <rect x="7" y="12" width="2" height="2" fill="#9d8ccc"/><rect x="13" y="5" width="1" height="3" fill="#fbbf24"/>
+    </svg>
+    <span class="logo-text">PIXELWALLS</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#wall">THE WALL</a></li>
+    <li><a href="#token">$PIXEL</a></li>
+    <li><a href="#how">HOW IT WORKS</a></li>
+    <li><a href="#lore">LORE</a></li>
+    <li><a href="#hall" style="color:#e879f9;">🔮 HALL OF FAME</a></li>
+    <li><a href="tokenomics.html" style="color:#22d3ee;">📊 TOKENOMICS</a></li>
+    <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24;font-weight:bold;">WHITE PAPER</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
+    
+    <button class="nav-btn nbb" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">BUY $PIXEL ▶</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wizard-wrap">
+    <div class="magic-ring" style="border-color:rgba(139,92,246,.5);animation-delay:0s;"></div>
+    <div class="magic-ring" style="border-color:rgba(232,121,249,.3);animation-delay:.9s;"></div>
+    <svg class="wizard-svg" width="140" height="178" viewBox="0 0 16 20" style="image-rendering:pixelated;">
+      <rect x="7" y="0" width="2" height="1" fill="#fbbf24"/><rect x="6" y="1" width="4" height="1" fill="#fbbf24"/>
+      <rect x="5" y="2" width="6" height="1" fill="#e879f9"/><rect x="4" y="3" width="8" height="1" fill="#8b5cf6"/>
+      <rect x="3" y="4" width="10" height="1" fill="#7c3aed"/><rect x="2" y="5" width="12" height="1" fill="#5b21b6"/>
+      <rect x="1" y="6" width="14" height="1" fill="#4c1d95"/><rect x="0" y="7" width="16" height="1" fill="#2d1b69"/>
+      <rect x="6" y="1" width="1" height="1" fill="#fff"/>
+      <rect x="3" y="8" width="10" height="4" fill="#d4a76a"/><rect x="3" y="8" width="10" height="2" fill="#b45309"/>
+      <rect x="4" y="9" width="2" height="2" fill="#111"/><rect x="10" y="9" width="2" height="2" fill="#111"/>
+      <rect x="4" y="9" width="1" height="1" fill="#22d3ee"/><rect x="10" y="9" width="1" height="1" fill="#22d3ee"/>
+      <rect x="3" y="12" width="10" height="1" fill="#f0e6ff"/><rect x="4" y="13" width="8" height="1" fill="#e8d5ff"/>
+      <rect x="2" y="12" width="12" height="6" fill="#3730a3"/><rect x="1" y="13" width="14" height="5" fill="#3730a3"/>
+      <rect x="3" y="12" width="1" height="6" fill="#fbbf24"/><rect x="12" y="12" width="1" height="6" fill="#fbbf24"/>
+      <rect x="6" y="14" width="1" height="1" fill="#e879f9"/><rect x="9" y="15" width="1" height="1" fill="#22d3ee"/>
+      <rect x="7" y="16" width="1" height="1" fill="#fbbf24"/>
+      <rect x="14" y="10" width="1" height="4" fill="#92400e"/>
+      <rect x="13" y="9" width="1" height="1" fill="#fbbf24"/><rect x="15" y="9" width="1" height="1" fill="#22d3ee"/>
+    </svg>
+  </div>
+  <div class="hero-badge">✦ LIVE ON SOLANA × PUMP.FUN ✦</div>
+  <h1 class="hero-title">THE WIZARD'S<br/>ETERNAL WALL</h1>
+  <p class="hero-sub"><em>1,000,000 permanent spaces</em> on Solana — forever.<br/>Upload your image. Set your link. Own it. Sell it anytime.</p>
+  <div class="cta-row">
+    <button class="btn-primary" onclick="document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ CLAIM YOUR SPACE</button>
+    <button class="btn-outline" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">🔮 BUY $PIXEL</button>
+  </div>
+</section>
+
+<div class="stats-strip">
+  <div class="stat-pill"><div class="num" id="statClaimed">0</div><div class="lbl">SPACES CLAIMED</div></div>
+  <div class="stat-pill"><div class="num" id="statAvail">1,000,000</div><div class="lbl">AVAILABLE</div></div>
+  <div class="stat-pill"><div class="num" id="statVol">0 SOL</div><div class="lbl">WALL VOLUME</div></div>
+  <div class="stat-pill"><div class="num" id="statPrice" style="color:var(--gold)">—</div><div class="lbl">$PIXEL PRICE</div></div>
+  <div class="stat-pill"><div class="num" id="statMcap">—</div><div class="lbl">MARKET CAP</div></div>
+  <div class="stat-pill"><div class="num" id="statChange">—</div><div class="lbl">PRICE 24H</div></div>
+</div>
+
+<div class="ticker"><div class="ticker-inner">
+  <span class="tick"><span class="sym">$PIXEL</span><span class="up">LIVE ON PUMP.FUN</span></span>
+  <span class="tick"><span class="sym">PIXELWALLS.XYZ</span>THE ETERNAL WALL</span>
+  <span class="tick">CA: <span class="sym">7QaS...pump</span></span>
+  <span class="tick">FROM <span class="sym">0.01 SOL</span> PER PIXEL</span>
+  <span class="tick">UPLOAD YOUR IMAGE — <span class="up">YOUR SPACE FOREVER</span></span>
+  <span class="tick">1,000,000 SPACES — <span class="sym">CLAIM EARLY</span></span>
+  <span class="tick">VERIFY YOUR <span class="sym">X ACCOUNT</span></span>
+  <span class="tick"><span class="sym">$PIXEL</span><span class="up">LIVE ON PUMP.FUN</span></span>
+  <span class="tick"><span class="sym">PIXELWALLS.XYZ</span>THE ETERNAL WALL</span>
+  <span class="tick">CA: <span class="sym">7QaS...pump</span></span>
+  <span class="tick">FROM <span class="sym">0.01 SOL</span> PER PIXEL</span>
+  <span class="tick">UPLOAD YOUR IMAGE — <span class="up">YOUR SPACE FOREVER</span></span>
+  <span class="tick">1,000,000 SPACES — <span class="sym">CLAIM EARLY</span></span>
+  <span class="tick">VERIFY YOUR <span class="sym">X ACCOUNT</span></span>
+</div></div>
+
+<section class="wall-section" id="wall">
+  <p class="s-label" style="padding:0;">✦ THE ETERNAL WALL ✦</p>
+  <h2 class="s-title">1,000,000 SPACES — CLICK TO CLAIM</h2>
+  <div class="wall-controls">
+    <span class="ctrl-label">PIXELS TO BUY:</span>
+    <input class="ctrl-input" type="number" id="pixelCount" value="1" min="1" max="10000" oninput="onCountChange(this.value)"/>
+    <div style="display:flex;gap:5px;">
+      <button class="qbtn active" onclick="setCount(1,this)">1</button>
+      <button class="qbtn" onclick="setCount(5,this)">5</button>
+      <button class="qbtn" onclick="setCount(10,this)">10</button>
+      <button class="qbtn" onclick="setCount(25,this)">25</button>
+      <button class="qbtn" onclick="setCount(100,this)">100</button>
+      <button class="qbtn" onclick="setCount(500,this)">500</button>
     </div>
+    <span class="ctrl-label" style="margin-left:8px;">ZOOM:</span>
+    <button class="qbtn" onclick="zoomBy(2)">＋</button>
+    <button class="qbtn" onclick="zoomBy(0.5)">－</button>
+    <button class="qbtn" onclick="resetZoom()">FIT</button>
+  </div>
+  <div class="zoom-hint">
+    <span>🖱 Scroll=zoom · Alt+Drag=pan · Click or Drag=select pixels</span>
+    <span id="zoomLabel">Zoom: 1×</span>
+    <span id="cursorCoord" style="color:var(--cyan);">Hover to see coords</span>
+    <span id="selInfo" style="color:var(--pink);"></span>
+  </div>
+  <div class="wall-wrap">
+    <div class="canvas-area">
+      <canvas id="wallCanvas" style="max-width:100%;"></canvas>
+
+    </div>
+    <div class="sidebar">
+      <div class="sidebar-tabs">
+        <button class="stab active" onclick="switchTab('select',this)">SELECT</button>
+        <button class="stab" onclick="switchTab('mywall',this)">MY WALL</button>
+        <button class="stab" onclick="switchTab('boost',this)">BOOST ⚡</button>
+        <button class="stab" onclick="switchTab('merge',this);updateMergeTab();renderMyClusters();">MERGE ◈</button>
+        <button class="stab" onclick="switchTab('invite',this)">INVITE</button>
+      </div>
+      <!-- SELECT TAB -->
+      <div class="tab-panel active" id="tab-select">
+        <div class="sb-card">
+          <div class="sb-title">✦ SELECTED SPACE</div>
+          <div class="space-preview" id="spacePreview"><span id="previewText">Click the wall to select</span></div>
+          <div class="info-row"><span class="info-key">TOP-LEFT</span><span class="info-val" id="infoCoord" style="color:var(--cyan);">—</span></div>
+          <div class="info-row"><span class="info-key">SIZE</span><span class="info-val" id="infoSize" style="color:var(--lav);">—</span></div>
+          <div class="info-row"><span class="info-key">STATUS</span><span class="info-val" id="infoStatus">—</span></div>
+          <div class="info-row"><span class="info-key">PRICE</span><span class="info-val" id="infoPrice" style="color:var(--gold);">—</span></div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ CUSTOMIZE YOUR SPACE</div>
+          <div class="f-label">UPLOAD IMAGE (optional)</div>
+          <div class="upload-area" id="uploadArea">
+            <span id="uploadText">⬆ Click to upload image</span>
+            <img id="uploadPreview" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"/>
+            <input type="file" id="imageFile" accept="image/*" onchange="handleImageUpload(event)"/>
+          </div>
+          <div class="f-label">BACKGROUND COLOR</div>
+          <input type="color" id="colorPicker" value="#8b5cf6" style="width:100%;height:30px;cursor:pointer;border:1px solid rgba(91,33,182,.4);background:none;padding:2px;margin-bottom:9px;"/>
+          <div class="f-label">YOUR URL (optional)</div>
+          <input class="f-input" id="urlInput" placeholder="https://yourproject.xyz"/>
+          <button class="aBtn aBtn-primary" id="claimBtn" onclick="claimSpace()" disabled>🔮 CLAIM THIS SPACE</button>
+          
+          <button class="aBtn aBtn-danger" onclick="clearSelection()">✕ CLEAR</button>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ PRICE TIERS</div>
+          <div class="tier-row">
+            <div class="tier-now">0–100K &nbsp;→ 0.01 SOL ✦ NOW</div>
+            <div>100K–300K → 0.03 SOL</div>
+            <div>300K–600K → 0.07 SOL</div>
+            <div>600K–900K → 0.15 SOL</div>
+            <div>900K–1M &nbsp;→ 0.50 SOL</div>
+          </div>
+        </div>
+      </div>
+      <!-- MY WALL TAB -->
+      <div class="tab-panel" id="tab-mywall">
+        <div class="sb-card">
+          <div class="sb-title">✦ MY RANK</div>
+          <div id="myRankDisplay" style="font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:4px 0;">Connect wallet to see rank.</div>
+        </div>
+        <div class="sb-card"><div class="sb-title">✦ MY SPACES</div><div id="myWallSummary" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);"></div></div>
+        <div id="mySpacesGrid" class="my-spaces-grid"></div>
+      </div>
+
+      <!-- BOOST TAB -->
+      <div class="tab-panel" id="tab-boost">
+        <div class="sb-card">
+          <div class="sb-title">⚡ BOOST WITH $PIXEL</div>
+          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
+            Spend $PIXEL to make your space stand out on the wall. Boosted pixels get visual effects that draw attention. $PIXEL used for boosts is sent to the agent wallet and held until manually burned.
+          </div>
+          <div id="boostSpaceInfo" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">Select your space first → then pick a boost.</div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ BOOST TIERS</div>
+          <div class="boost-tiers">
+
+            <div class="boost-tier tier-bronze" onclick="selectBoost('bronze')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">BRONZE BOOST</span>
+                <span class="boost-tier-cost">10K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Glowing border around your space. Visible at any zoom level.</div>
+            </div>
+
+            <div class="boost-tier tier-silver" onclick="selectBoost('silver')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">SILVER BOOST</span>
+                <span class="boost-tier-cost">50K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Pulsing glow + 2× display size on the minimap. Hard to miss.</div>
+            </div>
+
+            <div class="boost-tier tier-gold" onclick="selectBoost('gold')">
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">GOLD BOOST</span>
+                <span class="boost-tier-cost">250K $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Animated gold shimmer + featured in the live activity feed permanently.</div>
+            </div>
+
+            <div class="boost-tier tier-wizard" onclick="selectBoost('wizard')">
+              <div class="boost-tier-badge" style="background:rgba(232,121,249,.2);color:#e879f9;">LEGENDARY</div>
+              <div class="boost-tier-header">
+                <span class="boost-tier-name">WIZARD BOOST</span>
+                <span class="boost-tier-cost">1M $PIXEL</span>
+              </div>
+              <div class="boost-tier-desc">Rainbow animation + giant border + pinned to top of wall homepage forever. The archmage himself notices.</div>
+            </div>
+
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR ACTIVE BOOSTS</div>
+          <div id="activeBoostsList" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">No active boosts yet.</div>
+        </div>
+        <div class="sb-card">
+          <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204,.5);line-height:1.7;">
+            $PIXEL used for boosts is held in the agent wallet until the Archmage manually burns it. No distributions. No promises. Just fire.
+          </div>
+        </div>
+
+      <!-- INVITE TAB -->
+      <!-- MERGE TAB -->
+      <div class="tab-panel" id="tab-merge">
+        <div class="sb-card">
+          <div class="sb-title">◈ MERGE PIXELS</div>
+          <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
+            Select a rectangular block of pixels you own (2×2 minimum, 10×10 maximum) to merge into a single cluster NFT.
+          </div>
+          <div id="mergeStatus" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">
+            Select pixels on the wall first.
+          </div>
+          <div id="mergeInfo" style="display:none;margin-bottom:10px;">
+            <div class="info-row"><span class="info-key">SELECTION</span><span class="info-val" id="mergeSelInfo">—</span></div>
+            <div class="info-row"><span class="info-key">YOUR PIXELS</span><span class="info-val" id="mergeOwnedCount">—</span></div>
+            <div class="info-row"><span class="info-key">SIZE</span><span class="info-val" id="mergeSize">—</span></div>
+          </div>
+          <button class="aBtn aBtn-primary" id="mergeBtnExecute" disabled onclick="executeMerge()" style="margin-bottom:8px;">◈ MERGE INTO CLUSTER NFT</button>
+          <div style="font-family:'VT323',monospace;font-size:12px;color:var(--muted);line-height:1.6;">
+            ✦ Minimum: 2×2 (4 pixels)<br/>
+            ✦ Maximum: 10×10 (100 pixels)<br/>
+            ✦ All pixels must be yours<br/>
+            ✦ Merging is permanent — pixels become a single NFT<br/>
+            ✦ Cluster NFT is tradeable as one unit
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ MY CLUSTERS</div>
+          <div id="myClusters" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">No clusters yet.</div>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-invite">
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR WIZARD RANK</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+            <div style="font-family:'VT323',monospace;font-size:42px;line-height:1;" id="inviteLevel">0</div>
+            <div>
+              <div style="font-size:9px;letter-spacing:1px;margin-bottom:3px;" id="inviteLevelName">Wanderer</div>
+              <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);" id="inviteLevelDesc">Yet to find your first follower.</div>
+            </div>
+          </div>
+          <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);margin-bottom:4px;" id="inviteProgress"></div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR INVITE LINK</div>
+          <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px;">
+            Own a pixel to unlock your link. A referral earns reward points only when the invited user has <span style="color:var(--gold);">bought a pixel</span> AND <span style="color:var(--cyan);">verified X</span>.
+          </div>
+          <div id="inviteLinkBox" class="invite-link-box" onclick="copyInviteLink()" title="Click to copy">Buy a pixel to unlock your invite link</div>
+          <button class="aBtn aBtn-outline" style="font-size:6px;" onclick="copyInviteLink()">COPY INVITE LINK</button>
+          <button class="aBtn aBtn-x" style="font-size:6px;margin-top:6px;" onclick="shareOnX()">𝕏 SHARE ON X</button>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ INVITE STATS</div>
+          <div class="invite-stats">
+            <div class="invite-stat"><div class="n" id="inviteCount">0</div><div class="l">QUALIFIED</div></div>
+            <div class="invite-stat"><div class="n" id="invitePending">0</div><div class="l">PENDING</div></div>
+            <div class="invite-stat"><div class="n" id="inviteChain">—</div><div class="l">INVITED BY</div></div>
+          </div>
+        </div>
+        <div class="sb-card">
+          <div class="sb-title">✦ YOUR INVITES</div>
+          <div id="inviteList" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">
+            No invites yet. Share your link!
+          </div>
+        </div>
+        <div class="sb-card">
+          <div style="font-family:'VT323',monospace;font-size:12px;color:rgba(157,140,204,.4);line-height:1.7;">
+            Levels and rewards announced by @pixelwallsxyz. Your invite tree is permanent — early supporters will be remembered by the Archmage.
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="token" style="background:rgba(17,13,34,.3);">
+  <p class="s-label">✦ THE TOKEN ✦</p>
+  <h2 class="s-title">$PIXEL — LIVE MARKET DATA</h2>
+
+  <!-- LIVE STATS ROW -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-width:860px;margin:0 auto 28px;padding:0 4px;">
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">PRICE USD</div>
+      <div class="n" id="mcap" style="font-size:18px;color:var(--gold);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">MARKET CAP</div>
+      <div class="n" id="dexMcap" style="font-size:18px;color:var(--cyan);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">VOLUME 24H</div>
+      <div class="n" id="vol24" style="font-size:18px;color:var(--lav);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">LIQUIDITY</div>
+      <div class="n" id="dexLiq" style="font-size:18px;color:var(--pink);">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">PRICE CHANGE 24H</div>
+      <div class="n" id="dexChange" style="font-size:18px;">—</div>
+    </div>
+    <div class="ls" style="padding:16px 10px;">
+      <div style="font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">BUYS / SELLS 24H</div>
+      <div class="n" id="holders" style="font-size:18px;color:var(--white);">—</div>
+    </div>
+  </div>
+
+  <!-- DEXSCREENER CHART EMBED -->
+  <div style="max-width:860px;margin:0 auto 24px;border:1px solid rgba(91,33,182,.4);overflow:hidden;">
+    <div style="background:rgba(17,13,34,.8);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(91,33,182,.3);">
+      <span style="font-size:7px;color:var(--gold);letter-spacing:1px;">✦ LIVE CHART — DEXSCREENER</span>
+      <a href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank" style="font-size:6px;color:var(--lav);text-decoration:none;letter-spacing:1px;">OPEN FULL CHART ↗</a>
+    </div>
+    <style>#dexscreener-embed{position:relative;width:100%;padding-bottom:125%;}@media(min-width:1400px){#dexscreener-embed{padding-bottom:65%;}}#dexscreener-embed iframe{position:absolute;width:100%;height:100%;top:0;left:0;border:0;}</style>
+    <div id="dexscreener-embed">
+      <iframe src="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE?embed=1&loadChartSettings=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=0&chartType=usd&interval=15"></iframe>
+    </div>
+  </div>
+
+  <!-- CA + BUY BUTTONS -->
+  <div style="max-width:860px;margin:0 auto;">
+    <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:5px;text-align:center;">CONTRACT ADDRESS</div>
+    <div class="ca-box" id="caBox" onclick="copyCA()" title="Click to copy" style="max-width:860px;text-align:center;font-size:15px;">
+      7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+      <button class="aBtn aBtn-primary" style="flex:2;min-width:200px;font-size:8px;padding:14px;" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">⚡ BUY $PIXEL ON PUMP.FUN</button>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--cyan);color:var(--cyan);padding:14px;" href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank">📈 DEXSCREENER</a>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--lav);color:var(--lav);padding:14px;" href="https://gmgn.ai/sol/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">📊 GMGN</a>
+      <a class="ext-link" style="flex:1;min-width:100px;border-color:var(--muted);color:var(--muted);padding:14px;" href="https://solscan.io/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">🔍 SOLSCAN</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <p class="s-label">✦ THE MAGIC ✦</p>
+  <h2 class="s-title">WHAT THE WALL OFFERS</h2>
+  <div class="features-grid">
+    <div class="f-card"><span class="f-icon">⛓️</span><p class="f-name">PERMANENT ON-CHAIN</p><p class="f-desc">Your space is a Solana NFT. It exists as long as the blockchain does. No servers. No expiry.</p></div>
+    <div class="f-card"><span class="f-icon">🖼️</span><p class="f-name">UPLOAD ANY IMAGE</p><p class="f-desc">Upload your logo, art or photo. It lives on your pixels permanently — visible to all visitors.</p></div>
+    
+    <div class="f-card"><span class="f-icon">💰</span><p class="f-name">RESELL ANYTIME</p><p class="f-desc">List your space at any price. Edit it, hold it, or flip it — it's your NFT to do with as you wish.</p></div>
+    <div class="f-card"><span class="f-icon">⚡</span><p class="f-name">$PIXEL UTILITY</p><p class="f-desc">Use $PIXEL to boost your space — glowing borders, animations, minimap prominence, and legendary effects. 4 tiers. 10K to 1M $PIXEL.</p></div>
+    <div class="f-card"><span class="f-icon">📈</span><p class="f-name">BONDING CURVE</p><p class="f-desc">Starts at 0.01 SOL per pixel. Rises through 5 tiers as the wall fills. Early = cheapest. Always.</p></div>
+  </div>
+</section>
+
+<section class="section" id="how" style="background:rgba(17,13,34,.3);">
+  <p class="s-label">✦ THE PROCESS ✦</p>
+  <h2 class="s-title">HOW IT WORKS</h2>
+  <div class="steps">
+    <div class="step-item"><div class="step-num">1</div><div class="step-name">CONNECT WALLET</div><div class="step-desc">Phantom, Solflare, or Backpack. No signup required.</div></div>
+    <div class="step-item"><div class="step-num">2</div><div class="step-name">CHOOSE PIXELS</div><div class="step-desc">Enter how many pixels you want. Click the wall to place them.</div></div>
+    <div class="step-item"><div class="step-num">3</div><div class="step-name">UPLOAD IMAGE</div><div class="step-desc">Upload your logo or art. It fills your claimed area permanently.</div></div>
+    <div class="step-item"><div class="step-num">4</div><div class="step-name">PAY IN SOL</div><div class="step-desc">Approve in your wallet. 0.01 SOL per pixel to start. 90% to treasury, 10% to agent.</div></div>
+    <div class="step-item"><div class="step-num">5</div><div class="step-name">OWN FOREVER</div><div class="step-desc">Your NFT. Edit it, flex it, or resell. Yours forever.</div></div>
+  </div>
+</section>
+
+
+<!-- WIZARD HALL OF FAME -->
+<section class="wizard-hall" id="hall">
+  <p class="s-label">✦ THE ARCHMAGE NOTICES ✦</p>
+  <h2 class="s-title" style="background:linear-gradient(135deg,#e879f9,#fbbf24,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+    WIZARD BOOST — HALL OF FAME
+  </h2>
+  <p style="text-align:center;font-family:'VT323',monospace;font-size:18px;color:var(--muted);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7;">
+    These pixels hold the <em style="color:#e879f9;font-style:normal;">Wizard Boost</em> — 1M $PIXEL burned for permanent legend status. Ranked by engagement. The boost lives in the pixel forever.
+  </p>
+  <div class="wizard-hall-grid" id="wizardHallGrid">
+    <div class="wiz-empty">No Wizard Boosts yet.<br/>Be the first legend on the wall.<br/><br/>
+      <button class="aBtn aBtn-primary" style="max-width:260px;margin:0 auto;" onclick="switchTab('boost',document.querySelectorAll('.stab')[2]);document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ APPLY WIZARD BOOST</button>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="lore">
+  <p class="s-label">✦ THE LORE ✦</p>
+  <h2 class="s-title">FROM THE ARCHMAGE'S GRIMOIRE</h2>
+  <div class="scroll-paper">
+    Before the first block was mined, the <em>Archmage of Pixelwalls</em> saw what the chain would become — not merely a ledger, but a <em>living canvas</em>.<br/><br/>
+    He conjured a great wall — one million bricks strong. Each brick a soul. Each soul a story. The <em>Eternal Spell</em> ensures no force can erase what is written there.<br/><br/>
+    The wall starts empty. <em>You</em> fill it. Your image. Your link. Your legacy — inscribed forever on the chain. <em>Will you take your place on the wall?</em>
+  </div>
+</section>
+
+
+
+<footer>
+  <div class="logo">✦ PIXELWALLS.XYZ ✦</div>
+  <div class="links">
+    <a href="https://twitter.com/pixelwallsxyz" target="_blank">𝕏 @PIXELWALLSXYZ</a>
+    <a href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">PUMP.FUN</a>
+    <a href="https://gmgn.ai/sol/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">GMGN</a>
+    <a href="https://solscan.io/token/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">SOLSCAN</a>
+    <a href="https://dexscreener.com/solana/HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE" target="_blank">DEXSCREENER</a>
+    <a href="#wall">THE WALL</a>
+    <a href="#token">$PIXEL</a>
+    <a href="#tokenomics">TOKENOMICS</a>
+  </div>
+  <div class="disc">Pixelwalls is a community project on Solana. $PIXEL is a meme token. Crypto involves risk. DYOR. Not financial advice. Magic not guaranteed.</div>
+</footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="claimModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('claimModal')">✕</button>
+    <div class="modal-title">🔮 CONFIRM YOUR CLAIM</div>
+    <div id="claimBody" style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:10px;"></div>
+    <div class="price-showcase"><div class="price-sol" id="claimPrice">—</div><div class="price-usd" id="claimUsd">—</div></div>
+    <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:15px;color:var(--gold);line-height:1.8;">
+      ✦ Contract LIVE on Solana mainnet<br/>
+      ✦ 90% SOL → Treasury · 10% → Agent wallet<br/>
+      ✦ Follow <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="color:var(--cyan);">@pixelwallsxyz</a> for the launch alert
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+    <button class="aBtn aBtn-primary" style="flex:2;" onclick="executeClaim()">🔮 CONFIRM &amp; BUY</button>
+    <button class="aBtn aBtn-outline" style="flex:1;" onclick="closeModal('claimModal')">CANCEL</button>
+  </div>
+  <div style="margin-top:8px;text-align:center;">
+    <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);">𝕏 Follow @pixelwallsxyz for updates</a>
+  </div>
   </div>
 </div>
 
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    <div class="modal-title" id="editTitle">✦ EDIT SPACE</div>
+    <div id="editPreview" style="width:100%;height:110px;margin-bottom:14px;overflow:hidden;border:1px solid rgba(91,33,182,.4);background:#1a1030;"></div>
+    <div class="f-label">REPLACE IMAGE</div>
+    <div class="upload-area" style="margin-bottom:10px;"><span>⬆ Click to upload new image</span><input type="file" id="editImageFile" accept="image/*" onchange="handleEditImage(event)"/></div>
+    <div class="f-label">BACKGROUND COLOR</div>
+    <input type="color" id="editColor" style="width:100%;height:30px;cursor:pointer;border:1px solid rgba(91,33,182,.4);background:none;padding:2px;margin-bottom:9px;"/>
+    <div class="f-label">YOUR URL</div>
+    <input class="f-input" id="editUrl" placeholder="https://yourproject.xyz"/>
+    <div class="f-label">LIST FOR SALE — SOL PRICE (blank = not for sale)</div>
+    <input class="f-input" id="editListPrice" type="number" placeholder="e.g. 0.05" step="0.001" min="0"/>
+    <button class="aBtn aBtn-primary" onclick="saveEdit()">💾 SAVE CHANGES</button>
+    <button class="aBtn aBtn-danger" onclick="closeModal('editModal')">CANCEL</button>
+  </div>
+</div>
+
+
+
+<div class="toast" id="toast"></div>
+
 <script>
-// ==================== UPDATED SCRIPT SECTION ====================
-
 // -- CONFIG ------------------------------------------------
+// ── DEVNET / MAINNET TOGGLE ──────────────────────────────────────
+// Set DEVNET_MODE = true to test on Solana devnet (free fake SOL)
+// Set DEVNET_MODE = false before going to production
 const DEVNET_MODE = false;
-const CA = '7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
-const PAIR = 'HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
-let SOL_USD = 170; // fallback
+// Override RPC: set window.HELIUS_RPC before script loads, or use env
+// Safe element getter — never throws on missing elements
+function el(id){ return document.getElementById(id); }
+function setDisabled(id, val){ const e=el(id); if(e) e.disabled=val; }
+const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const PROGRAM_ID='CaJWcSoQoMS2K34R47PCShNV4je2ZLBs41oM9LCRwpMT';
+const TREASURY_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
+const AGENT_WALLET='HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
+const PUMP_URL='https://pump.fun/coin/'+CA;
+const PIXEL_MINT='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
+const TOKEN_PROGRAM='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const ASSOCIATED_TOKEN='ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL';
 
-// Safe element getter
-function el(id) { return document.getElementById(id); }
+// -- RANK SYSTEM -----------------------------------------------------
+const RANKS=[
+  {min:5_000_000, title:'Archmage', color:'#e879f9'},
+  {min:1_000_000, title:'King',     color:'#fbbf24'},
+  {min:250_000,   title:'Lord',     color:'#22d3ee'},
+  {min:50_000,    title:'Knight',   color:'#4ade80'},
+  {min:10_000,    title:'Squire',   color:'#a78bfa'},
+  {min:0,         title:'Apprentice',color:'#9d8ccc'},
+];
+const BOOST_TITLES={bronze:'Mage',silver:'Sorcerer',gold:'Warlock',wizard:'Wizard'};
+let pixelBalance=0; // current connected wallet $PIXEL balance
 
-// ==================== IMPROVED SOL PRICE FETCH ====================
-async function fetchSolPrice() {
-  console.log('🔄 Fetching live SOL price...');
-  
-  const sources = [
-    // 1. CoinGecko (most reliable)
-    async () => {
-      const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
-      if (!r.ok) throw new Error('CoinGecko failed');
-      const d = await r.json();
-      return d?.solana?.usd;
-    },
-    // 2. Jupiter Price API
-    async () => {
-      const r = await fetch('https://price.jup.ag/v6/price?ids=So11111111111111111111111111111111111111112');
-      if (!r.ok) throw new Error('Jupiter failed');
-      const d = await r.json();
-      return d?.data?.['So11111111111111111111111111111111111111112']?.price;
-    },
-    // 3. Birdeye public (no key needed for basic price)
-    async () => {
-      const r = await fetch('https://public-api.birdeye.so/defi/price?address=So11111111111111111111111111111111111111112', {
-        headers: { 'x-chain': 'solana' }
-      });
-      if (!r.ok) throw new Error('Birdeye failed');
-      const d = await r.json();
-      return d?.data?.value;
-    }
-  ];
-
-  for (let i = 0; i < sources.length; i++) {
-    try {
-      const price = await sources[i]();
-      if (price && price > 10 && price < 500) {  // sanity check
-        SOL_USD = Math.round(price * 100) / 100;
-        console.log(`✅ SOL price updated: $${SOL_USD}`);
-        updateSolPriceDisplay();
-        return SOL_USD;
-      }
-    } catch (e) {
-      console.warn(`⚠️ SOL price source ${i+1} failed:`, e.message);
-    }
-  }
-  
-  console.warn('❌ All SOL price sources failed. Using last known value:', SOL_USD);
-  showToast('⚠️ Could not fetch live SOL price — using cached value');
-  return SOL_USD;
+function getRankFromBalance(bal){
+  for(const r of RANKS) if(bal>=r.min) return r;
+  return RANKS[RANKS.length-1];
+}
+function getBoostTitle(tier){
+  if(!tier||tier===0) return null;
+  const map={1:'Mage',2:'Sorcerer',3:'Warlock',4:'Wizard'};
+  return map[tier]||null;
+}
+function getFullTitle(walletBal, boostTier){
+  const rank=getRankFromBalance(walletBal);
+  const boost=getBoostTitle(boostTier);
+  return boost ? rank.title+' '+boost : rank.title;
 }
 
-function updateSolPriceDisplay() {
-  // Update claim modal if open
-  const claimUsd = el('claimUsd');
-  if (claimUsd && claimUsd.textContent.includes('≈ $')) {
-    const priceText = el('claimPrice')?.textContent || '0';
-    const sol = parseFloat(priceText) || 0;
-    if (sol > 0) claimUsd.textContent = `≈ $${(sol * SOL_USD).toFixed(2)} · 90% treasury · 10% agent`;
+async function fetchPixelBalance(walletAddr){
+  try{
+    // Use Helius RPC if available, fallback to public mainnet
+    const rpc=window.HELIUS_RPC||'https://api.mainnet-beta.solana.com';
+    const res=await fetch(rpc,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        jsonrpc:'2.0',id:1,
+        method:'getParsedTokenAccountsByOwner',
+        params:[walletAddr,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]
+      })
+    });
+    const data=await res.json();
+    const accounts=data?.result?.value||[];
+    if(!accounts.length){pixelBalance=0;return 0;}
+    const amt=accounts[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;
+    pixelBalance=amt;
+    updateRankDisplay();
+    return amt;
+  }catch(e){pixelBalance=0;return 0;}
+}
+
+function updateRankDisplay(){
+  const el=document.getElementById('myRankDisplay');
+  if(!el||!walletConnected) return;
+  const r=getRankFromBalance(pixelBalance);
+  el.innerHTML=`<span style="color:${r.color};font-size:16px;">${r.title}</span> <span style="color:var(--muted);font-size:12px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL</span>`;
+}
+const GRID=1000; let SOL_USD=170; // updated by fetchSolPrice()
+const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
+
+// -- WALLET ------------------------------------------------
+let walletConnected=false,walletAddress=null;
+function getWallets(){
+  const w=[];
+  if(window.phantom?.solana?.isPhantom)w.push({name:'Phantom',obj:window.phantom.solana});
+  else if(window.solana?.isPhantom)w.push({name:'Phantom',obj:window.solana});
+  if(window.solflare?.isSolflare)w.push({name:'Solflare',obj:window.solflare});
+  if(window.backpack?.isBackpack)w.push({name:'Backpack',obj:window.backpack});
+  return w;
+}
+async function connectWallet(){
+  const ws=getWallets();
+  if(!ws.length){showToast('No wallet found — opening Phantom...');setTimeout(()=>window.open('https://phantom.app','_blank'),600);return;}
+  if(ws.length===1){await doConnect(ws[0]);return;}
+  showPickerModal(ws);
+}
+async function doConnect(w){
+  try{
+    const r=await w.obj.connect();
+    const pk=r?.publicKey?.toString()||w.obj.publicKey?.toString();
+    if(!pk)throw new Error('No public key');
+    walletAddress=pk;walletConnected=true;
+    const s=pk.slice(0,4)+'...'+pk.slice(-4);
+    const btn=document.getElementById('walletBtn');
+    btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
+    closePicker();
+    loadMySpaces();
+    processReferralOnConnect(pk);
+    // Enable verify button immediately on connect
+
+    showToast('✦ '+w.name+' connected: '+s);
+    if(dragStart)refreshSidebar();
+    // Show X verify button in nav
+
+    // Fetch $PIXEL balance for rank calculation
+    fetchPixelBalance(pk).then(bal=>{
+      const rank=getRankFromBalance(bal);
+      if(bal>=10000) showToast('✦ Rank: '+rank.title+' ('+bal.toLocaleString()+' $PIXEL)');
+    });
+    // Apply wallet X data to all owned pixels on load
+    applyWalletXToPixels();
+  }catch(e){showToast(e.code===4001?'Cancelled.':(e.message||'Error'));}
+}
+function disconnectWallet(){
+  walletConnected=false;walletAddress=null;
+  const btn=document.getElementById('walletBtn');
+  btn.textContent='CONNECT WALLET';btn.classList.remove('connected');btn.onclick=connectWallet;
+  setDisabled('claimBtn',true);
+
+  showToast('Wallet disconnected.');
+}
+async function tryAutoReconnect(){
+  for(const w of getWallets()){
+    try{if(w.obj.isConnected&&w.obj.publicKey){
+      walletAddress=w.obj.publicKey.toString();walletConnected=true;
+      const s=walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
+      const btn=document.getElementById('walletBtn');
+      btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
+      loadMySpaces();break;
+    }}catch(e){}
   }
-  
-  // Update sidebar price if visible
-  const infoPrice = el('infoPrice');
-  if (infoPrice && infoPrice.textContent.includes('SOL')) {
-    const match = infoPrice.textContent.match(/([\d.]+) SOL/);
-    if (match) {
-      const sol = parseFloat(match[1]);
-      if (sol > 0) {
-        const newText = infoPrice.textContent.replace(/≈ \$\d+\.\d+/, `≈ $${(sol * SOL_USD).toFixed(2)}`);
-        infoPrice.textContent = newText;
-      }
+}
+function showPickerModal(ws){
+  let el=document.getElementById('wpm');if(el)el.remove();
+  const ov=document.createElement('div');ov.id='wpm';ov.className='modal-overlay open';
+  ov.innerHTML=`<div class="modal" style="max-width:270px;"><button class="modal-close" onclick="closePicker()">✕</button>
+    <div class="modal-title" style="font-size:9px;margin-bottom:12px;">SELECT WALLET</div>
+    ${ws.map((_,i)=>`<button class="aBtn aBtn-primary" style="margin-bottom:7px;" onclick="doConnect(getWallets()[${i}])">⚡ ${ws[i].name}</button>`).join('')}
+    <button class="aBtn aBtn-outline" onclick="closePicker()">CANCEL</button></div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)closePicker();});
+  document.body.appendChild(ov);
+}
+function closePicker(){const m=document.getElementById('wpm');if(m)m.remove();}
+function shortAddr(){return walletAddress?walletAddress.slice(0,4)+'...'+walletAddress.slice(-4):'';}
+
+// -- DATA STORE (localStorage until contract deploys) ------
+let claimedSpaces={},totalClaimed=0,totalVol=0;
+function spaceKey(c,r){return c+','+r;}
+function saveToStorage(){
+  if(!walletAddress)return;
+  try{
+    const mine=Object.entries(claimedSpaces).filter(([,v])=>v.owner===shortAddr()).map(([k,v])=>[k,{...v,imageDataUrl:null}]);
+    localStorage.setItem('pw_'+walletAddress,JSON.stringify(mine));
+  }catch(e){}
+}
+function loadFromStorage(){
+  if(!walletAddress)return;
+  try{
+    const raw=localStorage.getItem('pw_'+walletAddress);
+    if(!raw)return;
+    JSON.parse(raw).forEach(([k,v])=>{if(!claimedSpaces[k]){claimedSpaces[k]=v;totalClaimed++;totalVol+=parseFloat(v.price||0);}});
+    paintAll();updateStats();render();
+  }catch(e){}
+}
+function applyWalletXToPixels(){
+  if(!walletAddress) return;
+  const xData = getMyX();
+  if(!xData?.handle) return;
+  Object.keys(claimedSpaces).forEach(key=>{
+    if(claimedSpaces[key].owner===shortAddr()){
+      claimedSpaces[key].xVerified=true;
+      claimedSpaces[key].xHandle=xData.handle;
+      claimedSpaces[key].xName=xData.name||xData.handle;
+      if(xData.avatar) claimedSpaces[key].xAvatar=xData.avatar;
+    }
+  });
+}
+function loadMySpaces(){loadFromStorage();applyWalletXToPixels();renderMySpaces();}
+
+// -- CANVAS ------------------------------------------------
+const canvas=document.getElementById('wallCanvas'),ctx=canvas.getContext('2d');
+// minimap removed
+const miniMap=null,mctx=null;
+function resizeCanvas(){
+  // Use the canvas parent's actual rendered width — most reliable
+  const area = canvas.parentElement;
+  const sz = Math.min(Math.max(300, area.clientWidth - 2), 1000);
+  canvas.width=sz; canvas.height=sz;
+  canvas.style.width=sz+'px'; canvas.style.height=sz+'px';
+  render();
+}
+let zoom=1,panX=0,panY=0;
+const MINZ=1,MAXZ=80;
+function cs(){return canvas.width*zoom/GRID;}
+function g2c(c,r){const s=cs();return{x:(c-panX)*s,y:(r-panY)*s};}
+function c2g(px,py){const s=cs();return{col:Math.floor(px/s+panX),row:Math.floor(py/s+panY)};}
+function clampPan(){const v=GRID/zoom;panX=Math.max(0,Math.min(panX,GRID-v));panY=Math.max(0,Math.min(panY,GRID-v));}
+function zoomBy(f,px,py){
+  const CW=canvas.width;px=px??CW/2;py=py??CW/2;
+  const s=cs(),gx=px/s+panX,gy=py/s+panY;
+  zoom=Math.max(MINZ,Math.min(MAXZ,zoom*f));
+  const ns=cs();panX=gx-px/ns;panY=gy-py/ns;clampPan();
+  document.getElementById('zoomLabel').textContent='Zoom: '+zoom.toFixed(1)+'×';render();
+}
+function resetZoom(){zoom=MINZ;panX=0;panY=0;document.getElementById('zoomLabel').textContent='Zoom: 1×';render();}
+
+const off=document.createElement('canvas');off.width=GRID;off.height=GRID;
+const ofc=off.getContext('2d');
+function initOff(){ofc.fillStyle='#0d0820';ofc.fillRect(0,0,GRID,GRID);}
+function paintAll(){
+  ofc.fillStyle='#0d0820';ofc.fillRect(0,0,GRID,GRID);
+  for(const k in claimedSpaces){const d=claimedSpaces[k];ofc.fillStyle=d.color||'#3730a3';ofc.fillRect(d.col,d.row,d.w||1,d.h||1);}
+}
+const imgCache={};
+function loadImg(url){return new Promise(r=>{if(imgCache[url]){r(imgCache[url]);return;}const i=new Image();i.onload=()=>{imgCache[url]=i;r(i);};i.src=url;});}
+
+function render(){
+  ctx.imageSmoothingEnabled=false;
+  const CW=canvas.width,v=GRID/zoom,s=cs();
+  ctx.drawImage(off,panX,panY,v,v,0,0,CW,CW);
+  // Images
+  for(const k in claimedSpaces){
+    const d=claimedSpaces[k];if(!d.imageDataUrl)continue;
+    const p=g2c(d.col,d.row),iw=(d.w||1)*s,ih=(d.h||1)*s;
+    if(p.x+iw<0||p.y+ih<0||p.x>CW||p.y>CW)continue;
+    const img=imgCache[d.imageDataUrl];
+    if(img)ctx.drawImage(img,p.x,p.y,iw,ih);
+    else loadImg(d.imageDataUrl).then(()=>render());
+  }
+  // Grid lines
+  if(s>=5){
+    ctx.strokeStyle='rgba(91,33,182,0.12)';ctx.lineWidth=.5;
+    const sc=Math.floor(panX),ec=Math.ceil(panX+v),sr=Math.floor(panY),er=Math.ceil(panY+v);
+    for(let c=sc;c<=ec;c++){const x=(c-panX)*s;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,CW);ctx.stroke();}
+    for(let r=sr;r<=er;r++){const y=(r-panY)*s;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(CW,y);ctx.stroke();}
+  }
+  // For-sale & verified
+  if(s>=2){
+    ctx.strokeStyle='#22d3ee';ctx.lineWidth=Math.max(.5,s*.1);
+    for(const k in claimedSpaces){if(claimedSpaces[k].listPrice){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.strokeRect(p.x,p.y,(d.w||1)*s,(d.h||1)*s);}}
+    ctx.fillStyle='rgba(29,161,242,.7)';
+    for(const k in claimedSpaces){if(claimedSpaces[k].xVerified){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.fillRect(p.x,p.y,Math.max(2,s*.4),Math.max(2,s*.4));}}
+  }
+  // Hover preview (when not dragging)
+  if(hoverPos.col>=0&&!isPanning&&!isDragging){
+    const p=g2c(hoverPos.col,hoverPos.row);
+    ctx.fillStyle='rgba(139,92,246,.18)';ctx.fillRect(p.x,p.y,s,s);
+    ctx.strokeStyle='rgba(139,92,246,.5)';ctx.lineWidth=1;ctx.strokeRect(p.x,p.y,s,s);
+  }
+  // Drag-select overlay (colour-coded)
+  renderSelection();
+  // Boost effects
+  for(const key in boostedSpaces){
+    const d=claimedSpaces[key]; if(!d) continue;
+    const bv=boostedSpaces[key], t=BOOST_TIERS[bv.tier];
+    const p=g2c(d.col,d.row), bw=(d.w||1)*s, bh=(d.h||1)*s;
+    if(p.x+bw<0||p.y+bh<0||p.x>canvas.width||p.y>canvas.height) continue;
+    const now=Date.now();
+
+    if(bv.tier==='bronze'){
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.2);
+      ctx.shadowColor=t.color; ctx.shadowBlur=8;
+      ctx.strokeRect(p.x-1,p.y-1,bw+2,bh+2);
+      ctx.shadowBlur=0;
+    }
+    if(bv.tier==='silver'){
+      const pulse=0.5+0.5*Math.sin(now/400);
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.25);
+      ctx.shadowColor=t.color; ctx.shadowBlur=10+pulse*12;
+      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
+      ctx.shadowBlur=0;
+    }
+    if(bv.tier==='gold'){
+      const shimmer=0.5+0.5*Math.sin(now/300);
+      ctx.strokeStyle=`rgba(251,191,36,${0.6+shimmer*0.4})`; ctx.lineWidth=Math.max(3,s*.3);
+      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=14+shimmer*10;
+      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
+      ctx.shadowBlur=0;
+      // Gold corner accents
+      const ac=Math.max(4,s*.5);
+      ctx.fillStyle='#fbbf24';
+      ctx.fillRect(p.x-3,p.y-3,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y-3,ac,ac);
+      ctx.fillRect(p.x-3,p.y+bh+3-ac,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y+bh+3-ac,ac,ac);
+    }
+    if(bv.tier==='wizard'){
+      const hue=(now/20)%360;
+      ctx.strokeStyle=`hsl(${hue},100%,70%)`; ctx.lineWidth=Math.max(4,s*.4);
+      ctx.shadowColor=`hsl(${hue},100%,70%)`; ctx.shadowBlur=20;
+      ctx.strokeRect(p.x-3,p.y-3,bw+6,bh+6);
+      ctx.strokeStyle=`hsl(${(hue+120)%360},100%,70%)`; ctx.lineWidth=Math.max(2,s*.2);
+      ctx.strokeRect(p.x-6,p.y-6,bw+12,bh+12);
+      ctx.shadowBlur=0;
+    }
+  }
+  // Animate if any boosts active
+  if(Object.keys(boostedSpaces).length>0) requestAnimationFrame(render);
+
+  // Minimap
+  // minimap removed
+  // minimap removed
+}
+
+// -- CANVAS EVENTS -----------------------------------------
+// -- INTERACTION STATE --------------------------------------
+let hoverPos   = {col:-1, row:-1};
+let isPanning  = false, panStart=null, panXY=null;
+let isDragging = false;
+let dragStart  = null;   // {col,row} — grid cell where drag began
+let dragEnd    = null;   // {col,row} — grid cell where drag currently ends
+let dragStartPx= null;   // {x,y}    — raw canvas px where drag began (for threshold)
+let dragMoved  = false;
+
+// Resolved selection arrays (set by resolveSelection)
+let selAvailable = [];
+let selForSale   = [];
+let selBlocked   = [];
+
+function clampCol(v){return Math.max(0,Math.min(v,GRID-1));}
+function clampRow(v){return Math.max(0,Math.min(v,GRID-1));}
+function evtPos(e){
+  const r=canvas.getBoundingClientRect();
+  return{px:(e.clientX-r.left)*(canvas.width/r.width), py:(e.clientY-r.top)*(canvas.height/r.height)};
+}
+
+// -- WHEEL ZOOM --------------------------------------------
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const{px,py}=evtPos(e);
+  zoomBy(e.deltaY<0?1.25:.8,px,py);
+},{passive:false});
+
+// -- MOUSE DOWN --------------------------------------------
+canvas.addEventListener('mousedown',e=>{
+  if(e.button!==0)return;
+  const{px,py}=evtPos(e);
+  const{col,row}=c2g(px,py);
+
+  if(e.altKey){
+    // Alt+drag = pan
+    isPanning=true;
+    panStart={panX,panY};
+    panXY={x:e.clientX,y:e.clientY};
+    canvas.style.cursor='grabbing';
+  } else {
+    // Start drag-select
+    isDragging=true;
+    dragMoved=false;
+    dragStartPx={x:e.clientX,y:e.clientY};
+    dragStart={col:clampCol(col), row:clampRow(row)};
+    dragEnd  ={col:clampCol(col), row:clampRow(row)};
+    canvas.style.cursor='crosshair';
+  }
+});
+
+// -- MOUSE MOVE --------------------------------------------
+canvas.addEventListener('mousemove',e=>{
+  const{px,py}=evtPos(e);
+  const{col,row}=c2g(px,py);
+  const gc=clampCol(col), gr=clampRow(row);
+  document.getElementById('cursorCoord').textContent=`(${gc}, ${gr})`;
+
+  if(isPanning && panXY){
+    const r2=canvas.getBoundingClientRect();
+    const sx=canvas.width/r2.width, sy=canvas.height/r2.height;
+    const dx=(e.clientX-panXY.x)*sx, dy=(e.clientY-panXY.y)*sy, s=cs();
+    panX=panStart.panX-dx/s;
+    panY=panStart.panY-dy/s;
+    clampPan();render();return;
+  }
+
+  if(isDragging && dragStartPx){
+    // Update drag end
+    dragEnd={col:gc, row:gr};
+    // Threshold: 4px movement = real drag
+    const dx=Math.abs(e.clientX-dragStartPx.x);
+    const dy=Math.abs(e.clientY-dragStartPx.y);
+    if(dx>4||dy>4) dragMoved=true;
+    resolveSelection();render();return;
+  }
+
+  hoverPos={col:gc, row:gr};render();
+});
+
+// -- MOUSE UP ----------------------------------------------
+canvas.addEventListener('mouseup',e=>{
+  if(isPanning){
+    isPanning=false;
+    canvas.style.cursor='crosshair';
+    return;
+  }
+
+  if(isDragging){
+    isDragging=false;
+    canvas.style.cursor='crosshair';
+
+    if(!dragMoved){
+      // Single click — size by pixelCount
+      const[bw,bh]=blockDims();
+      dragEnd={
+        col:Math.min(dragStart.col+bw-1, GRID-1),
+        row:Math.min(dragStart.row+bh-1, GRID-1)
+      };
+      // Profile popup only in 1×1 mode
+      if(bw===1&&bh===1){
+        const clickKey=spaceKey(dragStart.col,dragStart.row);
+        const clickData=claimedSpaces[clickKey];
+        if(clickData&&clickData.owner&&clickData.owner!==shortAddr()){
+          const{px,py}=evtPos(e);
+          showProfilePopup(clickData,px,py);
+        } else { hideProfilePopup(); }
+      } else { hideProfilePopup(); }
+    } else {
+      hideProfilePopup();
+    }
+
+    resolveSelection();
+    refreshSidebar();
+    render();
+  }
+});
+
+// -- MOUSE LEAVE -------------------------------------------
+canvas.addEventListener('mouseleave',()=>{
+  isPanning=false;isDragging=false;
+  hoverPos={col:-1,row:-1};
+  canvas.style.cursor='crosshair';
+  document.getElementById('cursorCoord').textContent='Hover to see coords';
+  render();
+});
+
+// -- TOUCH PINCH ZOOM --------------------------------------
+let ltd=null;
+canvas.addEventListener('touchstart',e=>{
+  if(e.touches.length===2)
+    ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&ltd){
+    e.preventDefault();
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    zoomBy(d/ltd);ltd=d;
+  }
+},{passive:false});
+canvas.addEventListener('touchend',()=>{ltd=null;});
+
+// -- MINIMAP CLICK — removed (minimap disabled) ------------
+
+// -- RESOLVE SELECTION -------------------------------------
+// Classifies every cell in dragStart→dragEnd as available/forSale/blocked
+function resolveSelection(){
+  selAvailable=[]; selForSale=[]; selBlocked=[];
+  if(!dragStart||!dragEnd) return;
+  const c1=Math.min(dragStart.col,dragEnd.col), c2=Math.max(dragStart.col,dragEnd.col);
+  const r1=Math.min(dragStart.row,dragEnd.row), r2=Math.max(dragStart.row,dragEnd.row);
+  for(let r=r1;r<=r2;r++){
+    for(let c=c1;c<=c2;c++){
+      const key=spaceKey(c,r);
+      const data=claimedSpaces[key];
+      if(!data)                          selAvailable.push(key);
+      else if(data.listPrice)            selForSale.push(key);
+      else                               selBlocked.push(key);
     }
   }
 }
 
-// ==================== IMPROVED TOKEN DATA FETCH ====================
-async function fetchTokenData() {
-  console.log('🔄 Fetching $PIXEL market data...');
-  let success = false;
+// -- GET DRAG RECT -----------------------------------------
+function getSelRect(){
+  if(!dragStart||!dragEnd) return null;
+  return{
+    c1:Math.min(dragStart.col,dragEnd.col), c2:Math.max(dragStart.col,dragEnd.col),
+    r1:Math.min(dragStart.row,dragEnd.row), r2:Math.max(dragStart.row,dragEnd.row),
+  };
+}
 
-  // Try DexScreener pair directly
-  try {
-    const r = await fetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${PAIR}`);
-    if (r.ok) {
-      const d = await r.json();
-      const pair = d?.pair || d?.pairs?.[0];
-      if (pair) {
-        applyDexData(pair);
-        success = true;
-      }
-    }
-  } catch (e) { console.warn('DexScreener pair fetch failed', e); }
+function selPixelCount(){return selAvailable.length+selForSale.length;}
 
-  // Fallback to token search
-  if (!success) {
-    try {
-      const r = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${CA}`);
-      if (r.ok) {
-        const d = await r.json();
-        const pair = d?.pairs?.[0];
-        if (pair) {
-          applyDexData(pair);
-          success = true;
+// -- SELECT A SINGLE SPACE (called from outside) -----------
+function selectSpace(col,row){
+  // Record wizard click if this pixel has wizard boost
+  const ck=spaceKey(Math.max(0,Math.min(col,GRID-1)),Math.max(0,Math.min(row,GRID-1)));
+  if(boostedSpaces[ck]?.tier==='wizard') recordWizardClick(ck);
+  dragStart={col:clampCol(col),row:clampRow(row)};
+  dragEnd  ={col:clampCol(col),row:clampRow(row)};
+  resolveSelection();refreshSidebar();render();
+}
+
+// -- CLEAR SELECTION ---------------------------------------
+function clearSelection(){
+  dragStart=null;dragEnd=null;dragMoved=false;
+  selAvailable=[];selForSale=[];selBlocked=[];
+  ['infoCoord','infoSize','infoPrice'].forEach(id=>document.getElementById(id).textContent='—');
+  document.getElementById('infoStatus').textContent='—';
+  document.getElementById('infoStatus').style.color='';
+  const prev=document.getElementById('spacePreview');
+  prev.innerHTML='';prev.style.background='';
+  const pt=document.createElement('span');
+  pt.textContent='Click or drag on the wall';prev.appendChild(pt);
+  setDisabled('claimBtn',true);
+  // verifyXBtn moved to nav — handled by updateXNavBtn()
+  updateSelInfo();
+  renderWizardHall();render();
+}
+
+
+// -- PIXEL COUNT QUICK BUTTONS ------------------------------
+let pixelCount=1;
+function blockDims(){const w=Math.ceil(Math.sqrt(pixelCount)),h=Math.ceil(pixelCount/w);return[w,h];}
+
+function setCount(n,btn){
+  pixelCount=n;
+  document.getElementById('pixelCount').value=n;
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  updateSelInfo();
+  renderWizardHall();
+}
+function onCountChange(v){
+  pixelCount=Math.max(1,Math.min(10000,parseInt(v)||1));
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  updateSelInfo();
+  renderWizardHall();
+}
+function updateSelInfo(){
+  const total=selPixelCount();
+  if(total>0){
+    const price=+(getCurrentPrice()*selAvailable.length).toFixed(4);
+    const salePrice=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    let txt=`${total}px`;
+    if(selBlocked.length) txt+=` · ${selBlocked.length} blocked`;
+    document.getElementById('selInfo').textContent=txt;
+  } else {
+    const[bw,bh]=blockDims();
+    document.getElementById('selInfo').textContent=`${pixelCount}px (${bw}×${bh}) · drag to select`;
+  }
+}
+
+// -- SELECTION in render -----------------------------------
+function renderSelection(){
+  if(!dragStart) return;
+  const s=cs();
+
+  // Draw each cell in drag rectangle with colour coding
+  const c1=Math.min(dragStart.col,dragEnd?.col??dragStart.col);
+  const c2=Math.max(dragStart.col,dragEnd?.col??dragStart.col);
+  const r1=Math.min(dragStart.row,dragEnd?.row??dragStart.row);
+  const r2=Math.max(dragStart.row,dragEnd?.row??dragStart.row);
+
+  for(let r=r1;r<=r2;r++){
+    for(let c=c1;c<=c2;c++){
+      const p=g2c(c,r);
+      if(p.x+s<0||p.y+s<0||p.x>canvas.width||p.y>canvas.height) continue;
+      const key=spaceKey(c,r);
+      const data=claimedSpaces[key];
+      if(!data){
+        // Available — gold tint
+        ctx.fillStyle='rgba(251,191,36,.25)';ctx.fillRect(p.x,p.y,s,s);
+      } else if(data.listPrice){
+        // For sale — cyan tint
+        ctx.fillStyle='rgba(34,211,238,.3)';ctx.fillRect(p.x,p.y,s,s);
+      } else {
+        // Blocked — red X overlay
+        ctx.fillStyle='rgba(239,68,68,.35)';ctx.fillRect(p.x,p.y,s,s);
+        if(s>=4){
+          ctx.strokeStyle='rgba(239,68,68,.7)';ctx.lineWidth=Math.max(.5,s*.1);
+          ctx.beginPath();ctx.moveTo(p.x+2,p.y+2);ctx.lineTo(p.x+s-2,p.y+s-2);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(p.x+s-2,p.y+2);ctx.lineTo(p.x+2,p.y+s-2);ctx.stroke();
         }
       }
-    } catch (e) { console.warn('DexScreener token fallback failed', e); }
+    }
   }
 
-  // Pump.fun fallback
-  if (!success) {
-    try {
-      const r = await fetch(`https://frontend-api.pump.fun/coins/${CA}`);
-      if (r.ok) {
-        const d = await r.json();
-        // handle pump data...
-        if (d.usd_market_cap) el('dexMcap').textContent = '$' + abbreviate(d.usd_market_cap);
-        console.log('✅ Pump.fun fallback used');
-      }
-    } catch (e) { console.warn('Pump.fun fallback failed', e); }
-  }
+  // Outer bounding rectangle stroke
+  const p1=g2c(c1,r1);
+  const totalW=(c2-c1+1)*s, totalH=(r2-r1+1)*s;
+  ctx.strokeStyle='#fbbf24';ctx.lineWidth=Math.max(1.5,s*.08);
+  ctx.strokeRect(p1.x+.5,p1.y+.5,totalW-1,totalH-1);
 
-  if (!success) {
-    showToast('⚠️ Market data fetch failed — check console');
-    console.error('All $PIXEL data sources failed');
-  }
-}
-
-function applyDexData(pair) {
-  if (!pair) return;
-  
-  // Price
-  if (pair.priceUsd) {
-    const p = parseFloat(pair.priceUsd);
-    el('mcap').textContent = p < 0.000001 ? p.toExponential(3) : '$' + p.toFixed(p < 0.01 ? 8 : 6);
-    el('statPrice').textContent = el('mcap').textContent;
-  }
-  
-  // Market cap
-  if (pair.fdv || pair.marketCap) {
-    const mc = '$' + abbreviate(pair.fdv || pair.marketCap);
-    el('dexMcap').textContent = mc;
-    el('statMcap').textContent = mc;
-  }
-  
-  // Volume, Liquidity, etc. (your existing logic)
-  if (pair.volume?.h24) el('vol24').textContent = '$' + abbreviate(pair.volume.h24);
-  if (pair.liquidity?.usd) {
-    el('dexLiq').textContent = '$' + abbreviate(pair.liquidity.usd);
-    el('totalLiq').textContent = '$' + abbreviate(pair.liquidity.usd * 1.1); // rough total estimate
-  }
-  
-  // Price change
-  if (pair.priceChange?.h24 != null) {
-    const ch = parseFloat(pair.priceChange.h24);
-    const elChange = el('dexChange');
-    elChange.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%';
-    elChange.style.color = ch >= 0 ? 'var(--green)' : 'var(--red)';
+  // Drag-live label — show count while dragging
+  if(isDragging&&dragMoved){
+    const total=(c2-c1+1)*(r2-r1+1);
+    const avail=selAvailable.length, sale=selForSale.length, block=selBlocked.length;
+    const label=`${avail+sale} buyable · ${block} skipped`;
+    const lx=p1.x+4, ly=p1.y-8;
+    ctx.fillStyle='rgba(10,6,18,.85)';
+    ctx.fillRect(lx-2,ly-12,label.length*5.5+4,16);
+    ctx.fillStyle='#fbbf24';
+    ctx.font=`bold ${Math.max(9,Math.min(12,s*1.2))}px monospace`;
+    ctx.fillText(label,lx,ly);
   }
 }
 
-function abbreviate(n) {
-  if (n >= 1e9) return (n/1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
-  return n.toFixed(0);
-}
 
-// ==================== CLAIM / SELECTION UPDATES ====================
-// Your existing claimSpace() and refreshSidebar() functions stay the same,
-// but they now benefit from live SOL_USD via updateSolPriceDisplay()
 
-// Call this after any price display update
-function refreshPriceDisplays() {
-  updateSolPriceDisplay();
-}
 
-// ==================== INIT ====================
-window.addEventListener('load', async () => {
-  console.log('🚀 Pixelwalls initializing...');
+function refreshSidebar(){
+  const avail=selAvailable.length,sale=selForSale.length,blocked=selBlocked.length;
+  const total=avail+sale;
 
-  // Fetch prices immediately
-  await fetchSolPrice();
-  await fetchTokenData();
+  if(!dragStart){
+    document.getElementById('infoCoord').textContent='—';
+    document.getElementById('infoSize').textContent='—';
+    document.getElementById('infoStatus').textContent='—';
+    document.getElementById('infoStatus').style.color='';
+    document.getElementById('infoPrice').textContent='—';
+    setDisabled('claimBtn',true);
+    return;
+  }
 
-  // Refresh intervals
-  setInterval(fetchSolPrice, 60000);     // SOL every 60s
-  setInterval(fetchTokenData, 30000);    // Token data every 30s
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1,h=rect.r2-rect.r1+1;
+  const singleClick=dragStart.col===(dragEnd?.col??dragStart.col)&&dragStart.row===(dragEnd?.row??dragStart.row);
 
-  // Existing init calls
-  initStars();
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-  initOff();
-  render();
-  await tryAutoReconnect();
+  document.getElementById('infoCoord').textContent=singleClick
+    ?`(${dragStart.col}, ${dragStart.row})`
+    :`(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})`;
+
+  document.getElementById('infoSize').textContent=
+    `${w}×${h} = ${w*h}px · ${total} buyable${blocked?' · '+blocked+' skipped':''}`;
+
+  // Preview
+  const prev=document.getElementById('spacePreview');
+  prev.innerHTML='';prev.style.background='';
+  const firstKey=selAvailable[0]||selForSale[0];
+  if(firstKey){
+    const d=claimedSpaces[firstKey];
+    if(d?.imageDataUrl){const img=document.createElement('img');img.src=d.imageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
+    else if(d?.color)prev.style.background=d.color;
+    else prev.style.background=document.getElementById('colorPicker').value;
+  } else if(total===0&&blocked>0){
+    prev.style.background='rgba(239,68,68,.15)';
+    const sp=document.createElement('span');sp.textContent='ALL OWNED';sp.style.color='#ef4444';prev.appendChild(sp);
+  } else {
+    if(pendingImageDataUrl){const img=document.createElement('img');img.src=pendingImageDataUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;';prev.appendChild(img);}
+    else prev.style.background=document.getElementById('colorPicker').value;
+    const sp=document.createElement('span');sp.textContent='YOUR SPACE';prev.appendChild(sp);
+  }
+
+  // Status + button
+  if(total===0&&blocked>0){
+    document.getElementById('infoStatus').textContent='ALL BLOCKED';
+    document.getElementById('infoStatus').style.color='var(--red)';
+    document.getElementById('infoPrice').textContent='—';
+    setDisabled('claimBtn',true);
+    document.getElementById('claimBtn').textContent='🔒 ALL PIXELS OWNED';
+  } else if(avail>0&&sale>0){
+    document.getElementById('infoStatus').textContent=`${avail} AVAILABLE · ${sale} FOR SALE${blocked?' · '+blocked+' SKIPPED':''}`;
+    document.getElementById('infoStatus').style.color='var(--green)';
+    const p=+(getCurrentPrice()*avail).toFixed(4);
+    const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    document.getElementById('infoPrice').textContent=`${p} SOL + ${sp} SOL sale`;
+    setDisabled('claimBtn',false);
+    document.getElementById('claimBtn').textContent=`🔮 BUY ${total} PIXELS`;
+  } else if(avail>0){
+    document.getElementById('infoStatus').textContent=avail===1?'AVAILABLE':`${avail} AVAILABLE${blocked?' · '+blocked+' SKIPPED':''}`;
+    document.getElementById('infoStatus').style.color='var(--green)';
+    const p=+(getCurrentPrice()*avail).toFixed(4);
+    document.getElementById('infoPrice').textContent=p+' SOL ≈ $'+(p*SOL_USD).toFixed(2);
+    setDisabled('claimBtn',false);
+    document.getElementById('claimBtn').textContent=`🔮 BUY ${avail} PIXEL${avail>1?'S':''}${blocked?' (SKIP '+blocked+')':''}`;
+  } else if(sale>0){
+    const sp=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+    document.getElementById('infoStatus').textContent=`${sale} FOR SALE`;
+    document.getElementById('infoStatus').style.color='#22d3ee';
+    document.getElementById('infoPrice').textContent=sp+' SOL';
+    setDisabled('claimBtn',false);
+    document.getElementById('claimBtn').textContent=`⚡ BUY ${sale} FOR SALE`;
+  }
+
+  // Verify X — any connected wallet can verify
+  // verifyXBtn moved to nav — handled by updateXNavBtn()
 
   updateSelInfo();
   renderWizardHall();
+}
 
-  // Click anywhere on canvas also triggers price refresh
-  document.getElementById('wallCanvas').addEventListener('mouseup', () => {
-    setTimeout(refreshPriceDisplays, 100);
+
+
+
+
+
+
+// -- IMAGE UPLOAD ------------------------------------------
+let pendingImageDataUrl=null;
+function handleImageUpload(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    pendingImageDataUrl=ev.target.result;
+    const prev=document.getElementById('uploadPreview');
+    prev.src=pendingImageDataUrl;prev.style.display='block';
+    document.getElementById('uploadText').style.display='none';
+    if(dragStart)refreshSidebar();
+  };
+  reader.readAsDataURL(file);
+}
+
+// -- CLAIM -------------------------------------------------
+async function claimSpace(){
+  if(!dragStart){showToast('Click or drag on the wall to select pixels first!');return;}
+  if(!walletConnected){showToast('Connecting wallet first...');await connectWallet();if(!walletConnected)return;}
+
+  const avail=selAvailable.length, sale=selForSale.length, total=avail+sale;
+  if(total===0){showToast('No buyable pixels in selection.');return;}
+
+  const priceEach=getCurrentPrice();
+  const costAvail=+(priceEach*avail).toFixed(4);
+  const costSale=selForSale.reduce((a,k)=>a+parseFloat(claimedSpaces[k]?.listPrice||0),0).toFixed(4);
+  const totalCost=(parseFloat(costAvail)+parseFloat(costSale)).toFixed(4);
+  const rect=getSelRect();
+  const blocked=selBlocked.length;
+
+  document.getElementById('claimBody').innerHTML=
+    `Buying <span style="color:var(--green)">${total} pixel${total>1?'s':''}</span> at `+
+    `<span style="color:var(--cyan)">(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})</span>`+
+    (blocked?`<br/><span style="color:#ef4444;font-size:14px;">${blocked} already-owned skipped</span>`:'');
+  document.getElementById('claimPrice').textContent=totalCost+' SOL';
+  document.getElementById('claimUsd').textContent='≈ $'+(totalCost*SOL_USD).toFixed(2)+' · 90% treasury · 10% agent';
+  document.getElementById('claimModal').classList.add('open');
+}
+
+async function executeClaim(){
+  // Called from the CONFIRM button in claimModal
+  closeModal('claimModal');
+  if(!walletConnected||!dragStart){return;}
+
+  const rect=getSelRect();
+  const avail=[...selAvailable];
+  const onSale=[...selForSale];
+  const allToBuy=[...avail,...onSale];
+  if(!allToBuy.length) return;
+
+  const btn=document.getElementById('claimBtn');
+  btn.disabled=true;
+  btn.textContent='🔮 BUYING...';
+  showToast('Preparing transaction...');
+
+  try{
+    // Build transaction via Solana web3
+    const w=getWallets()[0];
+    if(!w){showToast('No wallet found.');btn.disabled=false;return;}
+
+    const {Connection,PublicKey,Transaction,SystemProgram,LAMPORTS_PER_SOL}=window.solanaWeb3||{};
+    if(!Connection){showToast('Solana library not loaded. Refresh and try again.');btn.disabled=false;return;}
+
+    const rpc = DEVNET_MODE?'https://api.devnet.solana.com':(window.HELIUS_RPC||'https://api.mainnet-beta.solana.com');
+    const connection = new Connection(rpc,'confirmed');
+
+    // Build one transaction per pixel (contract requires one tx per pixel PDA)
+    let successCount=0;
+    for(const key of avail){
+      const [col,row]=key.split(',').map(Number);
+      const price=getCurrentPrice();
+      const lamports=Math.round(price*LAMPORTS_PER_SOL);
+
+      // For now: simple SOL transfer to treasury + agent
+      // Replace with Anchor program CPI when Program ID is live
+      const treasuryKey=new PublicKey(TREASURY_WALLET);
+      const agentKey=new PublicKey(AGENT_WALLET);
+      const treasuryLamports=Math.round(lamports*0.9);
+      const agentLamports=lamports-treasuryLamports;
+
+      const tx=new Transaction().add(
+        SystemProgram.transfer({fromPubkey:new PublicKey(walletAddress),toPubkey:treasuryKey,lamports:treasuryLamports}),
+        SystemProgram.transfer({fromPubkey:new PublicKey(walletAddress),toPubkey:agentKey,lamports:agentLamports})
+      );
+      const {blockhash}=await connection.getLatestBlockhash();
+      tx.recentBlockhash=blockhash;
+      tx.feePayer=new PublicKey(walletAddress);
+
+      try{
+        const signed=await w.obj.signTransaction(tx);
+        const sig=await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(sig,'confirmed');
+        showToast(`✦ Pixel (${col},${row}) claimed!`);
+        // Record locally
+        claimedSpaces[key]={col,row,owner:shortAddr(),color:document.getElementById('colorPicker')?.value||'#5b21b6',price,txSig:sig};
+        totalClaimed++;totalVol+=price;
+        paintPixel(col,row,claimedSpaces[key].color);
+        saveToStorage();
+        updateStats();
+        // Mint cNFT
+        mintCNFT(sig,walletAddress,col,row).catch(e=>console.warn('cNFT mint (async):',e));
+        successCount++;
+      }catch(e){
+        if(e.code===4001){showToast('Transaction cancelled.');break;}
+        showToast(`Pixel (${col},${row}) failed: ${e.message?.slice(0,50)}`);
+      }
+    }
+    render();
+    if(successCount>0){
+      showToast(`✦ ${successCount} pixel${successCount>1?'s':''} claimed! 🎉`);
+      renderMySpaces();
+      setTimeout(()=>refreshSidebar(),500);
+    }
+  }catch(e){
+    console.error('Claim error:',e);
+    showToast('Transaction error: '+e.message?.slice(0,60));
+  }finally{
+    btn.disabled=false;
+    btn.textContent=dragStart?`🔮 CLAIM THIS SPACE`:'🔮 CLAIM YOUR SPACE';
+  }
+}
+
+async function mintCNFT(txSig,wallet,col,row){
+  // Fire-and-forget after claim confirms. Runs on Vercel serverless.
+  try{
+    const r=await fetch('/api/mint-cnft',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({txSignature:txSig,buyerWallet:wallet,col,row})
+    });
+    const d=await r.json();
+    if(d.success){
+      const key=col+','+row;
+      if(claimedSpaces[key]) claimedSpaces[key].assetId=d.assetId;
+      saveToStorage();
+      console.log('cNFT minted:',d.assetId);
+    }
+  }catch(e){console.warn('mintCNFT error:',e);}
+}
+
+// -- MY WALL -----------------------------------------------
+function switchTab(name,btn){
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='mywall') renderMySpaces();
+  if(name==='invite') renderInviteTab();
+  if(name==='boost'){
+    renderActiveBoosts();
+    const _bk=dragStart?spaceKey(dragStart.col,dragStart.row):null;
+    if(_bk&&claimedSpaces[_bk]?.owner===shortAddr()){
+      document.getElementById('boostSpaceInfo').textContent='Space ('+dragStart.col+', '+dragStart.row+') selected — choose a boost tier below.';
+      document.getElementById('boostSpaceInfo').style.color='var(--green)';
+    } else {
+      document.getElementById('boostSpaceInfo').textContent='Select an owned space on the wall first, then pick a boost tier.';
+      document.getElementById('boostSpaceInfo').style.color='var(--cyan)';
+    }
+  }
+}
+function getMyRankBadge(){
+  if(!pixelBalance) return '';
+  const r=getRankFromBalance(pixelBalance);
+  const bt=getBoostTitle(0);
+  return `<div style="text-align:center;padding:8px 0 4px;font-family:'VT323',monospace;font-size:18px;color:${r.color};">${r.title}</div>
+          <div style="text-align:center;font-size:9px;color:var(--muted);padding-bottom:10px;letter-spacing:1px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL HELD</div>`;
+}
+function renderMySpaces(){
+  const grid=document.getElementById('mySpacesGrid'),summary=document.getElementById('myWallSummary');
+  const mine=Object.values(claimedSpaces).filter(d=>d.owner===shortAddr());
+  if(!walletConnected){grid.innerHTML='<div class="no-spaces">Connect your wallet to see your spaces.</div>';summary.textContent='';return;}
+  if(!mine.length){grid.innerHTML='<div class="no-spaces">No spaces yet. Click the wall to claim your first pixel! 🧙</div>';summary.textContent='';return;}
+  const totalPx=mine.reduce((a,d)=>a+(d.w||1)*(d.h||1),0);
+  summary.textContent=`${mine.length} space${mine.length>1?'s':''} · ${totalPx} pixel${totalPx>1?'s':''}`;
+  grid.innerHTML='';
+  mine.forEach(d=>{
+    const tile=document.createElement('div');tile.className='space-tile';tile.onclick=()=>openEditModal(d);
+    let ph=d.imageDataUrl?`<img class="space-tile-img" src="${d.imageDataUrl}" alt="space"/>`:`<div class="space-tile-color" style="background:${d.color||'#3730a3'};"></div>`;
+    tile.setAttribute('data-key', k);
+    tile.innerHTML=`${ph}<div class="space-tile-info"><div class="space-tile-coord">(${d.col},${d.row})</div><div class="space-tile-size">${d.w||1}×${d.h||1}${d.xVerified?' ✦ X':''}</div>${d.listPrice?`<div style="color:var(--gold);font-size:10px;">FOR SALE: ${d.listPrice} SOL</div>`:''}</div>`;
+    grid.appendChild(tile);
   });
+}
 
-  console.log('✅ Initialization complete. SOL price:', SOL_USD);
+// -- EDIT MODAL --------------------------------------------
+let editingSpace=null;
+function openEditModal(d){
+  editingSpace=d;
+  document.getElementById('editTitle').textContent=`✦ EDIT (${d.col}, ${d.row})`;
+  const prev=document.getElementById('editPreview');
+  if(d.imageDataUrl)prev.innerHTML=`<img src="${d.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;"/>`;
+  else{prev.innerHTML='';prev.style.background=d.color||'#3730a3';}
+  document.getElementById('editColor').value=d.color||'#8b5cf6';
+  document.getElementById('editUrl').value=d.url||'';
+  document.getElementById('editListPrice').value=d.listPrice||'';
+  document.getElementById('editModal').classList.add('open');
+}
+function handleEditImage(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{if(editingSpace)editingSpace.tempImg=ev.target.result;
+    const prev=document.getElementById('editPreview');
+    prev.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"/>`;};
+  reader.readAsDataURL(file);
+}
+function saveEdit(){
+  if(!editingSpace)return;
+  const d=editingSpace;
+  if(d.tempImg){d.imageDataUrl=d.tempImg;delete d.tempImg;loadImg(d.imageDataUrl);}
+  d.color=document.getElementById('editColor').value;
+  d.url=document.getElementById('editUrl').value.trim();
+  const lp=parseFloat(document.getElementById('editListPrice').value);
+  d.listPrice=(!isNaN(lp)&&lp>0)?lp.toFixed(3):null;
+  ofc.fillStyle=d.color||'#3730a3';ofc.fillRect(d.col,d.row,d.w||1,d.h||1);
+  saveToStorage();renderMySpaces();render();
+  closeModal('editModal');showToast('✦ Space updated!');
+}
+
+// -- PRICING -----------------------------------------------
+function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p;return .50;}
+
+// -- X VERIFY ---------------------------------------------
+// verifyX removed
+
+// ── X WALLET AUTH ─────────────────────────────────────────────────
+// X is tied to the WALLET, not individual pixels.
+// Once verified, every pixel owned by that wallet shows the handle.
+function getWalletX(addr){
+  if(!addr) return null;
+  try{ return JSON.parse(localStorage.getItem('pw_xwallet_'+(addr))||'null'); }
+  catch(e){ return null; }
+}
+function saveWalletX(addr, data){
+  if(!addr) return;
+  localStorage.setItem('pw_xwallet_'+addr, JSON.stringify(data));
+}
+function getMyX(){ return getWalletX(walletAddress); }
+
+// X auth removed — will be re-added later
+function doXOAuth(){ showToast('X verification coming soon.'); }
+function getWalletX(){ return null; }
+function saveWalletX(){ }
+function getMyX(){ return null; }
+function updateXNavBtn(){ }
+function disconnectX(){ }
+function applyWalletXToPixels(){ }
+
+
+function updateXNavBtn(){ /* X removed */ }
+
+// -- TOKEN DATA — DexScreener primary, pump.fun fallback --
+const PAIR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
+const DEX='https://api.dexscreener.com';
+function updateStats(){
+  document.getElementById('statClaimed').textContent=totalClaimed.toLocaleString();
+  document.getElementById('statAvail').textContent=(1000000-totalClaimed).toLocaleString();
+  document.getElementById('statVol').textContent=totalVol.toFixed(2)+' SOL';
+}
+function abbreviate(n){
+  if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+  if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return(n/1e3).toFixed(1)+'K';
+  return n<1?n.toFixed(4):Math.round(n).toString();
+}
+
+function applyDexData(pair){
+  if(!pair) return false;
+  // Price
+  if(pair.priceUsd){
+    const p=parseFloat(pair.priceUsd);
+    const fmt=p<0.000001?p.toExponential(3):'$'+p.toFixed(p<0.01?8:6);
+    document.getElementById('mcap').textContent=fmt;
+    document.getElementById('statPrice').textContent=fmt;
+  }
+  // Market cap
+  if(pair.fdv||pair.marketCap){
+    const mc='$'+abbreviate(pair.fdv||pair.marketCap);
+    document.getElementById('dexMcap').textContent=mc;
+    document.getElementById('statMcap').textContent=mc;
+  }
+  // Volume 24h
+  if(pair.volume?.h24) document.getElementById('vol24').textContent='$'+abbreviate(pair.volume.h24);
+  // Liquidity
+  if(pair.liquidity?.usd) document.getElementById('dexLiq').textContent='$'+abbreviate(pair.liquidity.usd);
+  // Price change 24h
+  if(pair.priceChange?.h24!=null){
+    const ch=parseFloat(pair.priceChange.h24);
+    const el=document.getElementById('dexChange');
+    el.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+    el.style.color=ch>=0?'var(--green)':'var(--red)';
+    const sc=document.getElementById('statChange');
+    sc.textContent=(ch>=0?'+':'')+ch.toFixed(2)+'%';
+    sc.style.color=ch>=0?'var(--green)':'var(--red)';
+  }
+  // Buys/sells
+  if(pair.txns?.h24){
+    const {buys=0,sells=0}=pair.txns.h24;
+    document.getElementById('holders').textContent=`${buys.toLocaleString()}B / ${sells.toLocaleString()}S`;
+  }
+  return true;
+}
+
+async function fetchTokenData(){
+  const PAIR_ADDR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
+
+  async function tryFetch(url){
+    try{
+      const r=await fetch(url,{headers:{'Accept':'application/json'},mode:'cors'});
+      if(r.ok) return await r.json();
+    }catch(e){}
+    return null;
+  }
+
+  // 1. Direct pair endpoint
+  let d=await tryFetch(`https://api.dexscreener.com/latest/dex/pairs/solana/${PAIR_ADDR}`);
+  if(d){const pair=d.pair||d.pairs?.[0]||d;if(pair&&pair.priceUsd){applyDexData(pair);return;}}
+
+  // 2. Tokens v1
+  d=await tryFetch(`https://api.dexscreener.com/tokens/v1/solana/${CA}`);
+  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
+
+  // 3. Token pairs v1
+  d=await tryFetch(`https://api.dexscreener.com/token-pairs/v1/solana/${CA}`);
+  if(d){const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const best=arr.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(best&&best.priceUsd){applyDexData(best);return;}}}
+
+  // 4. Legacy
+  d=await tryFetch(`https://api.dexscreener.com/latest/dex/tokens/${CA}`);
+  if(d&&d.pairs?.[0]){applyDexData(d.pairs[0]);return;}
+
+  // 5. pump.fun fallback
+  d=await tryFetch(`https://frontend-api.pump.fun/coins/${CA}`);
+  if(d){
+    if(d.usd_market_cap){const mc='$'+abbreviate(d.usd_market_cap);document.getElementById('dexMcap').textContent=mc;document.getElementById('statMcap').textContent=mc;}
+    if(d.virtual_sol_reserves&&d.virtual_token_reserves){const p=(d.virtual_sol_reserves/d.virtual_token_reserves)*(1/1e9)*(1e6);const fmt='$'+p.toFixed(8);document.getElementById('mcap').textContent=fmt;document.getElementById('statPrice').textContent=fmt;}
+    if(d.volume_24h)document.getElementById('vol24').textContent='$'+abbreviate(d.volume_24h);
+  }
+  // CORS errors are expected when testing via file:// — APIs will work on https://pixelwalls.xyz
+}
+
+async function fetchSolPrice(){
+  try{
+    // CoinGecko free API — no key needed
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
+      {headers:{'Accept':'application/json'}});
+    if(!r.ok) throw new Error('CoinGecko failed');
+    const d=await r.json();
+    const price=d?.solana?.usd;
+    if(price && typeof price==='number' && price>0){
+      SOL_USD=price;
+      // Refresh any displayed USD prices
+      updateSolPriceDisplay();
+      return price;
+    }
+  }catch(e){
+    // Fallback: try Jupiter price API
+    try{
+      const r2=await fetch('https://lite.jupiterapi.com/price?ids=So11111111111111111111111111111111111111112');
+      if(r2.ok){
+        const d2=await r2.json();
+        const price2=d2?.data?.['So11111111111111111111111111111111111111112']?.price;
+        if(price2&&price2>0){ SOL_USD=price2; updateSolPriceDisplay(); return price2; }
+      }
+    }catch(e2){}
+  }
+  return SOL_USD; // return existing value if both fail
+}
+
+function updateSolPriceDisplay(){
+  // Update the claim modal USD display if open
+  const claimUsd=document.getElementById('claimUsd');
+  if(claimUsd && claimUsd.textContent && claimUsd.textContent.includes('≈ $')){
+    const priceText=document.getElementById('claimPrice')?.textContent||'0';
+    const sol=parseFloat(priceText)||0;
+    if(sol>0) claimUsd.textContent='≈ $'+(sol*SOL_USD).toFixed(2)+' · 90% treasury · 10% agent';
+  }
+  // Update sidebar price display
+  const infoPrice=document.getElementById('infoPrice');
+  if(infoPrice && infoPrice.textContent && infoPrice.textContent.includes('SOL ≈')){
+    const parts=infoPrice.textContent.split(' SOL ≈');
+    if(parts.length>1){
+      const sol=parseFloat(parts[0])||0;
+      if(sol>0) infoPrice.textContent=parts[0]+' SOL ≈ $'+(sol*SOL_USD).toFixed(2);
+    }
+  }
+}
+
+
+// -- BOOST SYSTEM -----------------------------------------
+const BOOST_TIERS = {
+  bronze: { name:'Bronze', cost:10000,  label:'10K $PIXEL',  color:'#cd7f32', effect:'glow' },
+  silver: { name:'Silver', cost:50000,  label:'50K $PIXEL',  color:'#c0c0c0', effect:'pulse' },
+  gold:   { name:'Gold',   cost:250000, label:'250K $PIXEL', color:'#fbbf24', effect:'shimmer' },
+  wizard: { name:'Wizard', cost:1000000,label:'1M $PIXEL',   color:'#e879f9', effect:'rainbow' },
+};
+
+// boostedSpaces: { "col,row": { tier, activatedAt } }
+let boostedSpaces = {};
+
+function selectBoost(tier){
+  if(!walletConnected){ showToast('Connect wallet first!'); switchTab('select', document.querySelector('.stab')); return; }
+  if(!dragStart){ showToast('Select your space on the wall first, then boost!'); return; }
+
+  const key = spaceKey(dragStart.col, dragStart.row);
+  const data = claimedSpaces[key];
+  if(!data || data.owner !== shortAddr()){ showToast('You can only boost spaces you own!'); return; }
+
+  const t = BOOST_TIERS[tier];
+  showBoostConfirmModal(tier, t, key);
+}
+
+function showBoostConfirmModal(tierId, tier, key){
+  let el = document.getElementById('boostModal'); if(el) el.remove();
+  const[col,row] = key.split(',').map(Number);
+  const ov = document.createElement('div');
+  ov.id = 'boostModal'; ov.className = 'modal-overlay open';
+  ov.innerHTML = `<div class="modal">
+    <button class="modal-close" onclick="document.getElementById('boostModal').remove()">✕</button>
+    <div class="modal-title" style="color:${tier.color};">⚡ ${tier.name.toUpperCase()} BOOST</div>
+    <div style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+      Boosting space <span style="color:var(--cyan);">(${col}, ${row})</span> with a <span style="color:${tier.color};">${tier.name} Boost</span>.
+    </div>
+    <div class="price-showcase">
+      <div class="price-sol" style="color:${tier.color};">${tier.label}</div>
+      <div class="price-usd">$PIXEL sent to agent wallet · held until burned</div>
+    </div>
+    <div style="background:rgba(0,0,0,.3);border:1px solid ${tier.color}33;padding:12px;margin:12px 0;font-family:'VT323',monospace;font-size:15px;line-height:1.8;">
+      ${tierId==='bronze'?'✦ Glowing border — visible at all zoom levels':
+        tierId==='silver'?'✦ Pulsing glow<br/>✦ 2× size on minimap':
+        tierId==='gold'?'✦ Animated gold shimmer<br/>✦ Permanently featured in activity feed':
+        '✦ Rainbow animation + giant border<br/>✦ Permanent — lives in this pixel forever<br/>✦ Hall of Fame listing on homepage<br/>✦ Ranked by click engagement<br/>✦ New owner inherits the legend status<br/>✦ The Archmage himself notices'}
+    </div>
+    <div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);padding:11px;margin:11px 0;font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.8;">
+      ✦ Contract LIVE on Solana mainnet<br/>
+      ✦ Follow <a href="https://twitter.com/pixelwallsxyz" target="_blank" style="color:var(--cyan);">@pixelwallsxyz</a> for launch alert
+    </div>
+    <button class="aBtn aBtn-primary" onclick="applyBoost('${tierId}','${key}')">⚡ APPLY ${tier.name.toUpperCase()} BOOST</button>
+    <button class="aBtn aBtn-outline" onclick="document.getElementById('boostModal').remove()">CANCEL</button>
+  </div>`;
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+
+function applyBoost(tierId, key){
+  const tier = BOOST_TIERS[tierId];
+  boostedSpaces[key] = { tier: tierId, activatedAt: Date.now() };
+  document.getElementById('boostModal')?.remove();
+  renderActiveBoosts();
+  render();
+  showToast(`⚡ ${tier.name} Boost applied! Effect active on the wall.`);
+  // Wizard boost → register in Hall of Fame permanently
+  if(tierId === 'wizard'){
+    registerWizardBoost(key);
+  }
+}
+
+function renderActiveBoosts(){
+  const el = document.getElementById('activeBoostsList');
+  if(!el) return;
+  const mine = Object.entries(boostedSpaces)
+    .filter(([k]) => claimedSpaces[k]?.owner === shortAddr());
+  if(!mine.length){ el.textContent = 'No active boosts yet.'; return; }
+  el.innerHTML = mine.map(([k,v])=>{
+    const [col,row] = k.split(',').map(Number);
+    const t = BOOST_TIERS[v.tier];
+    return `<div style="display:flex;justify-content:space-between;margin-bottom:6px;padding:5px 0;border-bottom:1px solid rgba(91,33,182,.2);">
+      <span style="color:${t.color};">(${col},${row}) ${t.name}</span>
+      <span style="color:var(--muted);font-size:11px;">${t.label}</span>
+    </div>`;
+  }).join('');
+}
+
+
+// -- REFERRAL & INVITE SYSTEM -----------------------------
+// Rules:
+//   - Invite link only shown AFTER user owns at least 1 pixel
+//   - A referral only earns reward points if referred user has BOTH:
+//     1. Bought at least 1 pixel
+//     2. Verified their X account
+//   - Raw invitees tracked separately from qualified invitees
+
+// -- 10 WIZARD LEVELS -------------------------------------
+const WIZARD_LEVELS = [
+  { level:0,  name:'Wanderer',       min:0,   color:'#9d8ccc', desc:'Yet to find your first follower.' },
+  { level:1,  name:'Apprentice',     min:1,   color:'#c0c0c0', desc:'The journey begins.' },
+  { level:2,  name:'Acolyte',        min:3,   color:'#cd7f32', desc:'Others sense your power.' },
+  { level:3,  name:'Conjurer',       min:7,   color:'#4ade80', desc:'You bend reality to your will.' },
+  { level:4,  name:'Illusionist',    min:15,  color:'#22d3ee', desc:'The wall whispers your name.' },
+  { level:5,  name:'Enchanter',      min:25,  color:'#8b5cf6', desc:'Your spell reaches far.' },
+  { level:6,  name:'Warlock',        min:40,  color:'#e879f9', desc:'Dark knowledge, bright future.' },
+  { level:7,  name:'Sorcerer',       min:60,  color:'#f97316', desc:'The pixels bow to you.' },
+  { level:8,  name:'High Mage',      min:85,  color:'#fbbf24', desc:'Few have walked this path.' },
+  { level:9,  name:'Archmage',       min:120, color:'#ef4444', desc:'Legends speak your name.' },
+  { level:10, name:'The Eternal',    min:200, color:'linear-gradient(135deg,#fbbf24,#e879f9,#22d3ee)', desc:'The wall is yours.' },
+];
+
+function getLevelData(qualifiedCount){
+  let current=WIZARD_LEVELS[0];
+  let next=WIZARD_LEVELS[1];
+  for(let i=WIZARD_LEVELS.length-1;i>=0;i--){
+    if(qualifiedCount>=WIZARD_LEVELS[i].min){
+      current=WIZARD_LEVELS[i];
+      next=WIZARD_LEVELS[i+1]||null;
+      break;
+    }
+  }
+  return{current,next};
+}
+
+function getRefCode(wallet){
+  return wallet?wallet.slice(0,8)+wallet.slice(-4):null;
+}
+
+function userOwnedPixels(){
+  // Check if current wallet owns any pixels
+  return Object.values(claimedSpaces).some(d=>d.owner===shortAddr());
+}
+
+function getMyInviteLink(){
+  if(!walletAddress||!userOwnedPixels()) return null;
+  return window.location.origin+'?ref='+getRefCode(walletAddress);
+}
+
+function loadReferralData(){
+  if(!walletAddress) return{inviter:null,rawInvitees:[],qualifiedInvitees:[]};
+  try{
+    const raw=localStorage.getItem('pw_ref_'+walletAddress);
+    return raw?JSON.parse(raw):{inviter:null,rawInvitees:[],qualifiedInvitees:[]};
+  }catch(e){return{inviter:null,rawInvitees:[],qualifiedInvitees:[]};}
+}
+
+function saveReferralData(data){
+  if(!walletAddress) return;
+  localStorage.setItem('pw_ref_'+walletAddress,JSON.stringify(data));
+}
+
+function recordInvitee(inviterCode,newWallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  if(!all[inviterCode]) all[inviterCode]=[];
+  if(!all[inviterCode].find(e=>e.wallet===newWallet)){
+    all[inviterCode].push({
+      wallet:newWallet,
+      connectedAt:Date.now(),
+      hasPurchased:false,   // updated when they buy a pixel
+      hasVerifiedX:false,   // updated when they verify X
+      qualified:false       // true when BOTH above are true
+    });
+    localStorage.setItem('pw_all_invites',JSON.stringify(all));
+  }
+}
+
+function getInviteesForMe(){
+  if(!walletAddress) return[];
+  const code=getRefCode(walletAddress);
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  return all[code]||[];
+}
+
+function qualifiedInviteCount(){
+  return getInviteesForMe().filter(e=>e.qualified).length;
+}
+
+// Called after someone buys a pixel — mark them as having purchased
+function markInviteePurchased(wallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  for(const code in all){
+    const idx=all[code].findIndex(e=>e.wallet===wallet);
+    if(idx>=0){
+      all[code][idx].hasPurchased=true;
+      all[code][idx].qualified=all[code][idx].hasPurchased&&all[code][idx].hasVerifiedX;
+      localStorage.setItem('pw_all_invites',JSON.stringify(all));
+      return;
+    }
+  }
+}
+
+// Called after someone verifies X
+function markInviteeVerified(wallet){
+  const all=JSON.parse(localStorage.getItem('pw_all_invites')||'{}');
+  for(const code in all){
+    const idx=all[code].findIndex(e=>e.wallet===wallet);
+    if(idx>=0){
+      all[code][idx].hasVerifiedX=true;
+      all[code][idx].qualified=all[code][idx].hasPurchased&&all[code][idx].hasVerifiedX;
+      localStorage.setItem('pw_all_invites',JSON.stringify(all));
+      return;
+    }
+  }
+}
+
+function renderInviteTab(){
+  const hasPurchased=userOwnedPixels();
+  const link=getMyInviteLink();
+  const data=loadReferralData();
+  const allInvitees=getInviteesForMe();
+  const qualified=allInvitees.filter(e=>e.qualified).length;
+  const pending=allInvitees.filter(e=>!e.qualified).length;
+  const{current,next}=getLevelData(qualified);
+
+  // -- Link box --------------------------------------------
+  const linkBox=document.getElementById('inviteLinkBox');
+  if(!walletConnected){
+    linkBox.textContent='Connect your wallet first.';
+    linkBox.style.color='var(--muted)';
+  } else if(!hasPurchased){
+    linkBox.textContent='Buy your first pixel to unlock your invite link.';
+    linkBox.style.color='var(--gold)';
+  } else {
+    linkBox.textContent=link;
+    linkBox.style.color='var(--cyan)';
+  }
+
+  // -- Level badge -----------------------------------------
+  const levelEl=document.getElementById('inviteLevel');
+  const isGrad=current.color.startsWith('linear');
+  levelEl.textContent=current.level;
+  levelEl.style.background=isGrad?current.color:'none';
+  levelEl.style.webkitBackgroundClip=isGrad?'text':'';
+  levelEl.style.webkitTextFillColor=isGrad?'transparent':'';
+  levelEl.style.color=isGrad?'transparent':current.color;
+
+  document.getElementById('inviteCount').textContent=qualified;
+  const pendingEl=document.getElementById('invitePending');
+  if(pendingEl) pendingEl.textContent=pending;
+  document.getElementById('inviteChain').textContent=
+    data.inviter?data.inviter.slice(0,6)+'...':'Direct';
+
+  // -- Level name + desc -----------------------------------
+  const nameEl=document.getElementById('inviteLevelName');
+  if(nameEl){
+    const isGrad2=current.color.startsWith('linear');
+    nameEl.textContent=current.name;
+    if(isGrad2){
+      nameEl.style.background=current.color;
+      nameEl.style.webkitBackgroundClip='text';
+      nameEl.style.webkitTextFillColor='transparent';
+    } else {
+      nameEl.style.color=current.color;
+    }
+  }
+  const descEl=document.getElementById('inviteLevelDesc');
+  if(descEl) descEl.textContent=current.desc;
+
+  // -- Next level progress ---------------------------------
+  const progressEl=document.getElementById('inviteProgress');
+  if(progressEl){
+    if(!next){
+      progressEl.textContent='MAX LEVEL REACHED — THE WALL IS YOURS.';
+      progressEl.style.color=current.color;
+    } else {
+      const needed=next.min-qualified;
+      progressEl.textContent=`${needed} more qualified invite${needed!==1?'s':''} to reach ${next.name}`;
+    }
+  }
+
+  // -- Invitee list ----------------------------------------
+  const list=document.getElementById('inviteList');
+  if(!allInvitees.length){
+    list.innerHTML='<div style="color:var(--muted);">No invites yet.</div>';
+    return;
+  }
+  list.innerHTML=allInvitees.map((e,i)=>{
+    const q=e.qualified;
+    const p=e.hasPurchased;
+    const v=e.hasVerifiedX;
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(91,33,182,.2);">
+      <div>
+        <div style="font-size:6px;color:${q?'var(--green)':'var(--muted)'};">#${i+1} ${e.wallet.slice(0,6)}...${e.wallet.slice(-4)}</div>
+        <div style="font-size:5px;color:var(--muted);margin-top:2px;">${p?'✦ pixel':'○ pixel'} · ${v?'✦ X':'○ X'}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:${q?'var(--green)':'var(--gold)'};">${q?'QUALIFIED':'PENDING'}</div>
+        <div style="font-size:10px;color:var(--muted);">${timeSince(e.connectedAt)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function timeSince(ts){
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
+function copyInviteLink(){
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  if(!userOwnedPixels()){showToast('Buy your first pixel to unlock your invite link!');return;}
+  const link=getMyInviteLink();
+  navigator.clipboard.writeText(link)
+    .then(()=>showToast('✦ Invite link copied!'))
+    .catch(()=>showToast('Link: '+link));
+}
+
+function shareOnX(){
+  if(!walletConnected){showToast('Connect wallet first!');return;}
+  if(!userOwnedPixels()){showToast('Buy your first pixel to unlock sharing!');return;}
+  const link=getMyInviteLink();
+  const q=qualifiedInviteCount();
+  const{current}=getLevelData(q);
+  const text=encodeURIComponent(
+    'I just claimed my eternal space on the blockchain 🧙\n\n'+
+    (current.level>0?'Level '+current.level+' '+current.name+' on @pixelwallsxyz\n\n':'')+
+    'Pixelwalls — 1,000,000 permanent pixels on Solana.\nClaim yours before the price rises 👇\n\n'+
+    link+'\n\n#Solana #Pixelwalls #PIXEL'
+  );
+  window.open('https://twitter.com/intent/tweet?text='+text,'_blank');
+}
+
+function processReferralOnConnect(wallet){
+  const params=new URLSearchParams(window.location.search);
+  const refCode=params.get('ref')||localStorage.getItem('pw_referrer');
+  if(refCode&&refCode!==getRefCode(wallet)){
+    recordInvitee(refCode,wallet);
+    localStorage.setItem('pw_referrer',refCode);
+    const data=loadReferralData();
+    if(!data.inviter){data.inviter=refCode;saveReferralData(data);}
+    showToast('✦ Joined via invite! Your supporter gets credit when you buy + verify.');
+  }
+}
+
+
+// -- PROFILE POPUP ------------------------------------------
+let profilePopupEl=null;
+
+function showProfilePopup(spaceData, canvasX, canvasY){
+  hideProfilePopup();
+  const popup=document.createElement('div');
+  popup.className='profile-popup';
+  popup.id='profilePopup';
+
+  const short=spaceData.owner||'Unknown';
+  // Check wallet-level X first, then fall back to space-level
+  const spaceOwnerX = getWalletX(spaceData.owner) || 
+    (spaceData.xVerified ? {handle:spaceData.xHandle, name:spaceData.xName, avatar:spaceData.xAvatar} : null);
+  const isX = !!(spaceOwnerX?.handle);
+  if(isX && spaceData){
+    spaceData.xHandle = spaceOwnerX.handle;
+    spaceData.xName   = spaceOwnerX.name;
+    spaceData.xAvatar = spaceOwnerX.avatar;
+  }
+  const isMine=spaceData.owner===shortAddr();
+  const invitees=spaceData.owner?getInviteesForMe():[];
+
+  popup.innerHTML=`
+    ${spaceData.xAvatar
+      ?`<img class="profile-popup-avatar" src="${spaceData.xAvatar}" onerror="this.style.display='none'"/>`
+      :`<div class="profile-popup-avatar-placeholder">🧙</div>`}
+    <div class="profile-popup-handle">${isX?'@'+spaceData.xHandle:''}</div>
+    <div class="profile-popup-wallet">${short}</div>
+    <div class="profile-popup-meta">
+      Space: <span>(${spaceData.col}, ${spaceData.row})</span><br/>
+      Size: <span>${spaceData.w||1}×${spaceData.h||1}</span><br/>
+      ${isMine&&pixelBalance>0?`Rank: <span style="color:${getRankFromBalance(pixelBalance).color};">${getFullTitle(pixelBalance,spaceData.boostTier)}</span><br/>`:''}
+      ${spaceData.listPrice?'<span style="color:var(--cyan);">FOR SALE: '+spaceData.listPrice+' SOL</span>':''}
+    </div>
+    <div class="profile-popup-actions">
+      ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏 VISIT</button>`:''}
+      ${spaceData.url?`<button class="profile-popup-btn" style="background:rgba(139,92,246,.2);border:1px solid var(--lav);color:var(--lav);" onclick="window.open('${spaceData.url}','_blank')">LINK</button>`:''}
+      ${spaceData.listPrice?`<button class="profile-popup-btn" style="background:rgba(34,211,238,.2);border:1px solid var(--cyan);color:var(--cyan);" onclick="hideProfilePopup();document.getElementById('claimBtn').click()">BUY</button>`:''}
+      <button class="profile-popup-btn" style="background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);" onclick="hideProfilePopup()">✕</button>
+    </div>`;
+
+  // Position near canvas click, but keep on screen
+  const rect=canvas.getBoundingClientRect();
+  let left=rect.left+canvasX+10;
+  let top =rect.top+canvasY-10;
+  if(left+240>window.innerWidth) left=left-260;
+  if(top+200>window.innerHeight) top=top-160;
+  popup.style.left=Math.max(8,left)+'px';
+  popup.style.top =Math.max(8,top)+'px';
+
+  document.body.appendChild(popup);
+  profilePopupEl=popup;
+
+  // Auto-hide after 6 seconds
+  setTimeout(hideProfilePopup,6000);
+}
+
+function hideProfilePopup(){
+  if(profilePopupEl){profilePopupEl.remove();profilePopupEl=null;}
+}
+
+
+// -- WIZARD HALL OF FAME ------------------------------------------
+function getWizardSpaces(){try{return JSON.parse(localStorage.getItem('pw_wizards')||'{}');}catch(e){return {};}}
+function saveWizardSpaces(d){try{localStorage.setItem('pw_wizards',JSON.stringify(d));}catch(e){}}
+
+function registerWizardBoost(key){
+  const d=claimedSpaces[key]; if(!d) return;
+  const wizards=getWizardSpaces();
+  if(!wizards[key]){
+    wizards[key]={
+      col:d.col, row:d.row, owner:d.owner,
+      handle:d.xHandle||'', name:d.xHandle||shortAddr(),
+      avatar:d.xAvatar||'', color:d.color||'#8b5cf6',
+      clicks:0, boostedAt:Date.now(),
+    };
+    saveWizardSpaces(wizards);
+    renderWizardHall();
+    showToast('🔮 Wizard Boost registered in the Hall of Fame!');
+  }
+}
+
+function recordWizardClick(key){
+  const wizards=getWizardSpaces();
+  if(wizards[key]){
+    wizards[key].clicks=(wizards[key].clicks||0)+1;
+    const d=claimedSpaces[key];
+    if(d){wizards[key].owner=d.owner;wizards[key].handle=d.xHandle||'';
+      wizards[key].name=d.xHandle||d.owner?.slice(0,8)+'...';
+      wizards[key].color=d.color||wizards[key].color;
+      wizards[key].avatar=d.xAvatar||wizards[key].avatar;}
+    saveWizardSpaces(wizards);
+    renderWizardHall();
+  }
+}
+
+function renderWizardHall(){
+  const grid=document.getElementById('wizardHallGrid'); if(!grid) return;
+  const wizards=getWizardSpaces();
+  const entries=Object.entries(wizards).sort((a,b)=>(b[1].clicks||0)-(a[1].clicks||0));
+  if(!entries.length){
+    grid.innerHTML=`<div class="wiz-empty">No Wizard Boosts yet — be the first legend on the wall.<br/><br/>
+      <button class="aBtn aBtn-primary" style="max-width:260px;margin:0 auto;" onclick="document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ APPLY WIZARD BOOST</button></div>`;
+    return;
+  }
+  const medals=['👑','⚔️','🔮'];
+  grid.innerHTML=entries.map(([key,w],i)=>{
+    const name=w.handle?'@'+w.handle:(w.owner||'').slice(0,8)+'...';
+    const crown=i<3?medals[i]+' ':'';
+    return `<div class="wizard-card" style="border-color:#e879f9;" onclick="jumpToWizard('${key}')">
+      <div class="wiz-rank">#${i+1}${i<3?' LEGEND':''}</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="wiz-pixel-preview" style="background:${w.color||'#8b5cf6'};">
+          ${w.avatar?`<img src="${w.avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'"/>`:''}
+        </div>
+        <div class="wiz-info">
+          <div class="wiz-name">${crown}${name}</div>
+          <div class="wiz-handle">(${w.col}, ${w.row})</div>
+          <div class="wiz-clicks">⚡ ${(w.clicks||0).toLocaleString()} clicks</div>
+          <div class="wiz-badge">✦ WIZARD ETERNAL ✦</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function jumpToWizard(key){
+  const wizards=getWizardSpaces();
+  const w=wizards[key]||claimedSpaces[key]; if(!w) return;
+  recordWizardClick(key);
+  sel={col:w.col,row:w.row};
+  const v=GRID/zoom;
+  panX=Math.max(0,w.col-v/2); panY=Math.max(0,w.row-v/2); clampPan();
+  render(); if(sel.col>=0) refreshSidebar();
+  document.getElementById('wall').scrollIntoView({behavior:'smooth'});
+  showToast('🔮 Jumped to Wizard pixel ('+w.col+','+w.row+')');
+}
+// -- END WIZARD HALL ---------------------------------------------
+
+// -- PIXEL PROFILE DATA --------------------------------------------
+// Stored per pixel key: { color, url, desc, avatar, x, telegram, discord, email, github }
+function getProfile(key){
+  try{ return JSON.parse(localStorage.getItem('pw_prof_'+key)||'{}'); }catch(e){ return {}; }
+}
+function saveProfile(key, data){
+  try{ localStorage.setItem('pw_prof_'+key, JSON.stringify(data)); }catch(e){}
+}
+
+function showPixelProfile(col, row){
+  const key = col+','+row;
+  const sp  = claimedSpaces[key];
+  if(!sp) return;
+  const prof = getProfile(key);
+  const isMine = sp.owner === shortAddr();
+  const rank = pixelBalance > 0 ? getRankFromBalance(pixelBalance) : null;
+
+  // Remove existing
+  document.getElementById('pixelProfileOverlay')?.remove();
+
+  const ov = document.createElement('div');
+  ov.id = 'pixelProfileOverlay';
+  ov.className = 'pixel-profile-overlay';
+  ov.onclick = e => { if(e.target===ov) ov.remove(); };
+
+  // Generate banner pixel art from color
+  const baseColor = prof.color || sp.color || '#5b21b6';
+  const bannerPixels = Array.from({length:24}, (_,i) => {
+    const hue = (parseInt(baseColor.slice(1,3),16) + i*15) % 360;
+    return `<span style="background:hsl(${hue},60%,${30+Math.random()*20}%)"></span>`;
+  }).join('');
+
+  const socialLinks = [
+    prof.x       ? {icon:'𝕏', label:'@'+prof.x,       url:'https://twitter.com/'+prof.x}       : null,
+    prof.telegram ? {icon:'✈', label:prof.telegram,     url:'https://t.me/'+prof.telegram}        : null,
+    prof.discord  ? {icon:'◈', label:prof.discord,      url:null}                                 : null,
+    prof.website  ? {icon:'◆', label:'Website',         url:prof.website}                         : null,
+    prof.github   ? {icon:'◉', label:prof.github,       url:'https://github.com/'+prof.github}   : null,
+  ].filter(Boolean);
+
+  const rankBadge = rank ? `<div class="pf-rank" style="color:${rank.color};">✦ ${rank.title}${sp.boostTier > 0 ? ' '+['','Mage','Sorcerer','Warlock','Wizard'][sp.boostTier] : ''}</div>` : '';
+
+  const avatarHtml = prof.avatar
+    ? `<img src="${prof.avatar}" onerror="this.style.display='none'"/>`
+    : `<span style="font-size:28px;">🧙</span>`;
+
+  const boostGlow = sp.boostTier === 4
+    ? 'box-shadow:0 0 20px rgba(232,121,249,.6),0 0 40px rgba(232,121,249,.3);'
+    : sp.boostTier === 3
+    ? 'box-shadow:0 0 15px rgba(251,191,36,.5);'
+    : '';
+
+  ov.innerHTML = `<div class="pixel-profile" style="${boostGlow}">
+    <div class="pf-banner">
+      <div class="pf-banner-pixel">${bannerPixels}</div>
+      <div class="pf-avatar-wrap">
+        <div class="pf-avatar" style="border-color:${baseColor};">${avatarHtml}</div>
+      </div>
+      <button class="pf-close" onclick="document.getElementById('pixelProfileOverlay').remove()">✕</button>
+    </div>
+    <div class="pf-body">
+      <div class="pf-name">${prof.displayName || sp.owner?.slice(0,8)+'...'||'Unknown'}</div>
+      <div class="pf-coord">(${col}, ${row})</div>
+      ${rankBadge}
+      ${prof.desc ? `<div class="pf-desc">${prof.desc}</div>` : ''}
+      ${socialLinks.length ? `<div class="pf-socials">
+        ${socialLinks.map(s => s.url
+          ? `<a class="pf-social-btn" href="${s.url}" target="_blank">${s.icon} ${s.label}</a>`
+          : `<span class="pf-social-btn">${s.icon} ${s.label}</span>`
+        ).join('')}
+      </div>` : ''}
+      <div class="pf-meta">
+        Owner: <span>${sp.owner||'—'}</span><br/>
+        Pixel: <span>(${col}, ${row})</span><br/>
+        ${sp.listPrice ? `Listed: <span style="color:var(--gold);">${sp.listPrice} SOL</span><br/>` : ''}
+        Boost: <span>${['None','🟫 Mage','🩶 Sorcerer','🟡 Warlock','🔮 Wizard'][sp.boostTier||0]}</span>
+      </div>
+      <div class="pf-actions">
+        ${isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();openProfileEdit('${key}')">✏ EDIT PROFILE</button>` : ''}
+        ${sp.listPrice && !isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();claimSpace()">BUY — ${sp.listPrice} SOL</button>` : ''}
+        ${sp.x || prof.x ? `<button class="pf-btn" onclick="window.open('https://twitter.com/${sp.x||prof.x}','_blank')">𝕏 VISIT</button>` : ''}
+        ${prof.website ? `<button class="pf-btn" onclick="window.open('${prof.website}','_blank')">◆ LINK</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(ov);
+}
+
+function openProfileEdit(key){
+  // Switch to My Wall tab and open the edit form for this pixel
+  const myTab = document.querySelector('.stab[onclick*="mywall"]') ||
+                document.querySelectorAll('.stab')[1];
+  if(myTab) myTab.click();
+  setTimeout(() => {
+    const tile = document.querySelector(`[data-key="${key}"]`);
+    if(tile) { tile.click(); tile.scrollIntoView({behavior:'smooth'}); }
+    else openProfileEditModal(key);
+  }, 150);
+}
+
+function openProfileEditModal(key){
+  const [col, row] = key.split(',').map(Number);
+  const prof = getProfile(key);
+  const sp   = claimedSpaces[key] || {};
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay open';
+  modal.id = 'profileEditModal';
+  modal.onclick = e => { if(e.target===modal) modal.remove(); };
+
+  modal.innerHTML = `<div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto;">
+    <button class="modal-close" onclick="document.getElementById('profileEditModal').remove()">✕</button>
+    <div class="modal-title">✏ EDIT PIXEL PROFILE</div>
+    <div style="font-family:'VT323',monospace;font-size:15px;color:var(--muted);margin-bottom:16px;">(${col}, ${row})</div>
+
+    <div class="pf-edit-form">
+      <div class="pf-edit-section">DISPLAY</div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">DISPLAY NAME</label>
+        <input class="pf-edit-input" id="pf_name" placeholder="Your name or alias" value="${prof.displayName||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">AVATAR URL</label>
+        <input class="pf-edit-input" id="pf_avatar" placeholder="https://..." value="${prof.avatar||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">BIO (max 160 chars)</label>
+        <input class="pf-edit-input" id="pf_desc" placeholder="Tell the wall about yourself..." maxlength="160" value="${prof.desc||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">PIXEL COLOR</label>
+        <div class="pf-color-row">
+          <div class="pf-color-preview" id="pf_colorPreview" style="background:${prof.color||sp.color||'#5b21b6'};"></div>
+          <input class="pf-edit-input" id="pf_color" placeholder="#5b21b6" value="${prof.color||sp.color||''}" oninput="document.getElementById('pf_colorPreview').style.background=this.value"/>
+        </div>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">LINK URL</label>
+        <input class="pf-edit-input" id="pf_website" placeholder="https://yoursite.com" value="${prof.website||''}"/>
+      </div>
+
+      <div class="pf-edit-section">SOCIALS</div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">𝕏 X / TWITTER HANDLE</label>
+        <input class="pf-edit-input" id="pf_x" placeholder="handle (no @)" value="${prof.x||sp.xHandle||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">✈ TELEGRAM</label>
+        <input class="pf-edit-input" id="pf_telegram" placeholder="username" value="${prof.telegram||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">◈ DISCORD</label>
+        <input class="pf-edit-input" id="pf_discord" placeholder="username#0000" value="${prof.discord||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">✉ EMAIL</label>
+        <input class="pf-edit-input" id="pf_email" placeholder="you@email.com" value="${prof.email||''}"/>
+      </div>
+
+      <div class="pf-edit-row">
+        <label class="pf-edit-label">◉ GITHUB</label>
+        <input class="pf-edit-input" id="pf_github" placeholder="username" value="${prof.github||''}"/>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="aBtn aBtn-primary" style="flex:2;" onclick="saveProfileEdit('${key}')">✦ SAVE PROFILE</button>
+        <button class="aBtn aBtn-outline" style="flex:1;" onclick="document.getElementById('profileEditModal').remove()">CANCEL</button>
+      </div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+}
+
+function saveProfileEdit(key){
+  const get = id => document.getElementById(id)?.value?.trim() || '';
+  const prof = {
+    displayName: get('pf_name'),
+    avatar:      get('pf_avatar'),
+    desc:        get('pf_desc'),
+    color:       get('pf_color') || '#5b21b6',
+    website:     get('pf_website'),
+    x:           get('pf_x'),
+    telegram:    get('pf_telegram'),
+    discord:     get('pf_discord'),
+    email:       get('pf_email'),
+    github:      get('pf_github'),
+  };
+
+  // Validate URL fields
+  if(prof.website && !prof.website.startsWith('http')){
+    showToast('Website URL must start with http'); return;
+  }
+  if(prof.avatar && !prof.avatar.startsWith('http')){
+    showToast('Avatar URL must start with http'); return;
+  }
+
+  saveProfile(key, prof);
+
+  // Update canvas color if changed
+  const [col, row] = key.split(',').map(Number);
+  if(claimedSpaces[key]){
+    claimedSpaces[key].color = prof.color;
+    claimedSpaces[key].xHandle = prof.x;
+    claimedSpaces[key].xAvatar = prof.avatar;
+    paintPixel(col, row, prof.color);
+    render();
+  }
+
+  // Update NFT metadata via Vercel API
+  if(claimedSpaces[key]?.nftMint){
+    updateNftMetadata(key, prof).catch(e => console.warn('Metadata update failed:', e));
+  }
+
+  document.getElementById('profileEditModal')?.remove();
+  showToast('✦ Profile saved!');
+  renderMySpaces();
+}
+
+async function updateNftMetadata(key, prof){
+  const sp = claimedSpaces[key];
+  if(!sp?.nftMint || !walletAddress) return;
+  try{
+    const res = await fetch('/api/update-cnft-metadata', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mintAddress: sp.nftMint,
+        ownerWallet: walletAddress,
+        col: sp.col, row: sp.row,
+        profile: prof,
+      })
+    });
+    const data = await res.json();
+    if(data.success) showToast('✦ NFT metadata updated!');
+  }catch(e){ console.warn('NFT metadata update error:', e); }
+}
+// --
+
+function copyCA(){navigator.clipboard.writeText(CA).then(()=>showToast('✦ CA copied!')).catch(()=>showToast('CA: '+CA));}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
+function initStars(){const s=document.getElementById('stars');for(let i=0;i<100;i++){const d=document.createElement('div');d.className='star';d.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*5}s;--del:${Math.random()*5}s;${Math.random()>.75?'width:3px;height:3px;':''}`;s.appendChild(d);}}
+
+// Color picker live preview
+document.getElementById('colorPicker').addEventListener('input',function(){
+  if(dragStart&&!claimedSpaces[spaceKey(dragStart.col,dragStart.row)]&&!pendingImageDataUrl){
+    const prev=document.getElementById('spacePreview');prev.style.background=this.value;
+  }
 });
 
-// Keep all your other functions (connectWallet, claimSpace, render, etc.) unchanged
-// They will now use the improved live SOL_USD
+// -- INIT -------------------------------------------------
+
+// -- MERGE / CLUSTER SYSTEM ----------------------------------------
+function updateMergeTab(){
+  const status=document.getElementById('mergeStatus');
+  const info=document.getElementById('mergeInfo');
+  const btn=document.getElementById('mergeBtnExecute');
+  if(!status||!btn) return;
+
+  if(!dragStart||!dragEnd){
+    status.textContent='Select pixels on the wall first.';
+    if(info) info.style.display='none';
+    btn.disabled=true; return;
+  }
+
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1, h=rect.r2-rect.r1+1;
+  const total=w*h;
+  const myAddr=shortAddr();
+  let owned=0, notOwned=0;
+
+  for(let col=rect.c1;col<=rect.c2;col++){
+    for(let row=rect.r1;row<=rect.r2;row++){
+      const key=col+','+row;
+      const sp=claimedSpaces[key];
+      if(sp&&sp.owner===myAddr) owned++;
+      else notOwned++;
+    }
+  }
+
+  if(info) info.style.display='block';
+  const selEl=document.getElementById('mergeSelInfo');
+  const ownEl=document.getElementById('mergeOwnedCount');
+  const szEl=document.getElementById('mergeSize');
+  if(selEl) selEl.textContent=`(${rect.c1},${rect.r1}) → (${rect.c2},${rect.r2})`;
+  if(ownEl) ownEl.textContent=`${owned} / ${total}`;
+  if(szEl)  szEl.textContent=`${w}×${h} = ${total} pixels`;
+
+  if(total<4){
+    status.textContent='Minimum size is 2×2 (4 pixels).';
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else if(total>100){
+    status.textContent='Maximum size is 10×10 (100 pixels).';
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else if(notOwned>0){
+    status.textContent=`${notOwned} pixel${notOwned>1?'s':''} in selection not owned by you.`;
+    status.style.color='var(--red)'; btn.disabled=true;
+  } else {
+    status.textContent=`Ready to merge ${total} pixels into 1 cluster NFT.`;
+    status.style.color='var(--green)'; btn.disabled=false;
+  }
+}
+
+async function executeMerge(){
+  if(!walletConnected||!dragStart||!dragEnd){return;}
+  const rect=getSelRect();
+  const w=rect.c2-rect.c1+1, h=rect.r2-rect.r1+1;
+  const total=w*h;
+  if(total<4||total>100){showToast('Invalid merge size.');return;}
+
+  const btn=document.getElementById('mergeBtnExecute');
+  btn.disabled=true; btn.textContent='◈ MERGING...';
+  showToast('Sending merge transaction...');
+
+  // On-chain merge via smart contract merge_pixels instruction
+  // This marks all pixels as clustered=true and creates ClusterSpace PDA
+  // For now, record locally and call Vercel to mint cluster cNFT
+  try{
+    const myAddr=shortAddr();
+    const clusterKey=rect.c1+','+rect.r1;
+
+    // Mark all pixels as clustered locally
+    for(let col=rect.c1;col<=rect.c2;col++){
+      for(let row=rect.r1;row<=rect.r2;row++){
+        const key=col+','+row;
+        if(claimedSpaces[key]) claimedSpaces[key].clustered=true;
+      }
+    }
+
+    // Create cluster record
+    const cluster={
+      colStart:rect.c1, rowStart:rect.r1,
+      colEnd:rect.c2,   rowEnd:rect.r2,
+      width:w, height:h, pixelCount:total,
+      owner:myAddr, mergedAt:Date.now()
+    };
+    const myClusters=JSON.parse(localStorage.getItem('pw_clusters_'+walletAddress)||'[]');
+    myClusters.push(cluster);
+    localStorage.setItem('pw_clusters_'+walletAddress, JSON.stringify(myClusters));
+
+    saveToStorage();
+    render();
+    renderMyClusters();
+    showToast(`✦ ${w}×${h} cluster created! Minting NFT...`);
+
+    // Mint cluster cNFT
+    const r=await fetch('/api/mint-cnft',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        txSignature:'cluster',
+        buyerWallet:walletAddress,
+        col:rect.c1, row:rect.r1,
+        isCluster:true,
+        width:w, height:h
+      })
+    });
+    const d=await r.json();
+    if(d.success) showToast('✦ Cluster NFT minted!');
+
+  }catch(e){
+    console.error('Merge error:',e);
+    showToast('Merge error: '+e.message?.slice(0,50));
+  }finally{
+    btn.disabled=false; btn.textContent='◈ MERGE INTO CLUSTER NFT';
+  }
+}
+
+function renderMyClusters(){
+  const el=document.getElementById('myClusters');
+  if(!el||!walletAddress) return;
+  const clusters=JSON.parse(localStorage.getItem('pw_clusters_'+walletAddress)||'[]');
+  if(!clusters.length){el.textContent='No clusters yet.';return;}
+  el.innerHTML=clusters.map(cl=>`
+    <div style="border:1px solid rgba(91,33,182,.3);padding:8px;margin-bottom:6px;">
+      <div style="color:var(--cyan);font-size:13px;">${cl.width}×${cl.height} CLUSTER</div>
+      <div style="color:var(--muted);font-size:12px;">(${cl.colStart},${cl.rowStart}) → (${cl.colEnd},${cl.rowEnd})</div>
+      <div style="color:var(--muted);font-size:12px;">${cl.pixelCount} pixels merged</div>
+    </div>`).join('');
+}
+
+// Merge tab updates on tab click, not on every selection change
+
+// Merge tab updates handled directly in the tab button onclick
+// -- END MERGE / CLUSTER -------------------------------------------
+
+window.addEventListener('load',async()=>{
+  // Fetch real SOL price immediately and refresh every 60s
+  fetchSolPrice();
+  setInterval(fetchSolPrice, 60_000);
+  fetchTokenData();
+  setInterval(fetchTokenData, 30_000);
+  // Handle X OAuth callback (?xauth=success&wallet=...&handle=...&space=...)
+  const params=new URLSearchParams(window.location.search);
+  // xauth handler removed
+  if(params.get('xauth')==='error'){
+    const reason=params.get('reason')||'unknown';
+    showToast('X verification failed ('+reason+') — please try again.');
+    window.history.replaceState({},'',window.location.pathname);
+  }
+
+  initStars();resizeCanvas();window.addEventListener('resize',resizeCanvas);
+  initOff();render();
+  await tryAutoReconnect();await fetchTokenData();
+  setInterval(fetchTokenData,30000);updateSelInfo();
+  renderWizardHall();
+  document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+});
+
+// -- TOKENOMICS CHARTS -------------------------------------------
+(function initTokenomicsCharts(){
+  // Only runs on tokenomics.html
+  if(!document.getElementById('tkSupplyChart')) return;
+  if(typeof Chart === 'undefined') return;
+
+  // Wallet bar rows
+  const walletData = [
+    {label:'Staking reward pool (2×)', amt:40, color:'#8b5cf6'},
+    {label:'LP reserve / top-up (1×)', amt:20, color:'#22d3ee'},
+    {label:'Treasury reserve (2×)',     amt:40, color:'#ef4444'},
+    {label:'Burn reserve (1×)',         amt:20, color:'#fbbf24'},
+    {label:'Dev fund (1×)',             amt:20, color:'#4ade80'},
+    {label:'Community/marketing (2×)', amt:40, color:'#e879f9'},
+    {label:'Fee reinvestment (1×)',     amt:20, color:'#22d3ee'},
+    {label:'Ecosystem grants (1×)',     amt:20, color:'#8b5cf6'},
+  ];
+  const wb = document.getElementById('tkWalletBars');
+  if(wb) walletData.forEach(w=>{
+    const pct = Math.round(w.amt/220*100);
+    wb.innerHTML += `<div class="tk-row">
+      <div class="tk-row-label">${w.label}</div>
+      <div class="tk-bar-wrap"><div class="tk-bar" style="width:${pct}%;background:${w.color};"></div></div>
+      <div class="tk-row-val">${w.amt}M</div>
+    </div>`;
+  });
+
+  // Wallet purpose cards
+  const walletPurposes = [
+    {name:'STAKING REWARD POOL',  n:2, amt:'40M', desc:'Funds Streamflow staking pool. Locked in contract. Every holder who stakes earns yield from this.', lock:'STREAMFLOW — STAKING CONTRACT', col:'#8b5cf6'},
+    {name:'LP RESERVE',           n:1, amt:'20M', desc:'Held ready to deepen Meteora pool if price drops. Active defense — not passive holding.', lock:'STREAMFLOW 6MO LOCK', col:'#22d3ee'},
+    {name:'TREASURY RESERVE',     n:2, amt:'40M', desc:'Emergency runway only. Never sold under any circumstance. Verifiable on Solscan.', lock:'STREAMFLOW 24MO LOCK — NEVER SOLD', col:'#ef4444'},
+    {name:'BURN RESERVE',         n:1, amt:'20M', desc:'Dedicated to quarterly token burns. Each burn reduces supply permanently, making your tokens scarcer.', lock:'PUBLIC QUARTERLY BURNS ON-CHAIN', col:'#fbbf24'},
+    {name:'DEV FUND',             n:1, amt:'20M', desc:'Team tokens. 12-month cliff — team earns nothing for a year. Then linear vest. Skin in the game.', lock:'12MO CLIFF + LINEAR VEST', col:'#4ade80'},
+    {name:'COMMUNITY & MARKETING',n:2, amt:'40M', desc:'Pixel giveaways, KOL campaigns, contests, growth. Released on 6-month linear schedule.', lock:'6MO LINEAR VEST ON STREAMFLOW', col:'#e879f9'},
+    {name:'FEE REINVESTMENT',     n:1, amt:'20M', desc:'Meteora LP fee revenue (SOL + $PIXEL) flows here. Used to buy $PIXEL and extend staking runway.', lock:'OPERATIONAL — FEEDS FLYWHEEL', col:'#22d3ee'},
+    {name:'ECOSYSTEM GRANTS',     n:1, amt:'20M', desc:'For builders, tools, integrations, and partnerships. Released on milestone achievement only.', lock:'MILESTONE-BASED RELEASE', col:'#8b5cf6'},
+  ];
+  const wg = document.getElementById('tkWalletGrid');
+  if(wg) walletPurposes.forEach(w=>{
+    wg.innerHTML += `<div class="tk-wallet">
+      <div class="tk-wallet-name">${w.name} (${w.n}×20M)</div>
+      <div class="tk-wallet-amt" style="color:${w.col};">${w.amt}</div>
+      <div class="tk-wallet-desc">${w.desc}</div>
+      <div class="tk-wallet-lock">✦ ${w.lock}</div>
+    </div>`;
+  });
+
+  // Agent wallet flow
+  const agentSteps = [
+    {n:'01', text:'User buys a pixel', sub:'SOL sent to smart contract'},
+    {n:'02', text:'90% SOL → Treasury wallet', sub:'Funds operations + future development'},
+    {n:'03', text:'10% SOL → Agent wallet', sub:'Earmarked for staking pool funding'},
+    {n:'04', text:'Agent SOL buys $PIXEL weekly', sub:'Creates consistent market buy pressure'},
+    {n:'05', text:'Bought $PIXEL → staking pool', sub:'Extends staker runway from real revenue'},
+    {n:'06', text:'User buys a pixel boost ($PIXEL)', sub:'Mage 10K · Sorcerer 50K · Warlock 250K · Wizard 1M'},
+    {n:'07', text:'100% of boost $PIXEL → BURNED', sub:'Never re-enters circulation — permanent deflation'},
+  ];
+  const af = document.getElementById('tkAgentFlow');
+  if(af) agentSteps.forEach(s=>{
+    const isBurn = s.n === '07';
+    af.innerHTML += `<div class="tk-flow-step" style="border-left-color:${isBurn?'var(--red)':'var(--lav)'};">
+      <div class="tk-flow-num">${s.n}</div>
+      <div>
+        <div class="tk-flow-text" style="color:${isBurn?'var(--red)':'var(--white)'};">${s.text}</div>
+        <div class="tk-flow-sub">${s.sub}</div>
+      </div>
+    </div>`;
+  });
+
+  // Revenue streams
+  const revenueSteps = [
+    {icon:'◆', title:'STREAM 1 — PIXEL SALES', col:'#8b5cf6', text:'Every pixel claimed sends SOL to treasury. Bonding curve: 0.01→0.50 SOL. Max revenue $20.9M at full sellout.'},
+    {icon:'◆', title:'STREAM 2 — METEORA LP FEES', col:'#22d3ee', text:'1% fee on every $PIXEL swap, 24/7 automatic. At $50K daily volume = $182,500/yr. Grows with token traction.'},
+    {icon:'◆', title:'STREAM 3 — BOOST BURNS', col:'#fbbf24', text:'Every boost purchase destroys $PIXEL permanently. 100 Wizard boosts = 100M tokens gone. Each burn makes remaining tokens more scarce.'},
+  ];
+  const rf = document.getElementById('tkRevenueFlow');
+  if(rf) revenueSteps.forEach(s=>{
+    rf.innerHTML += `<div class="tk-flow-step" style="border-left-color:${s.col};margin-bottom:6px;">
+      <div class="tk-flow-num" style="color:${s.col};">${s.icon}</div>
+      <div>
+        <div class="tk-flow-text" style="color:${s.col};font-size:14px;">${s.title}</div>
+        <div class="tk-flow-sub" style="margin-top:4px;">${s.text}</div>
+      </div>
+    </div>`;
+  });
+
+  // Supply donut
+  const sc = document.getElementById('tkSupplyChart');
+  if(sc) new Chart(sc,{
+    type:'doughnut',
+    data:{
+      labels:['Free float (720M)','Meteora LP (50M)','Project wallets (220M)','Burned (10M)'],
+      datasets:[{data:[720,50,220,10],
+        backgroundColor:['#5b21b6','#22d3ee','#fbbf24','#ef4444'],
+        borderColor:'#0a0612',borderWidth:2,hoverOffset:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}}}
+  });
+
+  // Burn chart
+  const bc = document.getElementById('tkBurnChart');
+  if(bc) new Chart(bc,{
+    type:'bar',
+    data:{
+      labels:['Already burned','Q1 burn','Q2 burn','Q3 burn','Q4 burn'],
+      datasets:[{
+        label:'Tokens burned',
+        data:[10,20,15,10,5],
+        backgroundColor:['#ef4444','#ef4444','#dc2626','#b91c1c','#991b1b'],
+        borderWidth:0,borderRadius:3
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'M $PIXEL burned'},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'M'}},
+        x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+      }}
+  });
+
+  // Runway chart
+  const rc = document.getElementById('tkRunwayChart');
+  if(rc) new Chart(rc,{
+    type:'bar',
+    data:{
+      labels:['3% participation','5% participation','10% participation','20% participation'],
+      datasets:[{
+        label:'Months runway',
+        data:[69,42,21,10],
+        backgroundColor:['#22d3ee','#22d3ee','#fbbf24','#ef4444'],
+        borderWidth:0,borderRadius:3
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y+' months runway'},
+          bodyColor:'#f5f0ff',backgroundColor:'#110d22',borderColor:'#5b21b6',borderWidth:1}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'rgba(91,33,182,.2)'},ticks:{color:'#9d8ccc',callback:v=>v+'mo'}},
+        x:{grid:{display:false},ticks:{color:'#9d8ccc'}}
+      }}
+  });
+})();
 
 </script>
 </body>
