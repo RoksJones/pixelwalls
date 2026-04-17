@@ -387,7 +387,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   </ul>
   <div class="nav-right">
     <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
-    
+    <button class="nav-btn" id="xNavBtn" onclick="doXOAuth()" style="border-color:#1d9bf0;color:#1d9bf0;display:none;" title="Link your X account to your wallet">𝕏 VERIFY X</button>
     <button class="nav-btn nbb" onclick="window.open('https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump','_blank')">BUY $PIXEL ▶</button>
   </div>
 </nav>
@@ -950,6 +950,10 @@ async function doConnect(w){
 
     showToast('✦ '+w.name+' connected: '+s);
     if(dragStart)refreshSidebar();
+    const xBtn=document.getElementById('xNavBtn');
+    if(xBtn) xBtn.style.display='';
+    updateXNavBtn();
+    applyWalletXToPixels();
     // Show X verify button in nav
 
     // Fetch $PIXEL balance for rank calculation
@@ -976,7 +980,12 @@ async function tryAutoReconnect(){
       const s=walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
       const btn=document.getElementById('walletBtn');
       btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
-      loadMySpaces();break;
+      loadMySpaces();
+      const xBtnR=document.getElementById('xNavBtn');
+      if(xBtnR) xBtnR.style.display='';
+      updateXNavBtn();
+      applyWalletXToPixels();
+      break;
     }}catch(e){}
   }
 }
@@ -1756,28 +1765,12 @@ function getCurrentPrice(){for(const t of TIERS)if(totalClaimed<t.max)return t.p
 // ── X WALLET AUTH ─────────────────────────────────────────────────
 // X is tied to the WALLET, not individual pixels.
 // Once verified, every pixel owned by that wallet shows the handle.
-function getWalletX(addr){
-  if(!addr) return null;
-  try{ return JSON.parse(localStorage.getItem('pw_xwallet_'+(addr))||'null'); }
-  catch(e){ return null; }
-}
-function saveWalletX(addr, data){
-  if(!addr) return;
-  localStorage.setItem('pw_xwallet_'+addr, JSON.stringify(data));
-}
-function getMyX(){ return getWalletX(walletAddress); }
+// getWalletX/saveWalletX/getMyX defined in X auth section below
 
-// X auth removed — will be re-added later
-function doXOAuth(){ showToast('X verification coming soon.'); }
-function getWalletX(){ return null; }
-function saveWalletX(){ }
-function getMyX(){ return null; }
-function updateXNavBtn(){ }
-function disconnectX(){ }
-function applyWalletXToPixels(){ }
+// X auth stubs removed — full implementation below
 
 
-function updateXNavBtn(){ /* X removed */ }
+
 
 // -- TOKEN DATA — DexScreener primary, pump.fun fallback --
 const PAIR='HNUVY8vDKMy4S2sNmRtJ7wVY5GogPYgKJh1uNo3oPWfE';
@@ -1826,7 +1819,13 @@ function applyDexData(pair){
   // Volume 24h
   if(pair.volume?.h24) document.getElementById('vol24').textContent='$'+abbreviate(pair.volume.h24);
   // Liquidity
-  if(pair.liquidity?.usd) document.getElementById('dexLiq').textContent='$'+abbreviate(pair.liquidity.usd);
+  if(pair.liquidity?.usd && pair.liquidity.usd > 0){
+    document.getElementById('dexLiq').textContent='$'+abbreviate(pair.liquidity.usd);
+  } else {
+    // Token still on pump.fun bonding curve — liquidity is internal until ~$69K mcap
+    document.getElementById('dexLiq').textContent='BONDING';
+    document.getElementById('dexLiq').title='Token is on pump.fun bonding curve. Liquidity unlocks at ~$69K market cap.';
+  }
   // Price change 24h
   if(pair.priceChange?.h24!=null){
     const ch=parseFloat(pair.priceChange.h24);
@@ -2813,6 +2812,77 @@ function renderMyClusters(){
 // Merge tab updates handled directly in the tab button onclick
 // -- END MERGE / CLUSTER -------------------------------------------
 
+
+// ── X WALLET AUTH ─────────────────────────────────────────────────
+// X is tied to WALLET ADDRESS — one verify per wallet.
+// All pixels owned by that wallet automatically show the handle.
+
+function getWalletX(addr){
+  if(!addr) return null;
+  try{ return JSON.parse(localStorage.getItem('pw_xwallet_'+addr)||'null'); }
+  catch(e){ return null; }
+}
+function saveWalletX(addr, data){
+  if(!addr) return;
+  localStorage.setItem('pw_xwallet_'+addr, JSON.stringify(data));
+}
+function getMyX(){ return getWalletX(walletAddress); }
+
+function doXOAuth(){
+  if(!walletConnected||!walletAddress){
+    showToast('Connect your Phantom wallet first.');
+    return;
+  }
+  const myX=getMyX();
+  if(myX?.handle) showToast('Reverifying @'+myX.handle+'...');
+  const state=encodeURIComponent(JSON.stringify({
+    wallet:walletAddress,
+    returnUrl:'https://pixelwalls.xyz/'
+  }));
+  window.location.href='/api/xlogin?state='+state;
+}
+
+function disconnectX(){
+  if(!walletAddress) return;
+  localStorage.removeItem('pw_xwallet_'+walletAddress);
+  updateXNavBtn();
+  showToast('X account unlinked.');
+}
+
+function updateXNavBtn(){
+  const btn=document.getElementById('xNavBtn');
+  if(!btn) return;
+  const myX=getMyX();
+  if(myX?.handle){
+    btn.textContent='𝕏 @'+myX.handle;
+    btn.style.borderColor='var(--green)';
+    btn.style.color='var(--green)';
+    btn.title='Click to unlink X account';
+    btn.onclick=disconnectX;
+  } else {
+    btn.textContent='𝕏 VERIFY X';
+    btn.style.borderColor='#1d9bf0';
+    btn.style.color='#1d9bf0';
+    btn.title='Link your X account to your wallet';
+    btn.onclick=doXOAuth;
+  }
+}
+
+function applyWalletXToPixels(){
+  if(!walletAddress) return;
+  const xData=getMyX();
+  if(!xData?.handle) return;
+  Object.keys(claimedSpaces).forEach(key=>{
+    if(claimedSpaces[key].owner===shortAddr()){
+      claimedSpaces[key].xVerified=true;
+      claimedSpaces[key].xHandle=xData.handle;
+      claimedSpaces[key].xName=xData.name||xData.handle;
+      if(xData.avatar) claimedSpaces[key].xAvatar=xData.avatar;
+    }
+  });
+}
+// ── END X AUTH ────────────────────────────────────────────────────
+
 window.addEventListener('load',async()=>{
   // Fetch real SOL price immediately and refresh every 60s
   fetchSolPrice();
@@ -2821,7 +2891,23 @@ window.addEventListener('load',async()=>{
   setInterval(fetchTokenData, 30_000);
   // Handle X OAuth callback (?xauth=success&wallet=...&handle=...&space=...)
   const params=new URLSearchParams(window.location.search);
-  // xauth handler removed
+  // Handle X OAuth callback
+  if(params.get('xauth')==='success'){
+    const handle=params.get('handle');
+    const name=params.get('name')||handle;
+    const avatar=params.get('avatar')||'';
+    const wallet=params.get('wallet')||walletAddress;
+    if(handle&&wallet){
+      saveWalletX(wallet,{handle,name,avatar,verifiedAt:Date.now()});
+      if(avatar){const img=new Image();img.src=avatar;imgCache[avatar]=img;}
+      updateXNavBtn();
+      applyWalletXToPixels();
+      saveToStorage();
+      paintAll();render();
+      showToast('✦ @'+handle+' verified and linked to your wallet!');
+    }
+    window.history.replaceState({},'',window.location.pathname);
+  }
   if(params.get('xauth')==='error'){
     const reason=params.get('reason')||'unknown';
     showToast('X verification failed ('+reason+') — please try again.');
