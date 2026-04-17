@@ -383,6 +383,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <li><a href="#lore">LORE</a></li>
     <li><a href="#hall" style="color:#e879f9;">🔮 HALL OF FAME</a></li>
     <li><a href="tokenomics.html" style="color:#22d3ee;">📊 TOKENOMICS</a></li>
+    <li><a href="marketplace.html" style="color:#4ade80;">🏪 MARKET</a></li>
     <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24;font-weight:bold;">WHITE PAPER</a></li>
   </ul>
   <div class="nav-right">
@@ -468,6 +469,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <button class="qbtn" onclick="zoomBy(0.5)">－</button>
     <button class="qbtn" onclick="resetZoom()">FIT</button>
   </div>
+  <button class="ctrl-btn" onclick="jumpToCenter()" title="Jump to center pixel (499,499)" style="font-size:7px;padding:6px 12px;">✦ CENTER</button>
   <div class="zoom-hint">
     <span>🖱 Scroll=zoom · Alt+Drag=pan · Click or Drag=select pixels</span>
     <span id="zoomLabel">Zoom: 1×</span>
@@ -954,6 +956,7 @@ async function doConnect(w){
     if(xBtn) xBtn.style.display='';
     updateXNavBtn();
     applyWalletXToPixels();
+    activateDevCenter();
     // Show X verify button in nav
 
     // Fetch $PIXEL balance for rank calculation
@@ -2882,6 +2885,62 @@ function applyWalletXToPixels(){
   });
 }
 // ── END X AUTH ────────────────────────────────────────────────────
+
+
+// ── DEV TEST: CENTER PIXEL ────────────────────────────────────────
+// Gives wallet 6m5Gbwbx... a test pixel at (499,499)
+// Remove this block before production launch
+const DEV_TEST_WALLET = '9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
+const DEV_CENTER = {col:499, row:499, key:'499,499'};
+
+function activateDevCenter(){
+  if(!walletAddress || walletAddress !== DEV_TEST_WALLET) return;
+  const key = DEV_CENTER.key;
+  if(claimedSpaces[key]) return; // already set
+
+  // Pre-populate center pixel for testing
+  claimedSpaces[key] = {
+    col:499, row:499,
+    owner: walletAddress.slice(0,4)+'...'+walletAddress.slice(-4),
+    color: '#e879f9',
+    price: 0.01,
+    listPrice: 0,
+    boostTier: 0,
+    w:1, h:1,
+    txSig: 'dev-test-pixel',
+    devTest: true,
+  };
+  paintPixel(499, 499, '#e879f9');
+  render();
+  showToast('✦ Dev pixel set at (499,499) — center of the wall!');
+
+  // Jump to center
+  setTimeout(()=>{
+    panX = 499 - (1000/zoom)/2;
+    panY = 499 - (1000/zoom)/2;
+    clampPan();
+    // Select the center pixel
+    dragStart = {col:499, row:499};
+    dragEnd   = {col:499, row:499};
+    resolveSelection();
+    refreshSidebar();
+    render();
+  }, 300);
+}
+
+function jumpToCenter(){
+  zoom = 8;
+  panX = 499 - (1000/zoom)/2;
+  panY = 499 - (1000/zoom)/2;
+  clampPan();
+  dragStart = {col:499, row:499};
+  dragEnd   = {col:499, row:499};
+  resolveSelection();
+  refreshSidebar();
+  render();
+  showToast('✦ Jumped to center (499,499)');
+}
+// ── END DEV TEST ──────────────────────────────────────────────────
 
 window.addEventListener('load',async()=>{
   // Fetch real SOL price immediately and refresh every 60s
