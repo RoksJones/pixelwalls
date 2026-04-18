@@ -78,10 +78,6 @@
       "destination": "/profile.html"
     },
     {
-      "source": "/profile/:col/:row",
-      "destination": "/index.html"
-    },
-    {
       "source": "/marketplace.html",
       "destination": "/marketplace.html"
     },
