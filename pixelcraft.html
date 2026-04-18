@@ -353,10 +353,18 @@ select:focus{border-color:var(--lav);}
 
     <!-- ACTIONS -->
     <div class="ctrl-section">
-      <button class="action-btn a" id="dlPng" disabled onclick="downloadPNG()">▼ DOWNLOAD PNG</button>
+      <button class="action-btn a" id="dlPng" disabled onclick="downloadAndCount('png')">▼ DOWNLOAD PNG</button>
       <button class="action-btn b" id="dlSvg" disabled onclick="downloadSVG()">▼ DOWNLOAD SVG</button>
-      <button class="action-btn" id="cpyBtn" disabled onclick="copyClipboard()">⧉ COPY TO CLIPBOARD</button>
+      <button class="action-btn" id="cpyBtn" disabled onclick="copyAndCount()">⧉ COPY TO CLIPBOARD</button>
       <button class="action-btn" id="dlSprite" disabled onclick="downloadSprite()" style="display:none;">▼ DOWNLOAD SPRITE SHEET</button>
+      <button class="action-btn" id="shareXBtn" disabled onclick="shareOnX()" style="border-color:#1d9bf0;color:#1d9bf0;">𝕏 SHARE ON X</button>
+    </div>
+
+    <!-- COUNTER -->
+    <div style="background:rgba(0,255,204,.05);border:1px solid rgba(0,255,204,.2);padding:12px;text-align:center;">
+      <div style="font-size:6px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">PIXEL ARTS CRAFTED GLOBALLY</div>
+      <div id="craftCounter" style="font-family:'VT323',monospace;font-size:32px;color:#00ffcc;letter-spacing:2px;transition:all .3s;">—</div>
+      <div style="font-family:'VT323',monospace;font-size:13px;color:var(--muted);margin-top:3px;">creators worldwide</div>
     </div>
 
     <!-- PIXELWALLS PROMO -->
@@ -640,7 +648,7 @@ function doPixelate(){
   _lastPix={out,bW,bH,dispSz};
 
   // Enable buttons
-  ['dlPng','dlSvg','cpyBtn'].forEach(id=>document.getElementById(id).disabled=false);
+  ['dlPng','dlSvg','cpyBtn','shareXBtn'].forEach(id=>document.getElementById(id).disabled=false);
   if(isSprite)document.getElementById('dlSprite').disabled=false;
 
   // Update palette swatches
@@ -744,6 +752,9 @@ function copyClipboard(){
   });
 }
 
+// Fetch counter on load
+fetchCounter();
+
 // File inputs
 function handleFile(f){if(!f||!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=ev=>loadImg(ev.target.result);r.readAsDataURL(f);}
 document.getElementById('fileInput').addEventListener('change',function(){handleFile(this.files[0]);});
@@ -756,6 +767,58 @@ const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleFile(e.dataTransfer.files[0]);});
+
+// ── GLOBAL COUNTER ────────────────────────────────────────────────
+async function fetchCounter(){
+  try{
+    const r=await fetch('/api/counter');
+    if(r.ok){const d=await r.json();setCounter(d.count||0);}
+  }catch(e){}
+}
+async function incrementCounter(){
+  try{
+    const r=await fetch('/api/counter',{method:'POST'});
+    if(r.ok){const d=await r.json();setCounter(d.count||0);}
+  }catch(e){}
+}
+function setCounter(n){
+  const el=document.getElementById('craftCounter');
+  if(!el)return;
+  el.textContent=n.toLocaleString();
+  el.style.transform='scale(1.12)';
+  el.style.color='#e879f9';
+  setTimeout(()=>{el.style.transform='scale(1)';el.style.color='#00ffcc';},400);
+}
+
+// ── DOWNLOAD + COUNT ─────────────────────────────────────────────
+function downloadAndCount(type){
+  downloadPNG();
+  incrementCounter();
+}
+function copyAndCount(){
+  copyClipboard();
+  incrementCounter();
+}
+
+// ── SHARE ON X ───────────────────────────────────────────────────
+function shareOnX(){
+  const pc=document.getElementById('pixCanvas');
+  if(!pc){showToast('Generate a pixel art first!');return;}
+  // Download the image first so user has it
+  const link=document.createElement('a');
+  link.download='my-pixelart.png';
+  link.href=pc.toDataURL('image/png');
+  link.click();
+  // Increment counter
+  incrementCounter();
+  // Open X with pre-filled text
+  const text=encodeURIComponent('Just turned my photo into pixel art with #Pixelcraft by @pixelwallsxyz 🔥\n\nCreate yours free at pixelwalls.xyz/pixelcraft.html\n\n#PixelArt #Pixelwalls #Solana');
+  const url=encodeURIComponent('https://pixelwalls.xyz/pixelcraft.html');
+  setTimeout(()=>{
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`,'_blank');
+  },500);
+}
+// ── END SHARE ─────────────────────────────────────────────────────
 </script>
 </body>
 </html>
