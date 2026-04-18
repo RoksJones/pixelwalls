@@ -42,10 +42,6 @@
           "value": "nosniff"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
         },
@@ -61,34 +57,6 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/api/counter",
-      "destination": "/api/counter"
-    },
-    {
-      "source": "/pixelcraft.html",
-      "destination": "/pixelcraft.html"
-    },
-    {
-      "source": "/profile.html",
-      "destination": "/profile.html"
-    },
-    {
-      "source": "/profile/:col/:row",
-      "destination": "/profile.html"
-    },
-    {
-      "source": "/marketplace.html",
-      "destination": "/marketplace.html"
-    },
-    {
-      "source": "/tokenomics.html",
-      "destination": "/tokenomics.html"
-    },
-    {
-      "source": "/whitepaper.html",
-      "destination": "/whitepaper.html"
-    },
     {
       "source": "/api/metadata/:col/:row",
       "destination": "/api/metadata"
@@ -110,8 +78,8 @@
       "destination": "/api/xlogin"
     },
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "source": "/profile/:col/:row",
+      "destination": "/profile.html"
     },
     {
       "source": "/((?!api/)[^.]*)",
