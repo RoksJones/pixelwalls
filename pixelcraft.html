@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pixelcraft — Pixelwalls</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%238b5cf6'/><text y='24' font-size='20'>⬡</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --void:#0a0612;--deep:#110d22;--surface:#16161f;--panel:#1a1626;
+  --border:rgba(91,33,182,.3);--border2:rgba(91,33,182,.6);
+  --lav:#8b5cf6;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;
+  --green:#4ade80;--white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;
+  --accent:#00ffcc;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--void);color:var(--white);font-family:'Press Start 2P',monospace;min-height:100vh;overflow-x:hidden;}
+
+/* SCANLINE TEXTURE */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:1000;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:rgba(10,6,18,.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:26px;height:26px;background:var(--lav);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:4px;}
+.logo-mark span{background:var(--gold);display:block;}
+.nav-title{font-size:8px;color:var(--gold);letter-spacing:1px;}
+.nav-links{display:flex;gap:10px;align-items:center;}
+.nav-link{background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:7px 12px;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.nav-link:hover{border-color:var(--lav);color:var(--lav);}
+.nav-link.cta{border-color:var(--gold);color:var(--gold);}
+.nav-link.cta:hover{background:rgba(251,191,36,.1);}
+
+/* HERO */
+.hero{text-align:center;padding:40px 20px 30px;position:relative;}
+.hero-badge{font-size:7px;letter-spacing:4px;color:var(--lav);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.hero-badge::before,.hero-badge::after{content:'';flex:1;max-width:60px;height:1px;background:var(--border2);}
+.hero-title{font-size:clamp(14px,4vw,28px);background:linear-gradient(135deg,var(--gold),var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;line-height:1.4;}
+.hero-sub{font-family:'VT323',monospace;font-size:20px;color:var(--muted);max-width:500px;margin:0 auto;}
+
+/* MAIN LAYOUT */
+.app-wrap{max-width:1200px;margin:0 auto;padding:0 16px 60px;display:grid;grid-template-columns:1fr 280px;gap:14px;align-items:start;}
+@media(max-width:800px){.app-wrap{grid-template-columns:1fr;}}
+
+/* MAIN AREA */
+.main-area{display:flex;flex-direction:column;gap:10px;}
+
+/* DROP ZONE */
+.drop-zone{border:2px dashed rgba(91,33,182,.4);background:rgba(17,13,34,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s;position:relative;overflow:hidden;min-height:200px;border-radius:2px;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--lav);background:rgba(91,33,182,.08);}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz-inner{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;padding:20px;}
+.dz-icon{font-size:36px;opacity:.35;}
+.dz-text{font-size:8px;letter-spacing:2px;color:var(--muted);}
+.dz-sub{font-family:'VT323',monospace;font-size:15px;color:rgba(157,140,204,.5);}
+
+/* EXAMPLES */
+.example-row{display:flex;gap:6px;justify-content:center;margin-top:8px;}
+.ex-btn{background:rgba(17,13,34,.8);border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:7px 10px;cursor:pointer;transition:.2s;letter-spacing:1px;}
+.ex-btn:hover{border-color:var(--lav);color:var(--lav);}
+
+/* CANVASES */
+.canvas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.canvas-wrap{display:flex;flex-direction:column;gap:6px;}
+.canvas-label{font-size:6px;letter-spacing:2px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;}
+.canvas-label span{color:var(--lav);}
+.canvas-box{background:rgba(17,13,34,.9);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;min-height:180px;}
+canvas{max-width:100%;max-height:280px;object-fit:contain;image-rendering:pixelated;}
+.checker{background-image:linear-gradient(45deg,rgba(91,33,182,.1) 25%,transparent 25%),linear-gradient(-45deg,rgba(91,33,182,.1) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(91,33,182,.1) 75%),linear-gradient(-45deg,transparent 75%,rgba(91,33,182,.1) 75%);background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0px;}
+
+/* NEW IMAGE BUTTON */
+.new-img-btn{width:100%;background:rgba(17,13,34,.8);border:1px dashed rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:10px;cursor:pointer;transition:.2s;letter-spacing:1px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.new-img-btn:hover{border-color:var(--lav);color:var(--lav);}
+.new-img-btn input{position:absolute;opacity:0;width:0;height:0;}
+
+/* STATUS */
+.status{font-family:'VT323',monospace;font-size:16px;color:var(--muted);text-align:center;padding:6px;}
+.status.ok{color:var(--green);}
+.status.working{color:var(--gold);}
+
+/* PANEL */
+.panel{background:rgba(17,13,34,.95);border:1px solid var(--border);padding:18px;display:flex;flex-direction:column;gap:16px;position:sticky;top:70px;}
+
+/* CONTROLS */
+.ctrl-section{display:flex;flex-direction:column;gap:10px;}
+.ctrl-title{font-size:6px;letter-spacing:3px;color:var(--lav);border-bottom:1px solid var(--border);padding-bottom:7px;}
+.ctrl-row{display:flex;flex-direction:column;gap:5px;}
+.ctrl-lbl{font-size:6px;letter-spacing:1px;color:var(--muted);display:flex;justify-content:space-between;}
+.ctrl-lbl em{font-style:normal;color:var(--white);font-size:8px;}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:rgba(91,33,182,.3);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--lav);border-radius:2px;cursor:pointer;}
+input[type=range]:hover{background:rgba(91,33,182,.5);}
+select{width:100%;background:rgba(10,6,18,.9);border:1px solid var(--border);color:var(--white);font-family:'Press Start 2P',monospace;font-size:6px;padding:8px;cursor:pointer;outline:none;letter-spacing:1px;}
+select:focus{border-color:var(--lav);}
+
+/* TOGGLES */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0;}
+.tgl-lbl{font-size:6px;color:var(--muted);letter-spacing:1px;}
+.tgl{width:30px;height:15px;background:rgba(91,33,182,.2);border:1px solid var(--border);border-radius:0;cursor:pointer;position:relative;transition:.2s;flex-shrink:0;}
+.tgl.on{background:rgba(139,92,246,.3);border-color:var(--lav);}
+.tgl::after{content:'';position:absolute;left:2px;top:2px;width:9px;height:9px;background:var(--muted);transition:.2s;}
+.tgl.on::after{left:17px;background:var(--lav);}
+
+/* SPRITE MODE */
+.sprite-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.sprite-btn{background:rgba(10,6,18,.8);border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:5px;padding:7px 3px;cursor:pointer;transition:.2s;text-align:center;letter-spacing:.5px;}
+.sprite-btn:hover,.sprite-btn.active{border-color:var(--pink);color:var(--pink);background:rgba(232,121,249,.08);}
+
+/* PRESETS */
+.preset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;}
+.prs-btn{background:rgba(10,6,18,.8);border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:5px;padding:7px 3px;cursor:pointer;transition:.2s;text-align:center;}
+.prs-btn:hover,.prs-btn.active{border-color:var(--cyan);color:var(--cyan);background:rgba(34,211,238,.06);}
+
+/* ACTION BUTTONS */
+.action-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:1px;padding:11px;cursor:pointer;transition:.2s;text-align:center;}
+.action-btn.a{border-color:var(--lav);color:var(--lav);}
+.action-btn.a:hover{background:rgba(139,92,246,.12);}
+.action-btn.b{border-color:var(--pink);color:var(--pink);}
+.action-btn.b:hover{background:rgba(232,121,249,.1);}
+.action-btn:not(.a):not(.b):hover{border-color:var(--muted);color:var(--white);}
+.action-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* SWATCHES */
+.swatch-row{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+.sw{width:13px;height:13px;border:1px solid rgba(255,255,255,.1);}
+
+/* QUICK OUTPUT SIZES */
+.qs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.qs-btn{background:rgba(10,6,18,.8);border:1px solid var(--border);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:5px;padding:7px 2px;cursor:pointer;transition:.2s;text-align:center;}
+.qs-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* SPRITE SIZE INPUT */
+.size-inputs{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-top:6px;}
+.sz-inp{background:rgba(10,6,18,.9);border:1px solid var(--border);color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:7px 8px;text-align:center;width:100%;outline:none;}
+.sz-inp:focus{border-color:var(--lav);}
+.sz-x{font-size:8px;color:var(--muted);text-align:center;}
+
+/* PIXELWALLS PROMO */
+.promo{background:linear-gradient(135deg,rgba(91,33,182,.15),rgba(232,121,249,.08));border:1px solid var(--border2);padding:12px;text-align:center;}
+.promo-title{font-size:6px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;}
+.promo-text{font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.promo-link{display:block;background:linear-gradient(135deg,var(--lav),var(--pink));color:var(--void);font-family:'Press Start 2P',monospace;font-size:6px;padding:10px;text-decoration:none;letter-spacing:1px;}
+
+/* PIXEL SIZE MANUAL INPUT */
+.px-row{display:flex;gap:6px;align-items:center;margin-top:4px;}
+.px-num{background:rgba(10,6,18,.9);border:1px solid var(--border);color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 8px;width:60px;text-align:center;outline:none;}
+.px-num:focus{border-color:var(--lav);}
+.px-unit{font-size:7px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <span class="nav-title">PIXELWALLS</span>
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="/">← THE WALL</a>
+    <a class="nav-link" href="/marketplace.html">MARKET</a>
+    <a class="nav-link cta" href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">BUY $PIXEL ▶</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">✦ PIXEL TOOLS ✦</div>
+  <h1 class="hero-title">PIXELCRAFT</h1>
+  <p class="hero-sub">Turn any image into pixel art or a sprite — then use it on your wall</p>
+</div>
+
+<div class="app-wrap">
+  <!-- MAIN -->
+  <div class="main-area">
+    <!-- Drop zone (shown when no image) -->
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/*"/>
+      <div class="dz-inner">
+        <div class="dz-icon">⬡</div>
+        <div class="dz-text">DROP IMAGE HERE OR CLICK TO UPLOAD</div>
+        <div class="dz-sub">JPG · PNG · GIF · WEBP · supports transparency</div>
+        <div class="example-row">
+          <button class="ex-btn" onclick="loadExample('gradient');event.stopPropagation()">GRADIENT</button>
+          <button class="ex-btn" onclick="loadExample('sprite');event.stopPropagation()">SPRITE</button>
+          <button class="ex-btn" onclick="loadExample('face');event.stopPropagation()">FACE</button>
+          <button class="ex-btn" onclick="loadExample('city');event.stopPropagation()">CITY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas grid (hidden until image loaded) -->
+    <div id="canvasArea" style="display:none;flex-direction:column;gap:10px;">
+      <div class="canvas-grid">
+        <div class="canvas-wrap">
+          <div class="canvas-label">ORIGINAL <span id="origSize"></span></div>
+          <div class="canvas-box checker"><canvas id="origCanvas"></canvas></div>
+        </div>
+        <div class="canvas-wrap">
+          <div class="canvas-label">PIXELATED <span id="pixSize2"></span></div>
+          <div class="canvas-box checker" id="pixBox"><canvas id="pixCanvas"></canvas></div>
+        </div>
+      </div>
+      <!-- Sprite preview if active -->
+      <div id="spriteArea" style="display:none;">
+        <div class="canvas-wrap">
+          <div class="canvas-label">SPRITE SHEET <span id="sheetSize"></span></div>
+          <div class="canvas-box checker" style="min-height:80px;"><canvas id="sheetCanvas"></canvas></div>
+        </div>
+      </div>
+      <!-- New image button -->
+      <label class="new-img-btn">
+        ↺ LOAD NEW IMAGE
+        <input type="file" id="fileInput2" accept="image/*" style="display:none;"/>
+      </label>
+    </div>
+
+    <div class="status" id="status">waiting for image...</div>
+  </div>
+
+  <!-- PANEL -->
+  <div class="panel">
+
+    <!-- PIXEL SIZE -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">PIXEL BLOCK SIZE</div>
+      <div class="ctrl-row">
+        <div class="ctrl-lbl">block size <em id="szLabel">16</em>px</div>
+        <input type="range" id="pixSizeSlider" min="2" max="64" value="16" step="1" oninput="onSzSlider(this.value)"/>
+      </div>
+      <div class="px-row">
+        <input class="px-num" type="number" id="pixSizeNum" value="16" min="2" max="128" onchange="onSzNum(this.value)"/>
+        <span class="px-unit">px per block</span>
+      </div>
+    </div>
+
+    <!-- OUTPUT SIZE (sprite mode) -->
+    <div class="ctrl-section" id="spriteSizeSection" style="display:none;">
+      <div class="ctrl-title">SPRITE OUTPUT SIZE</div>
+      <div class="size-inputs">
+        <input class="sz-inp" type="number" id="sprW" value="32" min="8" max="256"/>
+        <span class="sz-x">×</span>
+        <input class="sz-inp" type="number" id="sprH" value="32" min="8" max="256"/>
+      </div>
+      <div style="margin-top:6px;">
+        <div class="sprite-grid">
+          <button class="sprite-btn" onclick="setSpriteSize(8,8)">8×8</button>
+          <button class="sprite-btn" onclick="setSpriteSize(16,16)">16×16</button>
+          <button class="sprite-btn" onclick="setSpriteSize(32,32)">32×32</button>
+          <button class="sprite-btn" onclick="setSpriteSize(48,48)">48×48</button>
+          <button class="sprite-btn" onclick="setSpriteSize(64,64)">64×64</button>
+          <button class="sprite-btn" onclick="setSpriteSize(128,128)">128×128</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PALETTE -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">COLOR PALETTE</div>
+      <select id="paletteSelect" onchange="pixelate()">
+        <option value="full">Full Color</option>
+        <option value="gb">Game Boy (4 green)</option>
+        <option value="nes">NES Classic</option>
+        <option value="cga">CGA (4-color)</option>
+        <option value="gray">Grayscale</option>
+        <option value="8">8 Colors (auto)</option>
+        <option value="16">16 Colors (auto)</option>
+        <option value="mono">1-bit Mono</option>
+        <option value="pxw">$PIXEL Purple</option>
+      </select>
+      <div class="swatch-row" id="swatchRow"></div>
+    </div>
+
+    <!-- MODE -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">MODE</div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">SPRITE MODE</span>
+        <div class="tgl" id="spriteTgl" onclick="toggleOpt('sprite')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">DITHERING</span>
+        <div class="tgl" id="ditherTgl" onclick="toggleOpt('dither')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">SQUARE OUTPUT</span>
+        <div class="tgl" id="squareTgl" onclick="toggleOpt('square')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">SHARP EDGES</span>
+        <div class="tgl on" id="sharpTgl" onclick="toggleOpt('sharp')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">GRID OVERLAY</span>
+        <div class="tgl" id="gridTgl" onclick="toggleOpt('grid')"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="tgl-lbl">TRANSPARENT BG</span>
+        <div class="tgl" id="transTgl" onclick="toggleOpt('trans')"></div>
+      </div>
+    </div>
+
+    <!-- PRESETS -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">PRESETS</div>
+      <div class="preset-grid">
+        <button class="prs-btn" onclick="applyPreset('retro',this)">◈ RETRO</button>
+        <button class="prs-btn" onclick="applyPreset('gameboy',this)">▣ GAME BOY</button>
+        <button class="prs-btn" onclick="applyPreset('pixel16',this)">✦ 16-BIT</button>
+        <button class="prs-btn" onclick="applyPreset('sprite8',this)">⬡ SPRITE 8</button>
+        <button class="prs-btn" onclick="applyPreset('mono',this)">◉ 1-BIT</button>
+        <button class="prs-btn" onclick="applyPreset('pixelwall',this)">🧙 PIXELWALL</button>
+      </div>
+    </div>
+
+    <!-- QUICK OUTPUT -->
+    <div class="ctrl-section">
+      <div class="ctrl-title">QUICK OUTPUT SIZE</div>
+      <div class="qs-grid">
+        <button class="qs-btn" onclick="quickOut(16)">16px</button>
+        <button class="qs-btn" onclick="quickOut(32)">32px</button>
+        <button class="qs-btn" onclick="quickOut(64)">64px</button>
+        <button class="qs-btn" onclick="quickOut(128)">128px</button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="ctrl-section">
+      <button class="action-btn a" id="dlPng" disabled onclick="downloadPNG()">▼ DOWNLOAD PNG</button>
+      <button class="action-btn b" id="dlSvg" disabled onclick="downloadSVG()">▼ DOWNLOAD SVG</button>
+      <button class="action-btn" id="cpyBtn" disabled onclick="copyClipboard()">⧉ COPY TO CLIPBOARD</button>
+      <button class="action-btn" id="dlSprite" disabled onclick="downloadSprite()" style="display:none;">▼ DOWNLOAD SPRITE SHEET</button>
+    </div>
+
+    <!-- PIXELWALLS PROMO -->
+    <div class="promo">
+      <div class="promo-title">✦ USE ON THE WALL</div>
+      <div class="promo-text">Upload your pixel art to your pixel space on the eternal wall. Permanent. Forever on Solana.</div>
+      <a class="promo-link" href="/">✦ CLAIM YOUR PIXEL</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const PALETTES={
+  full:null, gray:null, mono:['#000000','#ffffff'],
+  gb:['#0f380f','#306230','#8bac0f','#9bbc0f'],
+  cga:['#000000','#ffffff','#00aaaa','#aa00aa'],
+  nes:['#000000','#fcfcfc','#f8f8f8','#bcbcbc','#7c7c7c','#a4e4fc','#3cbcfc','#0078f8','#0000fc','#b8b8f8','#6888fc','#0058f8','#0000bc','#d8b8f8','#9878f8','#6844fc','#4428bc','#f8b8f8','#f878f8','#d800cc','#940084','#f8a4c0','#f85898','#e40058','#a80020','#f0d0b0','#f87858','#f83800','#a81000','#fce0a8','#fca044','#e45c10','#881400','#f8d878','#f8b800','#ac7c00','#503000','#d8f878','#b8f818','#00b800','#007800','#b8f8b8','#58d854','#00a800','#006800','#b8f8d8','#58f898','#00a844','#005800','#00fcfc','#00e8d8','#008888','#004058'],
+  pxw:['#0a0612','#110d22','#2d1b69','#5b21b6','#8b5cf6','#e879f9','#fbbf24','#22d3ee','#4ade80','#f5f0ff','#9d8ccc','#3730a3'],
+  '8':null,'16':null,
+};
+
+const opts={sprite:false,dither:false,square:false,sharp:true,grid:false,trans:false};
+let srcImg=null;
+let _lastPix=null;
+
+function hexToRgb(h){const n=parseInt(h.replace('#',''),16);return[(n>>16)&255,(n>>8)&255,n&255];}
+function rgbDist(r1,g1,b1,r2,g2,b2){return(r1-r2)**2+(g1-g2)**2+(b1-b2)**2;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function setStatus(m,c=''){const e=document.getElementById('status');e.textContent=m;e.className='status '+(c||'');}
+
+function onSzSlider(v){
+  document.getElementById('szLabel').textContent=v;
+  document.getElementById('pixSizeNum').value=v;
+  pixelate();
+}
+function onSzNum(v){
+  const n=Math.max(2,Math.min(128,parseInt(v)||2));
+  document.getElementById('pixSizeNum').value=n;
+  document.getElementById('pixSizeSlider').value=Math.min(64,n);
+  document.getElementById('szLabel').textContent=n;
+  pixelate();
+}
+function setSpriteSize(w,h){
+  document.getElementById('sprW').value=w;
+  document.getElementById('sprH').value=h;
+  pixelate();
+}
+function quickOut(n){
+  if(!srcImg)return;
+  const sw=srcImg.naturalWidth||srcImg.width;
+  const sh=srcImg.naturalHeight||srcImg.height;
+  const maxSrc=Math.max(sw,sh);
+  const newSz=Math.max(2,Math.round(maxSrc/n));
+  document.getElementById('pixSizeSlider').value=Math.min(64,newSz);
+  document.getElementById('pixSizeNum').value=newSz;
+  document.getElementById('szLabel').textContent=newSz;
+  pixelate();
+}
+
+function toggleOpt(k){
+  opts[k]=!opts[k];
+  document.getElementById(k+'Tgl').classList.toggle('on',opts[k]);
+  if(k==='sprite'){
+    document.getElementById('spriteSizeSection').style.display=opts.sprite?'flex':'none';
+    document.getElementById('spriteSizeSection').style.flexDirection='column';
+    document.getElementById('spriteArea').style.display=opts.sprite?'':'none';
+    document.getElementById('dlSprite').style.display=opts.sprite?'':'none';
+  }
+  pixelate();
+}
+
+function applyPreset(p,btn){
+  // If already active, clicking again deselects (goes back to full color defaults)
+  const wasActive = btn && btn.classList.contains('active');
+  document.querySelectorAll('.prs-btn').forEach(b=>b.classList.remove('active'));
+  if(wasActive){
+    // Reset to defaults
+    document.getElementById('pixSizeSlider').value=16;
+    document.getElementById('pixSizeNum').value=16;
+    document.getElementById('szLabel').textContent=16;
+    document.getElementById('paletteSelect').value='full';
+    opts.dither=false; opts.sprite=false; opts.square=false; opts.sharp=true;
+    ['dither','sprite','square'].forEach(k=>document.getElementById(k+'Tgl').classList.remove('on'));
+    document.getElementById('sharpTgl').classList.add('on');
+    document.getElementById('spriteSizeSection').style.display='none';
+    document.getElementById('spriteArea').style.display='none';
+    document.getElementById('dlSprite').style.display='none';
+    pixelate(); return;
+  }
+  if(btn)btn.classList.add('active');
+  const sl=document.getElementById('pixSizeSlider');
+  const nu=document.getElementById('pixSizeNum');
+  const pal=document.getElementById('paletteSelect');
+  const setSize=v=>{sl.value=Math.min(64,v);nu.value=v;document.getElementById('szLabel').textContent=v;};
+  if(p==='retro'){setSize(12);pal.value='nes';opts.dither=false;opts.sprite=false;}
+  else if(p==='gameboy'){setSize(8);pal.value='gb';opts.dither=true;opts.sprite=false;}
+  else if(p==='pixel16'){setSize(8);pal.value='16';opts.dither=false;opts.sprite=false;}
+  else if(p==='sprite8'){setSize(4);pal.value='16';opts.dither=false;opts.sprite=true;document.getElementById('sprW').value=32;document.getElementById('sprH').value=32;}
+  else if(p==='mono'){setSize(6);pal.value='mono';opts.dither=true;opts.sprite=false;}
+  else if(p==='pixelwall'){setSize(16);pal.value='pxw';opts.dither=false;opts.sprite=false;}
+  // Sync toggles
+  ['dither','sprite','square','sharp','grid','trans'].forEach(k=>{
+    document.getElementById(k+'Tgl').classList.toggle('on',opts[k]);
+  });
+  if(opts.sprite){
+    document.getElementById('spriteSizeSection').style.display='flex';
+    document.getElementById('spriteSizeSection').style.flexDirection='column';
+    document.getElementById('spriteArea').style.display='';
+    document.getElementById('dlSprite').style.display='';
+  } else {
+    document.getElementById('spriteSizeSection').style.display='none';
+    document.getElementById('spriteArea').style.display='none';
+    document.getElementById('dlSprite').style.display='none';
+  }
+  pixelate();
+}
+
+function kMeans(data,k){
+  const pxs=[];
+  for(let i=0;i<data.length;i+=4){if(data[i+3]>128)pxs.push([data[i],data[i+1],data[i+2]]);}
+  if(pxs.length===0)return Array.from({length:k},(_,i)=>[i*20,i*20,i*20]);
+  const cs=[];const used=new Set();
+  while(cs.length<k&&cs.length<pxs.length){
+    const idx=Math.floor(Math.random()*pxs.length);
+    if(!used.has(idx)){used.add(idx);cs.push([...pxs[idx]]);}
+  }
+  while(cs.length<k)cs.push([128,128,128]);
+  for(let it=0;it<10;it++){
+    const s=Array.from({length:k},()=>[0,0,0,0]);
+    for(const px of pxs){
+      let best=0,bd=Infinity;
+      for(let j=0;j<k;j++){const d=rgbDist(px[0],px[1],px[2],cs[j][0],cs[j][1],cs[j][2]);if(d<bd){bd=d;best=j;}}
+      s[best][0]+=px[0];s[best][1]+=px[1];s[best][2]+=px[2];s[best][3]++;
+    }
+    for(let j=0;j<k;j++){if(s[j][3]>0){cs[j]=[s[j][0]/s[j][3],s[j][1]/s[j][3],s[j][2]/s[j][3]];}}
+  }
+  return cs.map(c=>c.map(Math.round));
+}
+
+function buildPal(data,type){
+  if(type==='8')return kMeans(data,8);
+  if(type==='16')return kMeans(data,16);
+  if(PALETTES[type])return PALETTES[type].map(hexToRgb);
+  return null;
+}
+
+function nearest(r,g,b,pal){
+  let best=[r,g,b],bd=Infinity;
+  for(const p of pal){const d=rgbDist(r,g,b,p[0],p[1],p[2]);if(d<bd){bd=d;best=p;}}
+  return best;
+}
+
+function pixelate(){
+  if(!srcImg){return;}
+  setStatus('processing...','working');
+  requestAnimationFrame(()=>{
+    try{doPixelate();}catch(e){setStatus('error: '+e.message);}
+  });
+}
+
+function doPixelate(){
+  const blockSz=parseInt(document.getElementById('pixSizeNum').value)||16;
+  const palType=document.getElementById('paletteSelect').value;
+  const isGray=palType==='gray';
+  const isMono=palType==='mono';
+  const isSprite=opts.sprite;
+
+  const srcW=srcImg.naturalWidth||srcImg.width;
+  const srcH=srcImg.naturalHeight||srcImg.height;
+
+  // Read source
+  const tmp=document.createElement('canvas');tmp.width=srcW;tmp.height=srcH;
+  const tc=tmp.getContext('2d');tc.drawImage(srcImg,0,0);
+  const sd=tc.getImageData(0,0,srcW,srcH).data;
+
+  // Block counts
+  let bW=Math.max(1,Math.round(srcW/blockSz));
+  let bH=Math.max(1,Math.round(srcH/blockSz));
+  if(opts.square){const mx=Math.max(bW,bH);bW=mx;bH=mx;}
+
+  // Sample average colour per block
+  const sampled=new Uint8ClampedArray(bW*bH*4);
+  for(let by=0;by<bH;by++){
+    for(let bx=0;bx<bW;bx++){
+      const x0=Math.round(bx*(srcW/bW)),y0=Math.round(by*(srcH/bH));
+      const x1=Math.round((bx+1)*(srcW/bW)),y1=Math.round((by+1)*(srcH/bH));
+      let r=0,g=0,b=0,a=0,n=0;
+      for(let y=y0;y<y1;y++){for(let x=x0;x<x1;x++){
+        const i=(y*srcW+x)*4;r+=sd[i];g+=sd[i+1];b+=sd[i+2];a+=sd[i+3];n++;
+      }}
+      const di=(by*bW+bx)*4;
+      sampled[di]=r/n;sampled[di+1]=g/n;sampled[di+2]=b/n;sampled[di+3]=a/n;
+    }
+  }
+
+  // Build palette
+  const pal=buildPal(sampled,palType);
+  const out=new Uint8ClampedArray(sampled);
+
+  // Floyd-Steinberg dither
+  if(opts.dither&&pal){
+    const err=new Float32Array(bW*bH*3);
+    for(let y=0;y<bH;y++){
+      for(let x=0;x<bW;x++){
+        const i=(y*bW+x)*4,ei=(y*bW+x)*3;
+        if(out[i+3]<64)continue;
+        let r=clamp(out[i]+err[ei],0,255),g=clamp(out[i+1]+err[ei+1],0,255),bv=clamp(out[i+2]+err[ei+2],0,255);
+        let nr,ng,nb;
+        if(isGray){const l=Math.round((.299*r+.587*g+.114*bv)/32)*32;nr=ng=nb=l;}
+        else if(isMono){const l=.299*r+.587*g+.114*bv;nr=ng=nb=l>128?255:0;}
+        else{[nr,ng,nb]=nearest(r,g,bv,pal);}
+        out[i]=nr;out[i+1]=ng;out[i+2]=nb;
+        const er=r-nr,eg=g-ng,eb=bv-nb;
+        const push=(dx,dy,f)=>{const nx=x+dx,ny=y+dy;if(nx>=0&&nx<bW&&ny>=0&&ny<bH){const ni=(ny*bW+nx)*3;err[ni]+=er*f;err[ni+1]+=eg*f;err[ni+2]+=eb*f;}};
+        push(1,0,7/16);push(-1,1,3/16);push(0,1,5/16);push(1,1,1/16);
+      }
+    }
+  } else {
+    for(let i=0;i<bW*bH;i++){
+      const di=i*4;if(out[di+3]<64)continue;
+      let r=out[di],g=out[di+1],bv=out[di+2];
+      let nr,ng,nb;
+      if(isGray){const l=Math.round((.299*r+.587*g+.114*bv)/32)*32;nr=ng=nb=l;}
+      else if(isMono){nr=ng=nb=(.299*r+.587*g+.114*bv)>128?255:0;}
+      else if(pal){[nr,ng,nb]=nearest(r,g,bv,pal);}
+      else{nr=r;ng=g;nb=bv;}
+      out[di]=nr;out[di+1]=ng;out[di+2]=nb;
+    }
+  }
+
+  // Display size per block
+  const dispSz=Math.max(4,blockSz);
+  const pc=document.getElementById('pixCanvas');
+  pc.width=bW*dispSz;pc.height=bH*dispSz;
+  const pctx=pc.getContext('2d');
+  pctx.imageSmoothingEnabled=false;
+
+  for(let y=0;y<bH;y++){
+    for(let x=0;x<bW;x++){
+      const i=(y*bW+x)*4;
+      const a=out[i+3];
+      if(opts.trans&&a<64){pctx.clearRect(x*dispSz,y*dispSz,dispSz,dispSz);continue;}
+      pctx.fillStyle=`rgba(${out[i]},${out[i+1]},${out[i+2]},${a/255})`;
+      pctx.fillRect(x*dispSz,y*dispSz,dispSz,dispSz);
+    }
+  }
+  if(opts.grid){
+    pctx.strokeStyle='rgba(0,0,0,.18)';pctx.lineWidth=.5;
+    for(let x=0;x<=bW;x++){pctx.beginPath();pctx.moveTo(x*dispSz,0);pctx.lineTo(x*dispSz,pc.height);pctx.stroke();}
+    for(let y=0;y<=bH;y++){pctx.beginPath();pctx.moveTo(0,y*dispSz);pctx.lineTo(pc.width,y*dispSz);pctx.stroke();}
+  }
+
+  document.getElementById('pixSize2').textContent=`${bW}×${bH}`;
+
+  // SPRITE MODE — render to exact sprite dimensions
+  if(isSprite){
+    const spW=parseInt(document.getElementById('sprW').value)||32;
+    const spH=parseInt(document.getElementById('sprH').value)||32;
+    const sc=document.getElementById('sheetCanvas');
+    const dispMult=Math.max(1,Math.round(256/Math.max(spW,spH)));
+    sc.width=spW*dispMult;sc.height=spH*dispMult;
+    const sctx=sc.getContext('2d');
+    sctx.imageSmoothingEnabled=false;
+    // Scale pixelated to sprite size
+    const tmp2=document.createElement('canvas');tmp2.width=spW;tmp2.height=spH;
+    const t2=tmp2.getContext('2d');
+    t2.imageSmoothingEnabled=false;
+    t2.drawImage(pc,0,0,spW,spH);
+    sctx.drawImage(tmp2,0,0,spW*dispMult,spH*dispMult);
+    if(opts.grid){
+      sctx.strokeStyle='rgba(255,255,255,.15)';sctx.lineWidth=.5;
+      for(let x=0;x<=spW;x++){sctx.beginPath();sctx.moveTo(x*dispMult,0);sctx.lineTo(x*dispMult,sc.height);sctx.stroke();}
+      for(let y=0;y<=spH;y++){sctx.beginPath();sctx.moveTo(0,y*dispMult);sctx.lineTo(sc.width,y*dispMult);sctx.stroke();}
+    }
+    document.getElementById('sheetSize').textContent=`${spW}×${spH} sprite`;
+  }
+
+  // Save state
+  _lastPix={out,bW,bH,dispSz};
+
+  // Enable buttons
+  ['dlPng','dlSvg','cpyBtn'].forEach(id=>document.getElementById(id).disabled=false);
+  if(isSprite)document.getElementById('dlSprite').disabled=false;
+
+  // Update palette swatches
+  const seen=new Map();
+  for(let i=0;i<bW*bH;i++){
+    const di=i*4;if(out[di+3]<64)continue;
+    const k=`${Math.round(out[di]/20)*20},${Math.round(out[di+1]/20)*20},${Math.round(out[di+2]/20)*20}`;
+    seen.set(k,(seen.get(k)||0)+1);
+  }
+  const top=[...seen.entries()].sort((a,b)=>b[1]-a[1]).slice(0,16);
+  document.getElementById('swatchRow').innerHTML=top.map(([k])=>`<div class="sw" style="background:rgb(${k})"></div>`).join('');
+
+  setStatus(`${bW}×${bH} blocks · ${blockSz}px each · ${palType==='full'?'full color':palType}${isSprite?' · sprite mode':''}`, 'ok');
+}
+
+function loadImg(src){
+  const img=new Image();
+  img.onload=()=>{
+    srcImg=img;
+    const oc=document.getElementById('origCanvas');
+    const MAX=400;let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+    const s=Math.min(MAX/w,MAX/h,1);w=Math.round(w*s);h=Math.round(h*s);
+    oc.width=w;oc.height=h;
+    const octx=oc.getContext('2d');octx.clearRect(0,0,w,h);octx.drawImage(img,0,0,w,h);
+    document.getElementById('origSize').textContent=`${img.naturalWidth||img.width}×${img.naturalHeight||img.height}`;
+    document.getElementById('dropZone').style.display='none';
+    const ca=document.getElementById('canvasArea');ca.style.display='flex';ca.style.flexDirection='column';
+    pixelate();
+  };
+  img.src=src;
+}
+
+function loadExample(type){
+  const c=document.createElement('canvas');c.width=200;c.height=200;
+  const ctx=c.getContext('2d');
+  if(type==='gradient'){
+    const g=ctx.createLinearGradient(0,0,200,200);
+    g.addColorStop(0,'#e879f9');g.addColorStop(.4,'#5b21b6');g.addColorStop(1,'#22d3ee');
+    ctx.fillStyle=g;ctx.fillRect(0,0,200,200);
+    for(let i=0;i<8;i++){ctx.fillStyle=`hsla(${i*45},80%,60%,.25)`;ctx.beginPath();ctx.arc(40+i*18,80+Math.sin(i*1.2)*30,20,0,Math.PI*2);ctx.fill();}
+  } else if(type==='sprite'){
+    // Draw a cute wizard sprite
+    ctx.fillStyle='#5b21b6';ctx.fillRect(70,20,60,20); // hat
+    ctx.fillStyle='#8b5cf6';ctx.fillRect(60,40,80,60); // robe
+    ctx.fillStyle='#fbbf24';ctx.fillRect(75,25,50,20); // face
+    ctx.fillStyle='#0a0612';ctx.fillRect(83,30,12,10);ctx.fillRect(105,30,12,10); // eyes
+    ctx.fillStyle='#e879f9';ctx.fillRect(90,45,20,5); // mouth
+    ctx.fillStyle='#5b21b6';ctx.fillRect(50,60,20,40);ctx.fillRect(130,60,20,40); // sleeves
+    ctx.fillStyle='#22d3ee';ctx.fillRect(40,95,15,5);ctx.fillRect(145,95,15,5); // hands
+    ctx.fillStyle='#fbbf24';ctx.fillRect(90,20,20,5); // hat star
+  } else if(type==='face'){
+    ctx.fillStyle='#ffd700';ctx.beginPath();ctx.arc(100,100,80,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a2e';ctx.fillRect(65,75,20,18);ctx.fillRect(115,75,20,18);
+    ctx.beginPath();ctx.arc(100,115,28,0.2,Math.PI-.2);ctx.lineWidth=7;ctx.strokeStyle='#1a1a2e';ctx.stroke();
+  } else {
+    ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,200,200);
+    for(let i=0;i<12;i++){
+      const x=Math.random()*160+10,y=Math.random()*100+50;
+      const h2=30+Math.random()*70,w2=12+Math.random()*20;
+      ctx.fillStyle=`hsl(${220+Math.random()*40},50%,${18+Math.random()*22}%)`;
+      ctx.fillRect(x,y,w2,h2);
+      for(let r=0;r<3;r++)for(let cl=0;cl<3;cl++)if(Math.random()>.4){ctx.fillStyle='rgba(0,255,204,.5)';ctx.fillRect(x+cl*6+1,y+r*7+1,4,4);}
+    }
+    for(let i=0;i<50;i++){ctx.fillStyle=`rgba(255,200,50,${.3+Math.random()*.5})`;ctx.fillRect(Math.random()*200,Math.random()*200,1,1);}
+  }
+  loadImg(c.toDataURL());
+}
+
+function downloadPNG(){
+  if(!srcImg)return;
+  const pc=document.getElementById('pixCanvas');
+  const link=document.createElement('a');link.download='pixelcraft.png';link.href=pc.toDataURL('image/png');link.click();
+}
+function downloadSprite(){
+  const sc=document.getElementById('sheetCanvas');
+  const spW=parseInt(document.getElementById('sprW').value)||32;
+  const spH=parseInt(document.getElementById('sprH').value)||32;
+  // Export at exact sprite dimensions
+  const tmp=document.createElement('canvas');tmp.width=spW;tmp.height=spH;
+  const tctx=tmp.getContext('2d');tctx.imageSmoothingEnabled=false;
+  tctx.drawImage(document.getElementById('pixCanvas'),0,0,spW,spH);
+  const link=document.createElement('a');link.download=`sprite_${spW}x${spH}.png`;link.href=tmp.toDataURL('image/png');link.click();
+}
+function downloadSVG(){
+  if(!_lastPix)return;
+  const{out,bW,bH,dispSz}=_lastPix;
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${bW*dispSz}" height="${bH*dispSz}" shape-rendering="crispEdges">`;
+  for(let y=0;y<bH;y++)for(let x=0;x<bW;x++){
+    const i=(y*bW+x)*4;if(out[i+3]<64)continue;
+    svg+=`<rect x="${x*dispSz}" y="${y*dispSz}" width="${dispSz}" height="${dispSz}" fill="rgb(${out[i]},${out[i+1]},${out[i+2]})"/>`;
+  }
+  svg+='</svg>';
+  const b=new Blob([svg],{type:'image/svg+xml'});
+  const link=document.createElement('a');link.download='pixelcraft.svg';link.href=URL.createObjectURL(b);link.click();
+}
+function copyClipboard(){
+  const pc=document.getElementById('pixCanvas');
+  pc.toBlob(b=>{
+    if(!navigator.clipboard?.write){setStatus('copy not supported — use download','');return;}
+    navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(()=>setStatus('copied!','ok')).catch(()=>setStatus('copy failed — try download'));
+  });
+}
+
+// File inputs
+function handleFile(f){if(!f||!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=ev=>loadImg(ev.target.result);r.readAsDataURL(f);}
+document.getElementById('fileInput').addEventListener('change',function(){handleFile(this.files[0]);});
+document.getElementById('fileInput2').addEventListener('change',function(){handleFile(this.files[0]);});
+document.getElementById('sprW').addEventListener('change',pixelate);
+document.getElementById('sprH').addEventListener('change',pixelate);
+
+// Drag and drop
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');handleFile(e.dataTransfer.files[0]);});
+</script>
+</body>
+</html>
