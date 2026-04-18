@@ -1,53 +1,93 @@
 // api/metadata.js
-// Serves Metaplex-compatible NFT metadata JSON for each pixel.
-// URL: https://pixelwalls.xyz/api/metadata/COL/ROW
-// e.g. https://pixelwalls.xyz/api/metadata/0/0
+// Dynamic NFT metadata — reads pixel profile from Vercel KV so updates are
+// instant and free (no on-chain tx needed for profile changes).
+// URL: /api/metadata/COL/ROW  (routed via vercel.json)
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+};
+
+async function getKV(key) {
+  const url   = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const r = await fetch(`${url}/get/${key}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = await r.json();
+    return d.result ? JSON.parse(d.result) : null;
+  } catch { return null; }
+}
 
 module.exports = async function handler(req, res) {
-  // Parse col/row from path: /api/metadata/42/17
-  const parts = (req.url || '').replace('/api/metadata', '').split('/').filter(Boolean);
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Parse col/row — vercel.json routes /api/metadata/:col/:row here
+  const parts = (req.url || '').replace(/^\/api\/metadata\/?/, '').split('/').filter(Boolean);
   const col   = parseInt(parts[0], 10);
   const row   = parseInt(parts[1], 10);
 
   if (isNaN(col) || isNaN(row) || col < 0 || col > 999 || row < 0 || row > 999) {
-    return res.status(400).json({ error: 'Invalid pixel coordinates' });
+    return res.status(400).json({ error: 'Invalid pixel coordinates (0–999)' });
   }
 
-  // Determine price tier for attributes
-  const tier = col * 1000 + row < 100000 ? 'Tier 1 — 0.01 SOL'
-             : col * 1000 + row < 300000 ? 'Tier 2 — 0.03 SOL'
-             : col * 1000 + row < 600000 ? 'Tier 3 — 0.07 SOL'
-             : col * 1000 + row < 900000 ? 'Tier 4 — 0.15 SOL'
-             :                             'Tier 5 — 0.50 SOL';
+  const creator = process.env.CREATOR_ADDRESS || '9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
+
+  // Try to load saved pixel profile from KV (set when user edits their pixel)
+  const profile = await getKV(`pixel_profile_${col}_${row}`) || {};
+
+  // Price tier by pixel index (col * 1000 + row)
+  const idx  = col * 1000 + row;
+  const tier = idx < 100000 ? 'Tier 1 — 0.01 SOL'
+             : idx < 300000 ? 'Tier 2 — 0.03 SOL'
+             : idx < 600000 ? 'Tier 3 — 0.07 SOL'
+             : idx < 900000 ? 'Tier 4 — 0.15 SOL'
+             :                'Tier 5 — 0.50 SOL';
+
+  const name        = profile.displayName ? `${profile.displayName} — ${col}×${row}` : `Pixelwalls ${col}×${row}`;
+  const description = profile.desc
+    ? `${profile.desc}\n\nPixel (${col}, ${row}) on The Eternal Wall — pixelwalls.xyz`
+    : `Permanent pixel space at (${col}, ${row}) on The Eternal Wall. Immutable Solana ownership. 1 of 1,000,000.`;
+
+  const attributes = [
+    { trait_type: 'Column',     value: col },
+    { trait_type: 'Row',        value: row },
+    { trait_type: 'Position',   value: `${col}×${row}` },
+    { trait_type: 'Mint Tier',  value: tier },
+    { trait_type: 'Wall',       value: 'The Eternal Wall' },
+    { trait_type: 'Chain',      value: 'Solana' },
+  ];
+  if (profile.color)   attributes.push({ trait_type: 'Color',    value: profile.color });
+  if (profile.x)       attributes.push({ trait_type: 'X Handle', value: profile.x });
+  if (profile.website) attributes.push({ trait_type: 'Website',  value: profile.website });
+  if (profile.boostTier && profile.boostTier > 0) {
+    const boostName = ['', 'Mage', 'Sorcerer', 'Warlock', 'Wizard'][profile.boostTier] || 'Boosted';
+    attributes.push({ trait_type: 'Boost', value: boostName });
+  }
+
+  const imageUri = `https://pixelwalls.xyz/api/pixel-image/${col}/${row}`;
 
   const metadata = {
-    name:         `Pixelwalls ${col}x${row}`,
-    symbol:       'PXLW',
-    description:  `Permanent pixel space at position (${col}, ${row}) on The Eternal Wall — pixelwalls.xyz. This NFT represents immutable ownership of 1 pixel on a 1,000,000 space Solana blockchain canvas.`,
-    image:        `https://pixelwalls.xyz/api/pixel-image/${col}/${row}`,
-    external_url: `https://pixelwalls.xyz?pixel=${col},${row}`,
+    name,
+    symbol:      'PXLW',
+    description,
+    image:       imageUri,
+    external_url:`https://pixelwalls.xyz?pixel=${col},${row}`,
     seller_fee_basis_points: 500,
-    attributes: [
-      { trait_type: 'Column',        value: col },
-      { trait_type: 'Row',           value: row },
-      { trait_type: 'Position',      value: `${col}x${row}` },
-      { trait_type: 'Mint Tier',     value: tier },
-      { trait_type: 'Wall',          value: 'The Eternal Wall' },
-      { trait_type: 'Chain',         value: 'Solana' },
-    ],
+    attributes,
     properties: {
-      files:    [{ uri: `https://pixelwalls.xyz/api/pixel-image/${col}/${row}`, type: 'image/png' }],
+      files:    [{ uri: imageUri, type: 'image/svg+xml' }],
       category: 'image',
-      creators: [{ address: '9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk', share: 100 }],
+      creators: [{ address: creator, share: 100 }],
     },
-    collection: {
-      name:   'Pixelwalls',
-      family: 'PXLW',
-    },
+    collection: { name: 'Pixelwalls', family: 'PXLW' },
   };
 
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Short cache — profile can be updated, we want changes visible quickly
+  res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
   return res.status(200).json(metadata);
 };
