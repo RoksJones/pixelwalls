@@ -148,6 +148,33 @@ select:focus{border-color:var(--lav);}
 .px-num{background:rgba(10,6,18,.9);border:1px solid var(--border);color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:6px 8px;width:60px;text-align:center;outline:none;}
 .px-num:focus{border-color:var(--lav);}
 .px-unit{font-size:7px;color:var(--muted);}
+
+@media(max-width:800px){
+  .app-wrap{grid-template-columns:1fr;}
+  .panel{position:static;}
+  .canvas-grid{grid-template-columns:1fr;}
+}
+@media(max-width:480px){
+  .hero{padding:24px 14px 20px;}
+  .hero-title{font-size:16px!important;}
+  .hero-sub{font-size:15px!important;}
+  .app-wrap{padding:0 10px 40px;}
+  .panel{padding:14px;}
+  .canvas-grid{grid-template-columns:1fr;}
+  .ctrl-title{font-size:5px;}
+  .ctrl-lbl{font-size:5px;}
+  select{font-size:5px;}
+  .prs-btn,.qs-btn,.sprite-btn{font-size:4px;}
+  .action-btn{font-size:5px;padding:10px;}
+  .nav-title{display:none;}
+  .nav-links{gap:6px;}
+  .nav-link{font-size:5px;padding:6px 8px;}
+  .drop-zone{min-height:150px;}
+  .dz-text{font-size:6px;}
+  .preset-grid{grid-template-columns:repeat(3,1fr);}
+  .qs-grid{grid-template-columns:repeat(4,1fr);}
+  .sprite-grid{grid-template-columns:repeat(3,1fr);}
+}
 </style>
 </head>
 <body>

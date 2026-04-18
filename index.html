@@ -354,7 +354,96 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
 .pf-color-row{display:flex;gap:8px;align-items:center;}
 .pf-color-preview{width:36px;height:36px;border:1px solid rgba(91,33,182,.3);flex-shrink:0;}
 
-@media(max-width:780px){nav{padding:0 14px;}.nav-links{display:none;}.wall-wrap{flex-direction:column;padding:0;}.sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);}.section{padding:36px 14px;}.steps{flex-direction:column;}.step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}.wall-controls{padding:0 14px 14px;}.zoom-hint{padding:0 14px 10px;}}
+
+/* ── TABLET (≤780px) ─────────────────────────────────────────── */
+@media(max-width:780px){
+  nav{padding:0 12px;height:52px;}
+  .nav-links{display:none;}
+  .nav-right{gap:4px;}
+  .nav-btn{font-size:6px;padding:6px 8px;}
+  .wall-wrap{flex-direction:column;}
+  .sidebar{width:100%;max-height:none;border-left:none;border-top:1px solid rgba(91,33,182,.3);order:2;}
+  .canvas-area{order:1;}
+  .section{padding:36px 14px;}
+  .steps{flex-direction:column;}
+  .step-item{border-right:none;border-bottom:1px solid rgba(91,33,182,.2);}
+  .wall-controls{padding:0 12px 12px;flex-wrap:wrap;gap:6px;}
+  .zoom-hint{display:none;}
+  .stab{font-size:5px;padding:9px 3px;}
+  .sidebar-tabs{overflow-x:auto;}
+}
+
+/* ── PHONE (≤480px) ─────────────────────────────────────────── */
+@media(max-width:480px){
+  nav{padding:0 10px;height:48px;}
+  .nav-logo span:not(.logo-svg){display:none;}
+  .nav-right .nav-btn:not(.nbb){display:none;}
+  .nav-right .nav-btn.nbb{font-size:6px;padding:6px 8px;}
+  .nav-right{gap:4px;}
+
+  /* Hamburger menu trigger */
+  .nav-mobile-menu{display:flex!important;}
+
+  /* Wall controls become icon-only */
+  .wall-controls{padding:0 8px 8px;gap:4px;}
+  .ctrl-btn{font-size:5px;padding:5px 7px;}
+  #zoomLabel,#cursorCoord{font-size:9px;}
+
+  /* Sidebar compressed */
+  .stab{font-size:5px;padding:8px 2px;letter-spacing:0;}
+  .sb-card{padding:10px;}
+  .sb-title{font-size:6px;}
+  .info-row{font-size:9px;}
+  .aBtn{font-size:6px;padding:9px 8px;}
+
+  /* Pixel Power meter compact */
+  #rankMeterWrap{font-size:10px;}
+  #rankTitle{font-size:16px!important;}
+
+  /* Hero section */
+  .hero-title{font-size:16px!important;}
+  .hero-sub{font-size:14px!important;}
+  .section-title{font-size:13px!important;}
+  .section{padding:28px 12px;}
+
+  /* Token/stats bar */
+  .token-stats{flex-wrap:wrap;gap:6px;}
+  .stat-box{min-width:calc(50% - 6px);flex:1;}
+
+  /* Feature cards */
+  .f-card{padding:16px 12px;}
+  .f-icon{font-size:24px!important;}
+  .f-name{font-size:7px!important;}
+  .f-desc{font-size:11px!important;}
+
+  /* Hall of Fame */
+  .wiz-entry{padding:8px;}
+
+  /* Steps */
+  .step-num{font-size:16px!important;}
+  .step-title{font-size:9px!important;}
+  .step-desc{font-size:12px!important;}
+
+  /* Canvas gets full width */
+  #wallCanvas{touch-action:none;}
+  .canvas-area{border:none;}
+
+  /* Profile overlay */
+  .pixel-profile{width:calc(100vw - 16px)!important;max-width:360px;}
+  .pixel-profile-overlay{padding:8px!important;}
+  .pf-body{padding:14px!important;}
+
+  /* Modals */
+  .modal{width:calc(100vw - 24px)!important;max-width:360px;max-height:88vh;overflow-y:auto;}
+  .modal-title{font-size:9px!important;}
+
+  /* Promo banner */
+  .pixelcraft-promo span:nth-child(2){font-size:14px!important;}
+
+  /* Footer */
+  footer{font-size:11px;padding:28px 14px;}
+  footer a{font-size:11px;}
+}
 </style>
 </head>
 <body>
@@ -387,6 +476,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
     <li><a href="pixelcraft.html" style="color:#22d3ee;">⬡ PIXELCRAFT</a></li>
     <li><a href="whitepaper.html" target="_blank" style="color:#fbbf24;font-weight:bold;">WHITE PAPER</a></li>
   </ul>
+  <button class="nav-mobile-menu" id="mobileMenuBtn" style="display:none;background:transparent;border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:7px 10px;cursor:pointer;" onclick="toggleMobileMenu()">☰ MENU</button>
   <div class="nav-right">
     <button class="nav-btn nbw" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
     <button class="nav-btn" id="xNavBtn" onclick="doXOAuth()" style="border-color:#1d9bf0;color:#1d9bf0;display:none;" title="Link your X account to your wallet">𝕏 VERIFY X</button>
@@ -3483,5 +3573,95 @@ window.addEventListener('load',async()=>{
 })();
 
 </script>
+
+<!-- MOBILE MENU OVERLAY -->
+<div id="mobileMenu" style="display:none;position:fixed;inset:0;background:rgba(10,6,18,.97);z-index:500;flex-direction:column;padding:60px 24px 24px;">
+  <button onclick="toggleMobileMenu()" style="position:absolute;top:16px;right:16px;background:transparent;border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 12px;cursor:pointer;">✕ CLOSE</button>
+  <ul style="list-style:none;display:flex;flex-direction:column;gap:20px;">
+    <li><a href="#wall" style="color:var(--gold);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;" onclick="toggleMobileMenu()">THE WALL</a></li>
+    <li><a href="#token" style="color:var(--muted);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;" onclick="toggleMobileMenu()">$PIXEL</a></li>
+    <li><a href="#how" style="color:var(--muted);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;" onclick="toggleMobileMenu()">HOW IT WORKS</a></li>
+    <li><a href="tokenomics.html" style="color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;">TOKENOMICS</a></li>
+    <li><a href="marketplace.html" style="color:var(--green);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;">MARKETPLACE</a></li>
+    <li><a href="pixelcraft.html" style="color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;">⬡ PIXELCRAFT</a></li>
+    <li><a href="whitepaper.html" style="color:var(--gold);font-family:'Press Start 2P',monospace;font-size:10px;text-decoration:none;letter-spacing:2px;">WHITE PAPER</a></li>
+  </ul>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+    <a href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank" style="display:block;background:linear-gradient(135deg,var(--lav),var(--pink));color:var(--void);font-family:'Press Start 2P',monospace;font-size:8px;padding:14px;text-align:center;text-decoration:none;letter-spacing:1px;">BUY $PIXEL ▶</a>
+    <button onclick="connectWallet();toggleMobileMenu();" style="background:transparent;border:1px solid var(--lav);color:var(--lav);font-family:'Press Start 2P',monospace;font-size:8px;padding:14px;cursor:pointer;letter-spacing:1px;">CONNECT WALLET</button>
+  </div>
+</div>
+
+<script>
+// Mobile menu
+function toggleMobileMenu(){
+  const m=document.getElementById('mobileMenu');
+  m.style.display=m.style.display==='flex'?'none':'flex';
+}
+// Show hamburger on small screens
+(function(){
+  const btn=document.getElementById('mobileMenuBtn');
+  if(!btn)return;
+  function check(){btn.style.display=window.innerWidth<=480?'flex':'none';}
+  check();window.addEventListener('resize',check);
+})();
+
+// Touch support for canvas
+(function(){
+  const cv=document.getElementById('wallCanvas');
+  if(!cv)return;
+  let lastTouch=null,lastDist=null,lastMid=null;
+  cv.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};
+      lastDist=null;
+      // Simulate mousedown for selection
+      const r=cv.getBoundingClientRect();
+      const touch=e.touches[0];
+      cv.dispatchEvent(new MouseEvent('mousedown',{clientX:touch.clientX,clientY:touch.clientY,bubbles:true}));
+    } else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      lastDist=Math.sqrt(dx*dx+dy*dy);
+      lastMid={x:(e.touches[0].clientX+e.touches[1].clientX)/2,y:(e.touches[0].clientY+e.touches[1].clientY)/2};
+    }
+  },{passive:false});
+
+  cv.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&lastTouch){
+      const dx=e.touches[0].clientX-lastTouch.x;
+      const dy=e.touches[0].clientY-lastTouch.y;
+      // Pan
+      if(typeof panX!=='undefined'){
+        panX-=dx/cs();panY-=dy/cs();
+        clampPan();render();
+      }
+      lastTouch={x:e.touches[0].clientX,y:e.touches[0].clientY};
+    } else if(e.touches.length===2&&lastDist){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const delta=dist/lastDist;
+      if(typeof zoom!=='undefined'&&typeof zoomBy==='function'){
+        const mid={x:(e.touches[0].clientX+e.touches[1].clientX)/2,y:(e.touches[0].clientY+e.touches[1].clientY)/2};
+        zoomBy(delta);
+      }
+      lastDist=dist;
+    }
+  },{passive:false});
+
+  cv.addEventListener('touchend',e=>{
+    e.preventDefault();
+    if(e.changedTouches.length===1){
+      const touch=e.changedTouches[0];
+      cv.dispatchEvent(new MouseEvent('mouseup',{clientX:touch.clientX,clientY:touch.clientY,bubbles:true}));
+    }
+    lastTouch=null;lastDist=null;
+  },{passive:false});
+})();
+</script>
+
 </body>
 </html>
