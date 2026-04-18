@@ -1905,7 +1905,7 @@ function renderMySpaces(){
   mine.forEach(d=>{
     const tile=document.createElement('div');tile.className='space-tile';tile.onclick=()=>openEditModal(d);
     let ph=d.imageDataUrl?`<img class="space-tile-img" src="${d.imageDataUrl}" alt="space"/>`:`<div class="space-tile-color" style="background:${d.color||'#3730a3'};"></div>`;
-    tile.setAttribute('data-key', k);
+    tile.setAttribute('data-key', d.col+','+d.row);
     tile.innerHTML=`${ph}<div class="space-tile-info"><div class="space-tile-coord">(${d.col},${d.row})</div><div class="space-tile-size">${d.w||1}×${d.h||1}${d.xVerified?' ✦ X':''}</div>${d.listPrice?`<div style="color:var(--gold);font-size:10px;">FOR SALE: ${d.listPrice} SOL</div>`:''}</div>`;
     grid.appendChild(tile);
   });
@@ -3168,7 +3168,14 @@ function activateDevCenter(){
   };
   paintPixel(499, 499, '#e879f9');
   totalClaimed++;
-  saveToStorage(); // persist so it survives page refresh
+  // Write to BOTH wallet storage AND global pw_wall
+  // so pixel is visible even when not connected
+  try{
+    const wall=JSON.parse(localStorage.getItem('pw_wall')||'{}');
+    wall['499,499']=claimedSpaces['499,499'];
+    localStorage.setItem('pw_wall',JSON.stringify(wall));
+  }catch(e){}
+  saveToStorage();
   render();
   showToast('✦ Dev pixel set at (499,499) — center of the wall!');
 
