@@ -528,9 +528,25 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
       </div>
       <!-- MY WALL TAB -->
       <div class="tab-panel" id="tab-mywall">
-        <div class="sb-card">
-          <div class="sb-title">✦ MY RANK</div>
-          <div id="myRankDisplay" style="font-family:'VT323',monospace;font-size:18px;color:var(--muted);padding:4px 0;">Connect wallet to see rank.</div>
+        <div class="sb-card" id="rankMeterCard">
+          <div class="sb-title">✦ $PIXEL POWER</div>
+          <div id="rankMeterWrap" style="display:none;">
+            <!-- Rank title -->
+            <div id="rankTitle" style="font-family:'VT323',monospace;font-size:22px;margin-bottom:2px;">—</div>
+            <!-- Balance -->
+            <div id="rankBalance" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);margin-bottom:10px;">0 $PIXEL</div>
+            <!-- Progress bar -->
+            <div style="position:relative;height:14px;background:rgba(17,13,34,.8);border:1px solid rgba(91,33,182,.3);margin-bottom:6px;overflow:hidden;">
+              <div id="rankBar" style="height:100%;width:0%;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;">
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 4px,rgba(255,255,255,.07) 4px,rgba(255,255,255,.07) 5px);"></div>
+              </div>
+            </div>
+            <!-- Next rank label -->
+            <div id="rankNextLabel" style="font-family:'VT323',monospace;font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
+            <!-- Rank ladder -->
+            <div id="rankLadder" style="display:flex;flex-direction:column;gap:3px;"></div>
+          </div>
+          <div id="rankConnectMsg" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">Connect wallet to see your $PIXEL power.</div>
         </div>
         <div class="sb-card"><div class="sb-title">✦ MY SPACES</div><div id="myWallSummary" style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);"></div></div>
         <div id="mySpacesGrid" class="my-spaces-grid"></div>
@@ -912,10 +928,89 @@ async function fetchPixelBalance(walletAddr){
 }
 
 function updateRankDisplay(){
-  const el=document.getElementById('myRankDisplay');
-  if(!el||!walletConnected) return;
-  const r=getRankFromBalance(pixelBalance);
-  el.innerHTML=`<span style="color:${r.color};font-size:16px;">${r.title}</span> <span style="color:var(--muted);font-size:12px;">${Math.floor(pixelBalance).toLocaleString()} $PIXEL</span>`;
+  const wrap   = document.getElementById('rankMeterWrap');
+  const msg    = document.getElementById('rankConnectMsg');
+  if(!wrap||!msg) return;
+
+  if(!walletConnected){
+    wrap.style.display='none';
+    msg.style.display='block';
+    return;
+  }
+  wrap.style.display='block';
+  msg.style.display='none';
+
+  const MAX = 10_000_000;
+  const bal = Math.min(pixelBalance, MAX);
+  const pct = Math.min(100, (bal / MAX) * 100);
+  const rank = getRankFromBalance(pixelBalance);
+
+  // Find next rank
+  const rankOrder=[
+    {min:10_000_000, title:'BEYOND',  color:'#ffffff'},
+    {min:5_000_000,  title:'Archmage',color:'#e879f9'},
+    {min:1_000_000,  title:'King',    color:'#fbbf24'},
+    {min:250_000,    title:'Lord',    color:'#22d3ee'},
+    {min:50_000,     title:'Knight',  color:'#4ade80'},
+    {min:10_000,     title:'Squire',  color:'#a78bfa'},
+    {min:0,          title:'Apprentice',color:'#9d8ccc'},
+  ];
+  const nextRank = rankOrder.find(r=>r.min>pixelBalance);
+
+  // Title
+  const titleEl = document.getElementById('rankTitle');
+  if(titleEl){
+    titleEl.textContent = rank.title.toUpperCase();
+    titleEl.style.color = rank.color;
+    titleEl.style.textShadow = `0 0 12px ${rank.color}66`;
+  }
+
+  // Balance
+  const balEl = document.getElementById('rankBalance');
+  if(balEl) balEl.textContent = Math.floor(pixelBalance).toLocaleString()+' $PIXEL';
+
+  // Bar fill + color
+  const bar = document.getElementById('rankBar');
+  if(bar){
+    bar.style.width = pct+'%';
+    bar.style.background = `linear-gradient(90deg, ${rank.color}99, ${rank.color})`;
+    bar.style.boxShadow = `0 0 8px ${rank.color}88`;
+  }
+
+  // Next rank label
+  const nextEl = document.getElementById('rankNextLabel');
+  if(nextEl){
+    if(pixelBalance >= 10_000_000){
+      nextEl.textContent = '✦ MAX POWER REACHED';
+      nextEl.style.color = 'var(--gold)';
+    } else if(nextRank){
+      const needed = nextRank.min - pixelBalance;
+      nextEl.textContent = needed.toLocaleString()+' more → '+nextRank.title;
+      nextEl.style.color = nextRank.color;
+    }
+  }
+
+  // Rank ladder — show all tiers with checkmarks
+  const ladder = document.getElementById('rankLadder');
+  if(ladder){
+    const tiers = [
+      {min:5_000_000, label:'Archmage', color:'#e879f9'},
+      {min:1_000_000, label:'King',     color:'#fbbf24'},
+      {min:250_000,   label:'Lord',     color:'#22d3ee'},
+      {min:50_000,    label:'Knight',   color:'#4ade80'},
+      {min:10_000,    label:'Squire',   color:'#a78bfa'},
+      {min:0,         label:'Apprentice',color:'#9d8ccc'},
+    ];
+    ladder.innerHTML = tiers.map(t=>{
+      const achieved = pixelBalance >= t.min;
+      const isCurrent = rank.title === t.label;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;opacity:${achieved?1:0.35};">
+        <span style="font-size:10px;color:${t.color};">${achieved?'✦':'○'}</span>
+        <span style="font-family:'VT323',monospace;font-size:13px;color:${isCurrent?t.color:'var(--muted)'};${isCurrent?'font-size:15px;':''}">${t.label.toUpperCase()}</span>
+        <span style="font-family:'VT323',monospace;font-size:11px;color:rgba(157,140,204,.5);margin-left:auto;">${t.min.toLocaleString()}</span>
+      </div>`;
+    }).join('');
+  }
 }
 const GRID=1000; let SOL_USD=170; // updated by fetchSolPrice()
 const TIERS=[{max:100000,p:.01},{max:300000,p:.03},{max:600000,p:.07},{max:900000,p:.15},{max:1000000,p:.50}];
@@ -985,6 +1080,7 @@ async function tryAutoReconnect(){
       btn.textContent='✦ '+s;btn.classList.add('connected');btn.onclick=disconnectWallet;
       loadMySpaces();
       loadBoosts();
+      activateDevCenter();
       const xBtnR=document.getElementById('xNavBtn');
       if(xBtnR) xBtnR.style.display='';
       updateXNavBtn();
@@ -1016,13 +1112,19 @@ function saveToStorage(){
       .filter(([,v])=>v.owner===shortAddr())
       .map(([k,v])=>[k,{
         ...v,
-        imageDataUrl:null,
-        // Explicitly preserve boost data — never strip it
+        imageDataUrl: v.imageDataUrl||null,
         boostTier:    v.boostTier||0,
         boostActivatedAt: v.boostActivatedAt||0,
       }]);
-    localStorage.setItem('pw_'+walletAddress,JSON.stringify(mine));
-    // Also update pw_boosts global store for any boosted pixels
+    // Save wallet-specific pixels
+    localStorage.setItem('pw_'+walletAddress, JSON.stringify(mine));
+    // Also merge into pw_wall — global wall state visible to ALL visitors
+    try{
+      const wall=JSON.parse(localStorage.getItem('pw_wall')||'{}');
+      mine.forEach(([k,v])=>{ wall[k]=v; });
+      localStorage.setItem('pw_wall', JSON.stringify(wall));
+    }catch(e){}
+    // Update pw_boosts global store
     mine.forEach(([k,v])=>{
       if(v.boostTier>0){
         const tierNames=['','bronze','silver','gold','wizard'];
@@ -1033,24 +1135,46 @@ function saveToStorage(){
     });
   }catch(e){}
 }
-function loadFromStorage(){
-  if(!walletAddress)return;
+function loadWallState(){
+  // Load ALL pixels from the global wall store — no wallet needed
+  // This makes the wall populated for ALL visitors, connected or not
   try{
-    const raw=localStorage.getItem('pw_'+walletAddress);
-    if(!raw)return;
-    JSON.parse(raw).forEach(([k,v])=>{
+    const wall=JSON.parse(localStorage.getItem('pw_wall')||'{}');
+    Object.entries(wall).forEach(([k,v])=>{
       if(!claimedSpaces[k]){
         claimedSpaces[k]=v;
         totalClaimed++;
         totalVol+=parseFloat(v.price||0);
-        // Restore boost canvas effect if pixel has a boost tier
         if(v.boostTier&&v.boostTier>0){
           const tierNames=['','bronze','silver','gold','wizard'];
           boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze', activatedAt:v.boostActivatedAt||0};
         }
       }
     });
-    loadBoosts(); // merge any globally saved boosts
+  }catch(e){}
+}
+
+function loadFromStorage(){
+  // Load global wall state first so all pixels show
+  loadWallState();
+  // Then load wallet-specific data if connected
+  if(!walletAddress)return;
+  try{
+    const raw=localStorage.getItem('pw_'+walletAddress);
+    if(!raw)return;
+    JSON.parse(raw).forEach(([k,v])=>{
+      // Wallet data takes priority over wall state for owned pixels
+      claimedSpaces[k]=v;
+      if(!Object.values(claimedSpaces).find(s=>s===v)){
+        totalClaimed++;
+        totalVol+=parseFloat(v.price||0);
+      }
+      if(v.boostTier&&v.boostTier>0){
+        const tierNames=['','bronze','silver','gold','wizard'];
+        boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze', activatedAt:v.boostActivatedAt||0};
+      }
+    });
+    loadBoosts();
     paintAll();updateStats();render();
   }catch(e){}
 }
@@ -2599,7 +2723,7 @@ function showPixelProfile(col, row){
         Boost: <span>${['None','🟫 Mage','🩶 Sorcerer','🟡 Warlock','🔮 Wizard'][sp.boostTier||0]}</span>
       </div>
       <div class="pf-actions">
-        ${isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();openProfileEdit('${key}')">✏ EDIT PROFILE</button>` : ''}
+        ${isMine ? `<button class="pf-btn primary" onclick="window.location.href='/profile/'+${col}+'/'+${row}">✏ EDIT PROFILE</button>` : ''}
         ${sp.listPrice && !isMine ? `<button class="pf-btn primary" onclick="document.getElementById('pixelProfileOverlay').remove();claimSpace()">BUY — ${sp.listPrice} SOL</button>` : ''}
         ${sp.x || prof.x ? `<button class="pf-btn" onclick="window.open('https://twitter.com/${sp.x||prof.x}','_blank')">𝕏 VISIT</button>` : ''}
         ${prof.website ? `<button class="pf-btn" onclick="window.open('${prof.website}','_blank')">◆ LINK</button>` : ''}
@@ -3033,7 +3157,7 @@ function activateDevCenter(){
   // Pre-populate center pixel for testing
   claimedSpaces[key] = {
     col:499, row:499,
-    owner: walletAddress.slice(0,4)+'...'+walletAddress.slice(-4),
+    owner: shortAddr(), // matches saveToStorage filter
     color: '#e879f9',
     price: 0.01,
     listPrice: 0,
@@ -3077,6 +3201,26 @@ function jumpToCenter(){
 // ── END DEV TEST ──────────────────────────────────────────────────
 
 window.addEventListener('load',async()=>{
+  // Handle ?goto=col,row — jump to pixel after returning from profile page
+  const gotoParam = new URLSearchParams(window.location.search).get('goto');
+  if(gotoParam){
+    const [gc,gr] = gotoParam.split(',').map(Number);
+    if(!isNaN(gc)&&!isNaN(gr)){
+      setTimeout(()=>{
+        zoom=8;
+        panX=gc-(1000/zoom)/2; panY=gr-(1000/zoom)/2;
+        clampPan();
+        dragStart={col:gc,row:gr}; dragEnd={col:gc,row:gr};
+        resolveSelection(); refreshSidebar(); render();
+        showPixelProfile(gc,gr);
+        window.history.replaceState({},'',window.location.pathname);
+      },600);
+    }
+  }
+  // Load all pixels immediately — no wallet needed
+  loadWallState();
+  loadBoosts();
+  paintAll();render();
   // Handle /profile/col/row URL — auto-open profile overlay
   const profileMatch = window.location.pathname.match(/\/profile\/(\d+)[\/,](\d+)/);
   if(profileMatch){

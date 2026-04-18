@@ -58,6 +58,14 @@
   ],
   "rewrites": [
     {
+      "source": "/profile.html",
+      "destination": "/profile.html"
+    },
+    {
+      "source": "/profile/:col/:row",
+      "destination": "/profile.html"
+    },
+    {
       "source": "/profile/:col/:row",
       "destination": "/index.html"
     },

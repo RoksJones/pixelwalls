@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Edit Pixel Profile — Pixelwalls</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%238b5cf6'/><text y='24' font-size='20'>✦</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --void:#0a0612;--deep:#110d22;--violet:#5b21b6;--lav:#8b5cf6;
+  --pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;--green:#4ade80;
+  --white:#f5f0ff;--muted:#9d8ccc;--red:#ef4444;
+}
+body{background:var(--void);color:var(--white);font-family:'Press Start 2P',monospace;min-height:100vh;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(91,33,182,.4);position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-mark{width:28px;height:28px;background:var(--violet);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;padding:4px;}
+.logo-mark span{background:var(--gold);display:block;}
+.logo-text{font-size:10px;color:var(--gold);}
+.nav-back{background:transparent;border:1px solid var(--lav);color:var(--lav);font-family:'Press Start 2P',monospace;font-size:7px;padding:8px 14px;cursor:pointer;text-decoration:none;letter-spacing:1px;}
+.nav-back:hover{background:rgba(139,92,246,.15);}
+
+/* LAYOUT */
+.page{max-width:680px;margin:0 auto;padding:32px 20px 60px;}
+
+/* HEADER */
+.page-header{text-align:center;margin-bottom:32px;}
+.page-label{font-size:7px;color:var(--lav);letter-spacing:3px;margin-bottom:10px;}
+.page-title{font-size:16px;color:var(--gold);margin-bottom:6px;}
+.page-coord{font-family:'VT323',monospace;font-size:20px;color:var(--muted);}
+
+/* PIXEL PREVIEW */
+.preview-wrap{display:flex;gap:20px;align-items:flex-start;margin-bottom:28px;padding:20px;background:rgba(17,13,34,.8);border:1px solid rgba(91,33,182,.3);}
+.pixel-thumb{width:120px;height:120px;flex-shrink:0;border:2px solid rgba(91,33,182,.5);overflow:hidden;position:relative;cursor:pointer;}
+.pixel-thumb img{width:100%;height:100%;object-fit:cover;}
+.pixel-thumb-color{width:100%;height:100%;}
+.pixel-thumb-label{position:absolute;bottom:0;left:0;right:0;background:rgba(10,6,18,.8);font-family:'VT323',monospace;font-size:12px;color:var(--muted);text-align:center;padding:3px;}
+.preview-info{flex:1;}
+.preview-name{font-family:'VT323',monospace;font-size:22px;color:var(--white);margin-bottom:4px;}
+.preview-handle{font-family:'VT323',monospace;font-size:16px;color:var(--cyan);margin-bottom:8px;}
+.preview-bio{font-family:'VT323',monospace;font-size:15px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.preview-rank{font-size:7px;letter-spacing:1px;padding:4px 8px;border:1px solid;display:inline-block;}
+.preview-socials{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.preview-social{font-family:'VT323',monospace;font-size:14px;color:var(--muted);border:1px solid rgba(91,33,182,.3);padding:3px 8px;}
+
+/* NOT OWNER */
+.not-owner{text-align:center;padding:60px 20px;background:rgba(17,13,34,.8);border:1px solid rgba(91,33,182,.3);}
+.not-owner-icon{font-size:32px;margin-bottom:16px;}
+.not-owner-msg{font-family:'VT323',monospace;font-size:18px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+
+/* FORM */
+.form-section{font-size:7px;color:var(--lav);letter-spacing:2px;padding:10px 0 10px;margin-top:24px;border-bottom:1px solid rgba(91,33,182,.2);}
+.form-row{margin-bottom:16px;}
+.form-label{font-size:6px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;display:block;}
+.form-input{width:100%;background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);color:var(--white);font-family:'VT323',monospace;font-size:18px;padding:10px 12px;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(--lav);}
+.form-input::placeholder{color:rgba(157,140,204,.35);}
+.color-row{display:flex;gap:10px;align-items:center;}
+.color-swatch{width:44px;height:44px;border:2px solid rgba(91,33,182,.4);cursor:pointer;flex-shrink:0;}
+.color-input{width:80px;background:rgba(17,13,34,.9);border:1px solid rgba(91,33,182,.3);color:var(--white);font-family:'VT323',monospace;font-size:16px;padding:10px 8px;outline:none;}
+
+/* IMAGE UPLOAD */
+.img-upload-area{width:100%;height:160px;border:2px dashed rgba(91,33,182,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;background:rgba(17,13,34,.8);}
+.img-upload-area:hover{border-color:var(--lav);}
+.img-upload-area img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.img-upload-overlay{position:absolute;inset:0;background:rgba(10,6,18,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.img-upload-area:hover .img-upload-overlay{opacity:1;}
+.img-upload-icon{font-size:28px;margin-bottom:8px;}
+.img-upload-text{font-family:'VT323',monospace;font-size:16px;color:var(--muted);}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:10px;margin-top:28px;}
+.btn{font-family:'Press Start 2P',monospace;font-size:7px;padding:14px 20px;cursor:pointer;letter-spacing:1px;border:1px solid;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.5));border-color:var(--lav);color:var(--white);flex:2;}
+.btn-primary:hover{background:linear-gradient(135deg,var(--lav),var(--pink));border-color:var(--pink);}
+.btn-outline{background:transparent;border-color:rgba(91,33,182,.4);color:var(--muted);flex:1;}
+.btn-outline:hover{border-color:var(--lav);color:var(--lav);}
+.btn-danger{background:transparent;border-color:var(--red);color:var(--red);}
+.btn-danger:hover{background:rgba(239,68,68,.1);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(17,13,34,.95);border:1px solid var(--lav);font-family:'VT323',monospace;font-size:16px;color:var(--cyan);padding:10px 20px;z-index:999;transition:transform .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* CONNECT PROMPT */
+.connect-prompt{text-align:center;padding:60px 20px;}
+.connect-prompt .icon{font-size:40px;margin-bottom:20px;opacity:.5;}
+.connect-prompt p{font-family:'VT323',monospace;font-size:20px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.connect-btn{background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.5));border:1px solid var(--lav);color:var(--white);font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 24px;cursor:pointer;letter-spacing:1px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <div class="logo-mark"><span></span><span></span><span></span><span></span></div>
+    <span class="logo-text">PIXELWALLS</span>
+  </a>
+  <a class="nav-back" id="backBtn" href="/">← BACK TO WALL</a>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="page-label">✦ PIXEL PROFILE</div>
+    <div class="page-title" id="pageTitle">EDIT YOUR PIXEL</div>
+    <div class="page-coord" id="pageCoord">Loading...</div>
+  </div>
+
+  <!-- Live preview -->
+  <div class="preview-wrap" id="previewWrap">
+    <div class="pixel-thumb" id="pixelThumb" onclick="document.getElementById('imgFile').click()">
+      <div class="pixel-thumb-color" id="thumbColor"></div>
+      <div class="pixel-thumb-label">CLICK TO CHANGE</div>
+    </div>
+    <div class="preview-info">
+      <div class="preview-name" id="prevName">—</div>
+      <div class="preview-handle" id="prevHandle"></div>
+      <div class="preview-bio" id="prevBio"></div>
+      <div class="preview-rank" id="prevRank" style="display:none;"></div>
+      <div class="preview-socials" id="prevSocials"></div>
+    </div>
+  </div>
+
+  <!-- Main content area -->
+  <div id="mainContent">
+    <div class="connect-prompt">
+      <div class="icon">🔮</div>
+      <p>Connect your Phantom wallet to edit your pixel profile.</p>
+      <button class="connect-btn" onclick="connectWallet()">CONNECT WALLET</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<input type="file" id="imgFile" accept="image/*" style="display:none;" onchange="handleImageFile(event)"/>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────
+let col = 499, row = 499; // defaults, overridden by URL params
+let walletAddress = null;
+let pixelKey = '499,499';
+let currentImageDataUrl = null;
+let pendingImageDataUrl  = null;
+
+// ── URL PARSING ───────────────────────────────────────────────────
+(function parseUrl(){
+  // Supports /profile/499/499 and /profile?col=499&row=499
+  const pathMatch = window.location.pathname.match(/\/profile\/(\d+)[\/,](\d+)/);
+  const params    = new URLSearchParams(window.location.search);
+  if(pathMatch){
+    col = parseInt(pathMatch[1]);
+    row = parseInt(pathMatch[2]);
+  } else if(params.get('col') && params.get('row')){
+    col = parseInt(params.get('col'));
+    row = parseInt(params.get('row'));
+  }
+  pixelKey = col+','+row;
+  document.getElementById('pageCoord').textContent = '('+col+', '+row+')';
+  document.getElementById('backBtn').href = '/?goto='+col+','+row;
+})();
+
+// ── STORAGE HELPERS ───────────────────────────────────────────────
+function getProfile(key){
+  try{ return JSON.parse(localStorage.getItem('pw_prof_'+key)||'{}'); }
+  catch(e){ return {}; }
+}
+function saveProfile(key, data){
+  try{ localStorage.setItem('pw_prof_'+key, JSON.stringify(data)); }
+  catch(e){}
+}
+function getWallPixel(key){
+  try{
+    const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
+    return wall[key]||null;
+  }catch(e){ return null; }
+}
+function saveWallPixel(key, data){
+  try{
+    const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
+    wall[key] = {...(wall[key]||{}), ...data};
+    localStorage.setItem('pw_wall', JSON.stringify(wall));
+    // Also update wallet-specific storage
+    if(walletAddress){
+      const wkey = 'pw_'+walletAddress;
+      const saved = JSON.parse(localStorage.getItem(wkey)||'[]');
+      const idx   = saved.findIndex(([k])=>k===key);
+      const entry = [key, wall[key]];
+      if(idx>=0) saved[idx]=entry; else saved.push(entry);
+      localStorage.setItem(wkey, JSON.stringify(saved));
+    }
+  }catch(e){}
+}
+function shortAddr(addr){ return addr?addr.slice(0,4)+'...'+addr.slice(-4):''; }
+
+// ── WALLET CONNECT ────────────────────────────────────────────────
+async function connectWallet(){
+  const w = window.phantom?.solana||window.solana;
+  if(!w){ showToast('Install Phantom wallet first.'); return; }
+  try{
+    const r = await w.connect();
+    walletAddress = r.publicKey.toString();
+    onWalletConnected();
+  }catch(e){ showToast('Wallet connect cancelled.'); }
+}
+
+async function tryAutoConnect(){
+  const w = window.phantom?.solana||window.solana;
+  if(w?.isConnected && w?.publicKey){
+    walletAddress = w.publicKey.toString();
+    onWalletConnected();
+  }
+}
+
+function onWalletConnected(){
+  const sp    = getWallPixel(pixelKey);
+  const prof  = getProfile(pixelKey);
+  const owner = sp?.owner;
+  const mine  = shortAddr(walletAddress) === owner || walletAddress === owner;
+
+  // Always show preview for everyone
+  renderPreview(sp, prof);
+
+  if(!mine){
+    document.getElementById('mainContent').innerHTML = `
+      <div class="not-owner">
+        <div class="not-owner-icon">🔒</div>
+        <div class="not-owner-msg">
+          This pixel is owned by ${owner||'someone else'}.<br/>
+          Only the owner can edit this profile.
+        </div>
+        <a class="nav-back" href="/">← BACK TO WALL</a>
+      </div>`;
+    return;
+  }
+
+  renderEditForm(sp, prof);
+}
+
+// ── RENDER PREVIEW ────────────────────────────────────────────────
+function renderPreview(sp, prof){
+  if(!sp && !prof) return;
+  const color   = prof?.color || sp?.color || '#5b21b6';
+  const name    = prof?.displayName || (sp?.owner ? shortAddr(sp.owner) : 'Unknown');
+  const handle  = prof?.x || sp?.xHandle;
+  const bio     = prof?.desc || '';
+  const imgUrl  = sp?.imageDataUrl || currentImageDataUrl;
+
+  // Thumb
+  const thumb = document.getElementById('pixelThumb');
+  if(imgUrl){
+    thumb.innerHTML = `<img src="${imgUrl}"/><div class="pixel-thumb-label">CLICK TO CHANGE</div>`;
+  } else {
+    document.getElementById('thumbColor').style.background = color;
+  }
+
+  document.getElementById('prevName').textContent  = name;
+  document.getElementById('prevHandle').textContent = handle ? '@'+handle : '';
+  document.getElementById('prevBio').textContent    = bio;
+
+  // Socials
+  const socials = [];
+  if(prof?.x)        socials.push('𝕏 @'+prof.x);
+  if(prof?.telegram) socials.push('✈ '+prof.telegram);
+  if(prof?.discord)  socials.push('◈ '+prof.discord);
+  if(prof?.github)   socials.push('◉ '+prof.github);
+  if(prof?.website)  socials.push('◆ Link');
+  document.getElementById('prevSocials').innerHTML =
+    socials.map(s=>`<span class="preview-social">${s}</span>`).join('');
+}
+
+// ── RENDER EDIT FORM ──────────────────────────────────────────────
+function renderEditForm(sp, prof){
+  const color = prof?.color || sp?.color || '#5b21b6';
+  document.getElementById('mainContent').innerHTML = `
+    <div class="form-section">✦ DISPLAY</div>
+
+    <div class="form-row">
+      <label class="form-label">PIXEL IMAGE</label>
+      <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('imgFile').click()">
+        ${sp?.imageDataUrl
+          ? `<img src="${sp.imageDataUrl}" id="imgPreview"/>`
+          : '<div class="img-upload-icon">📷</div><div class="img-upload-text">CLICK TO UPLOAD PHOTO</div>'}
+        <div class="img-upload-overlay">
+          <div class="img-upload-icon">🔄</div>
+          <div class="img-upload-text">CHANGE PHOTO</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">DISPLAY NAME</label>
+      <input class="form-input" id="f_name" placeholder="Your name or alias"
+        value="${prof?.displayName||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">BIO (max 160 chars)</label>
+      <input class="form-input" id="f_bio" placeholder="Tell the wall about yourself..."
+        maxlength="160" value="${prof?.desc||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">PIXEL COLOR</label>
+      <div class="color-row">
+        <div class="color-swatch" id="colorSwatch" style="background:${color};"
+          onclick="document.getElementById('f_colorPicker').click()"></div>
+        <input type="color" id="f_colorPicker" value="${color}"
+          style="display:none;" oninput="onColorChange(this.value)"/>
+        <input class="color-input" id="f_color" value="${color}"
+          oninput="onColorChange(this.value)"/>
+        <span style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);">click swatch to pick</span>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">WEBSITE / LINK</label>
+      <input class="form-input" id="f_website" placeholder="https://yoursite.com"
+        value="${prof?.website||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-section">✦ SOCIALS</div>
+
+    <div class="form-row">
+      <label class="form-label">𝕏 X HANDLE (no @)</label>
+      <input class="form-input" id="f_x" placeholder="yourhandle"
+        value="${prof?.x||sp?.xHandle||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">✈ TELEGRAM</label>
+      <input class="form-input" id="f_telegram" placeholder="username"
+        value="${prof?.telegram||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">◈ DISCORD</label>
+      <input class="form-input" id="f_discord" placeholder="username"
+        value="${prof?.discord||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">◉ GITHUB</label>
+      <input class="form-input" id="f_github" placeholder="username"
+        value="${prof?.github||''}" oninput="livePreview()"/>
+    </div>
+
+    <div class="form-section">✦ LISTING</div>
+
+    <div class="form-row">
+      <label class="form-label">LIST FOR SALE — SOL PRICE (leave blank = not for sale)</label>
+      <input class="form-input" id="f_listPrice" type="number"
+        placeholder="e.g. 0.05" step="0.001" min="0"
+        value="${sp?.listPrice||''}"/>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveProfile_()">✦ SAVE PROFILE</button>
+      <button class="btn btn-outline" onclick="window.location.href='/'">CANCEL</button>
+    </div>
+  `;
+
+  // Set live preview with current data
+  currentImageDataUrl = sp?.imageDataUrl || null;
+  livePreview();
+}
+
+// ── LIVE PREVIEW UPDATE ───────────────────────────────────────────
+function livePreview(){
+  const name   = document.getElementById('f_name')?.value || shortAddr(walletAddress);
+  const bio    = document.getElementById('f_bio')?.value  || '';
+  const handle = document.getElementById('f_x')?.value;
+  const tg     = document.getElementById('f_telegram')?.value;
+  const dc     = document.getElementById('f_discord')?.value;
+  const gh     = document.getElementById('f_github')?.value;
+  const web    = document.getElementById('f_website')?.value;
+
+  document.getElementById('prevName').textContent   = name || '—';
+  document.getElementById('prevHandle').textContent = handle ? '@'+handle : '';
+  document.getElementById('prevBio').textContent    = bio;
+
+  const socials = [];
+  if(handle) socials.push('𝕏 @'+handle);
+  if(tg)     socials.push('✈ '+tg);
+  if(dc)     socials.push('◈ '+dc);
+  if(gh)     socials.push('◉ '+gh);
+  if(web)    socials.push('◆ Link');
+  document.getElementById('prevSocials').innerHTML =
+    socials.map(s=>`<span class="preview-social">${s}</span>`).join('');
+}
+
+function onColorChange(val){
+  document.getElementById('f_color')?.setAttribute('value', val);
+  if(document.getElementById('f_color')) document.getElementById('f_color').value = val;
+  if(document.getElementById('f_colorPicker')) document.getElementById('f_colorPicker').value = val;
+  if(document.getElementById('colorSwatch'))   document.getElementById('colorSwatch').style.background = val;
+  if(!pendingImageDataUrl){
+    document.getElementById('thumbColor') && (document.getElementById('thumbColor').style.background = val);
+  }
+}
+
+// ── IMAGE UPLOAD ──────────────────────────────────────────────────
+function handleImageFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    scaleImage(ev.target.result, scaled => {
+      pendingImageDataUrl = scaled;
+      // Update thumb preview
+      const thumb = document.getElementById('pixelThumb');
+      if(thumb) thumb.innerHTML = `<img src="${scaled}"/><div class="pixel-thumb-label">CLICK TO CHANGE</div>`;
+      // Update form upload area
+      const area = document.getElementById('imgUploadArea');
+      if(area){
+        const existing = area.querySelector('img');
+        if(existing) existing.src = scaled;
+        else area.innerHTML = `<img src="${scaled}" id="imgPreview"/>
+          <div class="img-upload-overlay">
+            <div class="img-upload-icon">🔄</div>
+            <div class="img-upload-text">CHANGE PHOTO</div>
+          </div>`;
+      }
+      showToast('Photo ready — hit SAVE PROFILE to apply.');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function scaleImage(dataUrl, callback){
+  const SIZE = 512;
+  const img  = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = SIZE; canvas.height = SIZE;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    const scale = Math.max(SIZE/img.width, SIZE/img.height);
+    const sw = img.width*scale, sh = img.height*scale;
+    ctx.drawImage(img, (SIZE-sw)/2, (SIZE-sh)/2, sw, sh);
+    callback(canvas.toDataURL('image/jpeg', 0.82));
+  };
+  img.onerror = () => callback(dataUrl);
+  img.src = dataUrl;
+}
+
+// ── SAVE ─────────────────────────────────────────────────────────
+function saveProfile_(){
+  const get = id => document.getElementById(id)?.value?.trim()||'';
+  const prof = {
+    displayName: get('f_name'),
+    desc:        get('f_bio'),
+    color:       get('f_color') || '#5b21b6',
+    website:     get('f_website'),
+    x:           get('f_x'),
+    telegram:    get('f_telegram'),
+    discord:     get('f_discord'),
+    github:      get('f_github'),
+  };
+
+  const lp = parseFloat(get('f_listPrice'));
+
+  // Save profile
+  saveProfile(pixelKey, prof);
+
+  // Update pw_wall — this makes changes visible to ALL visitors immediately
+  const updates = {
+    color:     prof.color,
+    xHandle:   prof.x,
+    listPrice: (!isNaN(lp)&&lp>0) ? lp : null,
+  };
+  if(pendingImageDataUrl) updates.imageDataUrl = pendingImageDataUrl;
+  saveWallPixel(pixelKey, updates);
+
+  showToast('✦ Profile saved! Wall updated.');
+
+  // Bounce back to wall after short delay so user can see the toast
+  setTimeout(()=>{
+    window.location.href = '/?goto='+pixelKey;
+  }, 1200);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Always show the pixel preview to anyone visiting
+  const sp   = getWallPixel(pixelKey);
+  const prof = getProfile(pixelKey);
+  renderPreview(sp, prof);
+
+  // Try auto-connect
+  tryAutoConnect();
+});
+</script>
+</body>
+</html>
