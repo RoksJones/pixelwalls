@@ -1265,50 +1265,90 @@ function render(){
   }
   // Drag-select overlay (colour-coded)
   renderSelection();
-  // Boost effects
+  // Boost effects — each tier scales pixel UP so it rises above neighbours
   for(const key in boostedSpaces){
     const d=claimedSpaces[key]; if(!d) continue;
     const bv=boostedSpaces[key], t=BOOST_TIERS[bv.tier];
-    const p=g2c(d.col,d.row), bw=(d.w||1)*s, bh=(d.h||1)*s;
-    if(p.x+bw<0||p.y+bh<0||p.x>canvas.width||p.y>canvas.height) continue;
+    if(!t) continue;
     const now=Date.now();
 
+    // Scale factors: pixel grows larger, centred on its position
+    const scales={bronze:1.25, silver:1.45, gold:1.65, wizard:1.9};
+    const scale=scales[bv.tier]||1.25;
+
+    const basew=(d.w||1)*s, baseh=(d.h||1)*s;
+    const p=g2c(d.col,d.row);
+    // Scale from centre
+    const sw=basew*scale, sh=baseh*scale;
+    const sx=p.x-(sw-basew)/2, sy=p.y-(sh-baseh)/2;
+
+    if(sx+sw<0||sy+sh<0||sx>canvas.width||sy>canvas.height) continue;
+
+    ctx.save();
+
     if(bv.tier==='bronze'){
-      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.2);
-      ctx.shadowColor=t.color; ctx.shadowBlur=8;
-      ctx.strokeRect(p.x-1,p.y-1,bw+2,bh+2);
-      ctx.shadowBlur=0;
+      // Redraw pixel larger with bronze glow border
+      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
+        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
+      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(1.5,s*.15);
+      ctx.shadowColor=t.color; ctx.shadowBlur=6;
+      ctx.strokeRect(sx,sy,sw,sh);
     }
+
     if(bv.tier==='silver'){
       const pulse=0.5+0.5*Math.sin(now/400);
-      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.25);
-      ctx.shadowColor=t.color; ctx.shadowBlur=10+pulse*12;
-      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
-      ctx.shadowBlur=0;
+      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
+        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
+      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
+      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.2);
+      ctx.shadowColor=t.color; ctx.shadowBlur=8+pulse*10;
+      ctx.strokeRect(sx,sy,sw,sh);
+      // Inner accent line
+      ctx.lineWidth=1; ctx.globalAlpha=0.4;
+      ctx.strokeRect(sx+2,sy+2,sw-4,sh-4);
+      ctx.globalAlpha=1;
     }
+
     if(bv.tier==='gold'){
       const shimmer=0.5+0.5*Math.sin(now/300);
-      ctx.strokeStyle=`rgba(251,191,36,${0.6+shimmer*0.4})`; ctx.lineWidth=Math.max(3,s*.3);
-      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=14+shimmer*10;
-      ctx.strokeRect(p.x-2,p.y-2,bw+4,bh+4);
-      ctx.shadowBlur=0;
-      // Gold corner accents
-      const ac=Math.max(4,s*.5);
-      ctx.fillStyle='#fbbf24';
-      ctx.fillRect(p.x-3,p.y-3,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y-3,ac,ac);
-      ctx.fillRect(p.x-3,p.y+bh+3-ac,ac,ac); ctx.fillRect(p.x+bw+3-ac,p.y+bh+3-ac,ac,ac);
+      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
+        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
+      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
+      // Animated gold border
+      ctx.strokeStyle=`rgba(251,191,36,${0.7+shimmer*0.3})`;
+      ctx.lineWidth=Math.max(2.5,s*.25);
+      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=12+shimmer*8;
+      ctx.strokeRect(sx,sy,sw,sh);
+      // Corner accents
+      const ac=Math.max(3,s*.4);
+      ctx.shadowBlur=0; ctx.fillStyle='#fbbf24';
+      [[sx,sy],[sx+sw-ac,sy],[sx,sy+sh-ac],[sx+sw-ac,sy+sh-ac]]
+        .forEach(([cx,cy])=>ctx.fillRect(cx,cy,ac,ac));
     }
+
     if(bv.tier==='wizard'){
-      const hue=(now/20)%360;
-      ctx.strokeStyle=`hsl(${hue},100%,70%)`; ctx.lineWidth=Math.max(4,s*.4);
-      ctx.shadowColor=`hsl(${hue},100%,70%)`; ctx.shadowBlur=20;
-      ctx.strokeRect(p.x-3,p.y-3,bw+6,bh+6);
-      ctx.strokeStyle=`hsl(${(hue+120)%360},100%,70%)`; ctx.lineWidth=Math.max(2,s*.2);
-      ctx.strokeRect(p.x-6,p.y-6,bw+12,bh+12);
-      ctx.shadowBlur=0;
+      const hue=(now/15)%360;
+      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
+        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
+      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
+      // Outer rainbow ring
+      ctx.strokeStyle=`hsl(${hue},100%,65%)`;
+      ctx.lineWidth=Math.max(3,s*.35);
+      ctx.shadowColor=`hsl(${hue},100%,65%)`; ctx.shadowBlur=16;
+      ctx.strokeRect(sx,sy,sw,sh);
+      // Inner counter-rotating ring
+      ctx.strokeStyle=`hsl(${(hue+180)%360},100%,65%)`;
+      ctx.lineWidth=Math.max(1.5,s*.15);
+      ctx.shadowColor=`hsl(${(hue+180)%360},100%,65%)`; ctx.shadowBlur=8;
+      ctx.strokeRect(sx+Math.max(2,s*.15),sy+Math.max(2,s*.15),
+                     sw-Math.max(4,s*.3),sh-Math.max(4,s*.3));
     }
+
+    ctx.shadowBlur=0;
+    ctx.restore();
   }
-  // Animate if any boosts active
+  // Animate continuously if any boosts active
   if(Object.keys(boostedSpaces).length>0) requestAnimationFrame(render);
 
   // Minimap
@@ -1416,11 +1456,11 @@ canvas.addEventListener('mouseup',e=>{
         col:Math.min(dragStart.col+bw-1, GRID-1),
         row:Math.min(dragStart.row+bh-1, GRID-1)
       };
-      // Profile popup only in 1×1 mode
+      // Profile popup for ANY claimed pixel in 1×1 mode
       if(bw===1&&bh===1){
         const clickKey=spaceKey(dragStart.col,dragStart.row);
         const clickData=claimedSpaces[clickKey];
-        if(clickData&&clickData.owner&&clickData.owner!==shortAddr()){
+        if(clickData&&clickData.owner){
           const{px,py}=evtPos(e);
           showProfilePopup(clickData,px,py);
         } else { hideProfilePopup(); }
@@ -2541,8 +2581,9 @@ function showProfilePopup(spaceData, canvasX, canvasY){
       ${spaceData.listPrice?'<span style="color:var(--cyan);">FOR SALE: '+spaceData.listPrice+' SOL</span>':''}
     </div>
     <div class="profile-popup-actions">
-      ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏 VISIT</button>`:''}
-      ${spaceData.url?`<button class="profile-popup-btn" style="background:rgba(139,92,246,.2);border:1px solid var(--lav);color:var(--lav);" onclick="window.open('${spaceData.url}','_blank')">LINK</button>`:''}
+      <button class="profile-popup-btn" style="background:rgba(139,92,246,.25);border:1px solid var(--lav);color:var(--lav);" onclick="hideProfilePopup();showPixelProfile(${spaceData.col},${spaceData.row})">✦ VIEW PROFILE</button>
+      ${isMine?`<button class="profile-popup-btn" style="background:rgba(251,191,36,.15);border:1px solid var(--gold);color:var(--gold);" onclick="hideProfilePopup();window.location.href='/profile/${spaceData.col}/${spaceData.row}'">✏ EDIT</button>`:''}
+      ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏</button>`:''}
       ${spaceData.listPrice?`<button class="profile-popup-btn" style="background:rgba(34,211,238,.2);border:1px solid var(--cyan);color:var(--cyan);" onclick="hideProfilePopup();document.getElementById('claimBtn').click()">BUY</button>`:''}
       <button class="profile-popup-btn" style="background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);" onclick="hideProfilePopup()">✕</button>
     </div>`;
