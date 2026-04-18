@@ -357,7 +357,7 @@ select:focus{border-color:var(--lav);}
       <button class="action-btn b" id="dlSvg" disabled onclick="downloadSVG()">▼ DOWNLOAD SVG</button>
       <button class="action-btn" id="cpyBtn" disabled onclick="copyAndCount()">⧉ COPY TO CLIPBOARD</button>
       <button class="action-btn" id="dlSprite" disabled onclick="downloadSprite()" style="display:none;">▼ DOWNLOAD SPRITE SHEET</button>
-      <button class="action-btn" id="shareXBtn" disabled onclick="shareOnX()" style="border-color:#1d9bf0;color:#1d9bf0;">𝕏 SHARE ON X</button>
+      <button class="action-btn" id="shareXBtn" onclick="shareOnX()" style="border-color:#1d9bf0;color:#1d9bf0;background:rgba(29,155,240,.12);font-size:7px;padding:12px;">𝕏 SHARE ON X</button>
     </div>
 
     <!-- COUNTER -->
@@ -648,7 +648,7 @@ function doPixelate(){
   _lastPix={out,bW,bH,dispSz};
 
   // Enable buttons
-  ['dlPng','dlSvg','cpyBtn','shareXBtn'].forEach(id=>document.getElementById(id).disabled=false);
+  ['dlPng','dlSvg','cpyBtn'].forEach(id=>document.getElementById(id).disabled=false);
   if(isSprite)document.getElementById('dlSprite').disabled=false;
 
   // Update palette swatches
@@ -803,7 +803,13 @@ function copyAndCount(){
 // ── SHARE ON X ───────────────────────────────────────────────────
 function shareOnX(){
   const pc=document.getElementById('pixCanvas');
-  if(!pc){showToast('Generate a pixel art first!');return;}
+  if(!pc||!pc.width||!srcImg){
+    showToast('Upload an image first, then share!');
+    // Still open X with text even without image
+    const textOnly=encodeURIComponent('Create pixel art for free with #Pixelcraft by @pixelwallsxyz 🔥\n\npixelwalls.xyz/pixelcraft.html\n\n#PixelArt #Pixelwalls #Solana');
+    window.open('https://twitter.com/intent/tweet?text='+textOnly,'_blank');
+    return;
+  }
   // Download the image first so user has it
   const link=document.createElement('a');
   link.download='my-pixelart.png';
