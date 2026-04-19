@@ -450,7 +450,7 @@ function scaleImage(dataUrl, callback){
 }
 
 // ── SAVE ─────────────────────────────────────────────────────────
-function saveProfile_(){
+async function saveProfile_(){
   const get = id => document.getElementById(id)?.value?.trim()||'';
   const prof = {
     displayName: get('f_name'),
@@ -462,27 +462,89 @@ function saveProfile_(){
     discord:     get('f_discord'),
     github:      get('f_github'),
   };
-
   const lp = parseFloat(get('f_listPrice'));
+  const listPrice = (!isNaN(lp)&&lp>0) ? lp : null;
 
-  // Save profile
+  // Save profile locally first (instant feedback)
   saveProfile(pixelKey, prof);
-
-  // Update pw_wall — this makes changes visible to ALL visitors immediately
   const updates = {
     color:     prof.color,
     xHandle:   prof.x,
-    listPrice: (!isNaN(lp)&&lp>0) ? lp : null,
+    displayName: prof.displayName,
+    desc:      prof.desc,
+    listPrice,
+    updatedAt: Date.now(),
   };
   if(pendingImageDataUrl) updates.imageDataUrl = pendingImageDataUrl;
   saveWallPixel(pixelKey, updates);
 
-  showToast('✦ Profile saved! Wall updated.');
+  showToast('✦ Saving to server...');
 
-  // Bounce back to wall after short delay so user can see the toast
+  // Push to Vercel KV so all devices and users see the update
+  const [col, row] = pixelKey.split(',').map(Number);
+  const sp = getWallPixel(pixelKey) || {};
+  const fullPixel = {
+    col, row,
+    owner: sp.owner || walletAddress || '',
+    color: prof.color,
+    w: sp.w || 1, h: sp.h || 1,
+    price: sp.price || 0.01,
+    listPrice,
+    boostTier: sp.boostTier || 0,
+    xHandle: prof.x,
+    xVerified: !!prof.x,
+    xAvatar: sp.xAvatar || '',
+    url: prof.website || '',
+    displayName: prof.displayName,
+    desc: prof.desc,
+    updatedAt: Date.now(),
+    txSig: sp.txSig || '',
+    assetId: sp.assetId || '',
+  };
+
+  try{
+    // 1. Push pixel data to wall-state
+    await fetch('/api/wall-state', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({pixels: [fullPixel]}),
+    });
+
+    // 2. Push image separately if uploaded
+    if(pendingImageDataUrl){
+      await fetch('/api/pixel-image-data', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          col, row,
+          owner: walletAddress || sp.owner || '',
+          imageDataUrl: pendingImageDataUrl,
+        }),
+      });
+    }
+
+    // 3. Push extended profile fields to metadata endpoint
+    await fetch('/api/update-cnft-metadata', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mintAddress: sp.assetId || null,
+        ownerWallet: walletAddress || sp.owner || '',
+        col, row,
+        profile: prof,
+      }),
+    });
+
+    showToast('✦ Saved! Visible to all users.');
+  }catch(e){
+    console.warn('Server sync failed:', e);
+    showToast('✦ Saved locally. Server sync may take a moment.');
+  }
+
+  // Bounce back to wall
   setTimeout(()=>{
     window.location.href = '/?goto='+pixelKey;
-  }, 1200);
+  }, 1400);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────
