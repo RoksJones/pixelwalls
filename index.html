@@ -70,7 +70,7 @@ nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-co
 .ctrl-label{font-size:7px;color:var(--muted);}
 .ctrl-input{background:rgba(0,0,0,.4);border:1px solid rgba(91,33,182,.5);color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;padding:7px 9px;width:76px;outline:none;text-align:center;}
 .ctrl-input:focus{border-color:var(--lav);}
-.qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:6px 8px;cursor:pointer;transition:all .2s;}
+.qbtn{background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:6px;padding:0;cursor:pointer;transition:all .2s;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
 .qbtn:hover,.qbtn.active{background:rgba(91,33,182,.4);border-color:var(--lav);color:var(--white);}
 .zoom-hint{padding:0 0 10px;font-family:'VT323',monospace;font-size:15px;color:var(--muted);display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;max-width:1400px;margin:0 auto;width:100%;}
 .zoom-hint span{color:var(--lav);}
@@ -384,6 +384,19 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
   /* Hamburger menu trigger */
   .nav-mobile-menu{display:flex!important;}
 
+  /* TOOLS menu — full width dropdown on mobile */
+  .nav-tools-wrap{display:none !important;}
+  .nav-tools-menu{position:fixed;inset:0;top:48px;min-width:100vw;border-radius:0;z-index:400;}
+  .nav-tools-btn{font-size:5px;padding:5px 8px;}
+
+  /* Sidebar panel cards */
+  .sb-card{padding:10px 8px;}
+  .tab-panel{max-height:60vh;overflow-y:auto;}
+
+  /* Wall controls compact */
+  .wall-controls{gap:4px;padding:0 6px 8px;}
+  .ctrl-input{width:54px;font-size:8px;padding:5px 4px;}
+
   /* Wall controls become icon-only */
   .wall-controls{padding:0 8px 8px;gap:4px;}
   .ctrl-btn{font-size:5px;padding:5px 7px;}
@@ -504,7 +517,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="tools-menu-soon">
           <span class="tool-icon" style="opacity:.4;">◈</span>
           <span class="tool-info">
-            <span class="tool-name" style="opacity:.4;">HIDDEN</span>
+            <span class="tool-name" style="opacity:.4;">SPRITE ANIMATOR</span>
             <span class="tool-desc">Coming soon</span>
           </span>
           <span class="tool-badge locked">$PIXEL</span>
@@ -512,7 +525,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="tools-menu-soon">
           <span class="tool-icon" style="opacity:.4;">✦</span>
           <span class="tool-info">
-            <span class="tool-name" style="opacity:.4;">HIDDEN</span>
+            <span class="tool-name" style="opacity:.4;">AI PIXEL GENERATOR</span>
             <span class="tool-desc">Coming soon</span>
           </span>
           <span class="tool-badge locked">$PIXEL</span>
@@ -780,10 +793,10 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
           </div>
           <button class="aBtn aBtn-primary" id="mergeBtnExecute" disabled onclick="executeMerge()" style="margin-bottom:8px;">◈ MERGE INTO CLUSTER NFT</button>
           <div style="font-family:'VT323',monospace;font-size:12px;color:var(--muted);line-height:1.6;">
-            ✦ Minimum: 2×2 (4 pixels)<br/>
-            ✦ Maximum: 10×10 (100 pixels)<br/>
-            ✦ All pixels must be yours<br/>
-            ✦ Merging is permanent — pixels become a single NFT<br/>
+            ✦ Minimum: 2 pixels (any shape)<br/>
+            ✦ Any rectangle size — no upper limit<br/>
+            ✦ All pixels in selection must be yours<br/>
+            ✦ Merging is permanent — becomes a single NFT<br/>
             ✦ Cluster NFT is tradeable as one unit
           </div>
         </div>
@@ -1267,9 +1280,9 @@ function saveToStorage(){
         boostTier:    v.boostTier||0,
         boostActivatedAt: v.boostActivatedAt||0,
       }]);
-    // Save wallet-specific pixels
+    // Save wallet-specific pixels locally
     localStorage.setItem('pw_'+walletAddress, JSON.stringify(mine));
-    // Also merge into pw_wall — global wall state visible to ALL visitors
+    // Merge into local pw_wall cache
     try{
       const wall=JSON.parse(localStorage.getItem('pw_wall')||'{}');
       mine.forEach(([k,v])=>{ wall[k]=v; });
@@ -1284,10 +1297,44 @@ function saveToStorage(){
         localStorage.setItem('pw_boosts',JSON.stringify(existing));
       }
     });
+    // Push to server so ALL browsers/users see the update
+    pushPixelsToServer(mine);
   }catch(e){}
 }
+
+// Push claimed pixels to Vercel KV via /api/wall-state
+// This is what makes pixels visible to ALL visitors globally
+async function pushPixelsToServer(pixelPairs){
+  if(!pixelPairs||!pixelPairs.length) return;
+  try{
+    const pixels = pixelPairs.map(([k,v])=>({
+      col:v.col, row:v.row, owner:v.owner,
+      color:v.color, w:v.w||1, h:v.h||1,
+      price:v.price||0.01, listPrice:v.listPrice||null,
+      boostTier:v.boostTier||0,
+      xHandle:v.xHandle||'', xVerified:!!v.xVerified,
+      xAvatar:v.xAvatar||'', url:v.url||'',
+      txSig:v.txSig||'', assetId:v.assetId||'',
+    }));
+    await fetch('/api/wall-state',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pixels}),
+    });
+    // Push image data separately (too large for wall-state hash)
+    for(const [k,v] of pixelPairs){
+      if(v.imageDataUrl){
+        fetch('/api/pixel-image-data',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({col:v.col,row:v.row,owner:v.owner,imageDataUrl:v.imageDataUrl}),
+        }).catch(()=>{});
+      }
+    }
+  }catch(e){ console.warn('Server push failed (localStorage still saved):',e.message); }
+}
 function loadWallState(){
-  // Load ALL pixels from the global wall store — no wallet needed
+  // Step 1: Load from localStorage immediately (instant, no network)
   try{
     const wall=JSON.parse(localStorage.getItem('pw_wall')||'{}');
     Object.entries(wall).forEach(([k,v])=>{
@@ -1302,18 +1349,88 @@ function loadWallState(){
       }
     });
   }catch(e){}
-  // ALWAYS show the dev center pixel (499,499) to everyone — no wallet needed
+  // Dev center pixel always visible
   const devKey='499,499';
   if(!claimedSpaces[devKey]){
     claimedSpaces[devKey]={
       col:499,row:499,
       owner:'9LAB...ViHk',
       color:'#e879f9',
-      price:0.01,boostTier:0,w:1,h:1,
-      txSig:'dev-test-pixel',devTest:true,
+      price:0,listPrice:null,boostTier:0,w:1,h:1,
+      txSig:'dev-pixel',devTest:true,reserved:true,
     };
     totalClaimed++;
-    // paintAll() will pick this up — canvas is not ready yet at this point
+  }
+  // Step 2: Pull from server in background — merges new pixels from other users
+  fetchServerWallState();
+}
+
+// Fetch all pixels from Vercel KV and merge into local state
+// This is what makes other users' pixels visible to everyone
+async function fetchServerWallState(){
+  try{
+    const r = await fetch('/api/wall-state');
+    if(!r.ok) return;
+    const d = await r.json();
+    if(!d.kvReady || !d.pixels) return;
+
+    let newPixels = 0;
+    const tierNames=['','bronze','silver','gold','wizard'];
+    const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
+
+    Object.entries(d.pixels).forEach(([k,v])=>{
+      if(!claimedSpaces[k]){
+        claimedSpaces[k] = v;
+        wall[k] = v;
+        totalClaimed++;
+        totalVol += parseFloat(v.price||0);
+        if(v.boostTier>0){
+          boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze',activatedAt:v.boostActivatedAt||0};
+        }
+        newPixels++;
+      } else {
+        // Server has newer data — update color/boost but keep local image
+        const local = claimedSpaces[k];
+        if(v.updatedAt > (local.updatedAt||0)){
+          claimedSpaces[k] = {...v, imageDataUrl: local.imageDataUrl||v.imageDataUrl};
+          wall[k] = claimedSpaces[k];
+          if(v.boostTier>0){
+            boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze',activatedAt:v.boostActivatedAt||0};
+          }
+        }
+      }
+    });
+
+    // Save merged state back to localStorage
+    try{ localStorage.setItem('pw_wall', JSON.stringify(wall)); }catch(e){}
+
+    if(newPixels > 0){
+      updateStats();
+      paintAll();
+      render();
+      // Fetch images for newly discovered pixels
+      fetchServerImages(Object.keys(d.pixels).filter(k=>!claimedSpaces[k]?.imageDataUrl));
+    }
+  }catch(e){ console.warn('Server wall fetch failed:',e.message); }
+}
+
+// Fetch image data for pixels that have images on server but not locally
+async function fetchServerImages(keys){
+  if(!keys||!keys.length) return;
+  // Batch — only fetch first 20 to avoid hammering
+  const batch = keys.slice(0,20);
+  for(const key of batch){
+    const [col,row] = key.split(',').map(Number);
+    if(isNaN(col)||isNaN(row)) continue;
+    try{
+      const r = await fetch(`/api/pixel-image-data?col=${col}&row=${row}`);
+      if(!r.ok) continue;
+      const d = await r.json();
+      if(d.imageDataUrl && claimedSpaces[key]){
+        claimedSpaces[key].imageDataUrl = d.imageDataUrl;
+        loadImg(d.imageDataUrl).then(()=>render());
+      }
+    }catch(e){}
   }
 }
 
@@ -1428,84 +1545,75 @@ function render(){
   }
   // Drag-select overlay (colour-coded)
   renderSelection();
-  // Boost effects — each tier scales pixel UP so it rises above neighbours
+  // Boost effects — border drawn INSIDE pixel boundary, never touches neighbours
   for(const key in boostedSpaces){
     const d=claimedSpaces[key]; if(!d) continue;
     const bv=boostedSpaces[key], t=BOOST_TIERS[bv.tier];
     if(!t) continue;
     const now=Date.now();
-
-    // Scale factors: pixel grows larger, centred on its position
-    const scales={bronze:1.25, silver:1.45, gold:1.65, wizard:1.9};
-    const scale=scales[bv.tier]||1.25;
-
-    const basew=(d.w||1)*s, baseh=(d.h||1)*s;
     const p=g2c(d.col,d.row);
-    // Scale from centre
-    const sw=basew*scale, sh=baseh*scale;
-    const sx=p.x-(sw-basew)/2, sy=p.y-(sh-baseh)/2;
+    const pw=(d.w||1)*s, ph=(d.h||1)*s; // exact pixel bounds
 
-    if(sx+sw<0||sy+sh<0||sx>canvas.width||sy>canvas.height) continue;
+    if(p.x+pw<0||p.y+ph<0||p.x>canvas.width||p.y>canvas.height) continue;
 
     ctx.save();
+    // Clip strictly to this pixel's own area — no neighbour bleed
+    ctx.beginPath();
+    ctx.rect(p.x, p.y, pw, ph);
+    ctx.clip();
+
+    // Border thickness scales with zoom but never exceeds 20% of pixel size
+    const maxBorder = Math.min(pw, ph) * 0.2;
 
     if(bv.tier==='bronze'){
-      // Redraw pixel larger with bronze glow border
-      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
-        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
-      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
-      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(1.5,s*.15);
-      ctx.shadowColor=t.color; ctx.shadowBlur=6;
-      ctx.strokeRect(sx,sy,sw,sh);
+      const bw = Math.max(1, Math.min(maxBorder, s*.12));
+      ctx.strokeStyle=t.color;
+      ctx.lineWidth=bw*2; // doubled because half is clipped outside
+      ctx.shadowColor=t.color; ctx.shadowBlur=4;
+      ctx.strokeRect(p.x,p.y,pw,ph);
     }
 
     if(bv.tier==='silver'){
       const pulse=0.5+0.5*Math.sin(now/400);
-      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
-        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
-      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
-      ctx.strokeStyle=t.color; ctx.lineWidth=Math.max(2,s*.2);
-      ctx.shadowColor=t.color; ctx.shadowBlur=8+pulse*10;
-      ctx.strokeRect(sx,sy,sw,sh);
-      // Inner accent line
-      ctx.lineWidth=1; ctx.globalAlpha=0.4;
-      ctx.strokeRect(sx+2,sy+2,sw-4,sh-4);
+      const bw=Math.max(1.5, Math.min(maxBorder, s*.15));
+      ctx.strokeStyle=t.color;
+      ctx.lineWidth=bw*2;
+      ctx.shadowColor=t.color; ctx.shadowBlur=6+pulse*6;
+      ctx.strokeRect(p.x,p.y,pw,ph);
+      // Inner ring
+      const inset=bw*2+1;
+      ctx.lineWidth=1; ctx.globalAlpha=0.5; ctx.shadowBlur=0;
+      ctx.strokeRect(p.x+inset,p.y+inset,pw-inset*2,ph-inset*2);
       ctx.globalAlpha=1;
     }
 
     if(bv.tier==='gold'){
       const shimmer=0.5+0.5*Math.sin(now/300);
-      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
-        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
-      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
-      // Animated gold border
+      const bw=Math.max(2, Math.min(maxBorder, s*.18));
       ctx.strokeStyle=`rgba(251,191,36,${0.7+shimmer*0.3})`;
-      ctx.lineWidth=Math.max(2.5,s*.25);
-      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=12+shimmer*8;
-      ctx.strokeRect(sx,sy,sw,sh);
-      // Corner accents
-      const ac=Math.max(3,s*.4);
+      ctx.lineWidth=bw*2;
+      ctx.shadowColor='#fbbf24'; ctx.shadowBlur=8+shimmer*6;
+      ctx.strokeRect(p.x,p.y,pw,ph);
+      // Corner accents (inset so they stay inside)
+      const ac=Math.max(2, Math.min(bw*2.5, pw*0.15));
       ctx.shadowBlur=0; ctx.fillStyle='#fbbf24';
-      [[sx,sy],[sx+sw-ac,sy],[sx,sy+sh-ac],[sx+sw-ac,sy+sh-ac]]
+      [[p.x,p.y],[p.x+pw-ac,p.y],[p.x,p.y+ph-ac],[p.x+pw-ac,p.y+ph-ac]]
         .forEach(([cx,cy])=>ctx.fillRect(cx,cy,ac,ac));
     }
 
     if(bv.tier==='wizard'){
       const hue=(now/15)%360;
-      if(d.imageDataUrl&&imgCache[d.imageDataUrl])
-        ctx.drawImage(imgCache[d.imageDataUrl],sx,sy,sw,sh);
-      else{ctx.fillStyle=d.color||'#5b21b6';ctx.fillRect(sx,sy,sw,sh);}
-      // Outer rainbow ring
+      const bw=Math.max(2.5, Math.min(maxBorder, s*.22));
+      // Outer rainbow
       ctx.strokeStyle=`hsl(${hue},100%,65%)`;
-      ctx.lineWidth=Math.max(3,s*.35);
-      ctx.shadowColor=`hsl(${hue},100%,65%)`; ctx.shadowBlur=16;
-      ctx.strokeRect(sx,sy,sw,sh);
-      // Inner counter-rotating ring
+      ctx.lineWidth=bw*2;
+      ctx.shadowColor=`hsl(${hue},100%,65%)`; ctx.shadowBlur=10;
+      ctx.strokeRect(p.x,p.y,pw,ph);
+      // Inner counter-ring
+      const inset=bw*2+1;
       ctx.strokeStyle=`hsl(${(hue+180)%360},100%,65%)`;
-      ctx.lineWidth=Math.max(1.5,s*.15);
-      ctx.shadowColor=`hsl(${(hue+180)%360},100%,65%)`; ctx.shadowBlur=8;
-      ctx.strokeRect(sx+Math.max(2,s*.15),sy+Math.max(2,s*.15),
-                     sw-Math.max(4,s*.3),sh-Math.max(4,s*.3));
+      ctx.lineWidth=Math.max(1,bw); ctx.shadowBlur=5;
+      ctx.strokeRect(p.x+inset,p.y+inset,pw-inset*2,ph-inset*2);
     }
 
     ctx.shadowBlur=0;
@@ -1666,6 +1774,8 @@ canvas.addEventListener('touchend',()=>{ltd=null;});
 
 // -- RESOLVE SELECTION -------------------------------------
 // Classifies every cell in dragStart→dragEnd as available/forSale/blocked
+const DEV_PIXEL_KEY='499,499'; // Reserved — not for sale to anyone
+
 function resolveSelection(){
   selAvailable=[]; selForSale=[]; selBlocked=[];
   if(!dragStart||!dragEnd) return;
@@ -1674,6 +1784,8 @@ function resolveSelection(){
   for(let r=r1;r<=r2;r++){
     for(let c=c1;c<=c2;c++){
       const key=spaceKey(c,r);
+      // Dev pixel at (499,499) is permanently reserved — always blocked
+      if(key===DEV_PIXEL_KEY){ selBlocked.push(key); continue; }
       const data=claimedSpaces[key];
       if(!data)                          selAvailable.push(key);
       else if(data.listPrice)            selForSale.push(key);
@@ -1999,6 +2111,8 @@ async function executeClaim(){
     // Build one transaction per pixel (contract requires one tx per pixel PDA)
     let successCount=0;
     for(const key of avail){
+      // Double-guard: never allow minting the dev center pixel
+      if(key===DEV_PIXEL_KEY){ showToast('(499,499) is reserved.'); continue; }
       const [col,row]=key.split(',').map(Number);
       const price=getCurrentPrice();
       const lamports=Math.round(price*LAMPORTS_PER_SOL);
@@ -2747,7 +2861,8 @@ function showProfilePopup(spaceData, canvasX, canvasY){
       <button class="profile-popup-btn" style="background:rgba(139,92,246,.25);border:1px solid var(--lav);color:var(--lav);" onclick="hideProfilePopup();showPixelProfile(${spaceData.col},${spaceData.row})">✦ VIEW PROFILE</button>
       ${isMine?`<button class="profile-popup-btn" style="background:rgba(251,191,36,.15);border:1px solid var(--gold);color:var(--gold);" onclick="hideProfilePopup();window.location.href='/profile/${spaceData.col}/${spaceData.row}'">✏ EDIT</button>`:''}
       ${isX?`<button class="profile-popup-btn" style="background:rgba(29,161,242,.2);border:1px solid #1DA1F2;color:#1DA1F2;" onclick="window.open('https://twitter.com/${spaceData.xHandle}','_blank')">𝕏</button>`:''}
-      ${spaceData.listPrice?`<button class="profile-popup-btn" style="background:rgba(34,211,238,.2);border:1px solid var(--cyan);color:var(--cyan);" onclick="hideProfilePopup();document.getElementById('claimBtn').click()">BUY</button>`:''}
+      ${spaceData.listPrice&&spaceData.col+','+spaceData.row!==DEV_PIXEL_KEY?`<button class="profile-popup-btn" style="background:rgba(34,211,238,.2);border:1px solid var(--cyan);color:var(--cyan);" onclick="hideProfilePopup();document.getElementById('claimBtn').click()">BUY</button>`:''}
+      ${spaceData.col===499&&spaceData.row===499?`<span class="profile-popup-btn" style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.4);color:var(--gold);cursor:default;">✦ RESERVED</span>`:''}
       <button class="profile-popup-btn" style="background:rgba(45,27,105,.4);border:1px solid rgba(91,33,182,.4);color:var(--muted);" onclick="hideProfilePopup()">✕</button>
     </div>`;
 
@@ -3097,33 +3212,60 @@ function saveProfileEdit(key){
     render();
   }
 
-  // Update NFT metadata via Vercel API
-  if(claimedSpaces[key]?.nftMint){
-    updateNftMetadata(key, prof).catch(e => console.warn('Metadata update failed:', e));
-  }
+  // Always push to Vercel KV so ALL users / browsers see the update
+  syncProfileToKV(key, prof, claimedSpaces[key]);
 
   document.getElementById('profileEditModal')?.remove();
-  showToast('✦ Profile saved!');
+  showToast('✦ Profile saved! Syncing...');
   renderMySpaces();
 }
 
-async function updateNftMetadata(key, prof){
-  const sp = claimedSpaces[key];
-  if(!sp?.nftMint || !walletAddress) return;
+async function syncProfileToKV(key, prof, sp){
+  // Push profile to Vercel KV so ALL browsers/users see it instantly.
+  // Also updates NFT metadata URI since /api/metadata/col/row reads from KV.
+  if(!walletAddress) return;
+  const [col,row] = key.split(',').map(Number);
   try{
     const res = await fetch('/api/update-cnft-metadata', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        mintAddress: sp.nftMint,
+        mintAddress: sp?.assetId || sp?.nftMint || null,
         ownerWallet: walletAddress,
-        col: sp.col, row: sp.row,
+        col, row,
         profile: prof,
       })
     });
     const data = await res.json();
-    if(data.success) showToast('✦ NFT metadata updated!');
-  }catch(e){ console.warn('NFT metadata update error:', e); }
+    if(data.success && data.persisted){
+      showToast('✦ Profile saved & synced for all users!');
+    } else {
+      showToast('✦ Profile saved locally. Set up Vercel KV for global sync.');
+    }
+  }catch(e){
+    console.warn('Profile KV sync error:', e);
+    showToast('✦ Profile saved locally.');
+  }
+}
+// Pull remote profile from KV so viewers always see latest data
+async function fetchRemoteProfile(col, row){
+  try{
+    const r = await fetch(`/api/metadata/${col}/${row}`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    if(!d.attributes) return null;
+    const attrs = {};
+    d.attributes.forEach(a => { attrs[a.trait_type] = a.value; });
+    const desc = d.description ? d.description.split('\n')[0] : '';
+    const dname = d.name ? d.name.split(' — ')[0].trim() : '';
+    return {
+      displayName: dname,
+      desc,
+      color:   attrs['Color'] || '#8b5cf6',
+      x:       attrs['X Handle'] || '',
+      website: attrs['Website'] || '',
+    };
+  }catch(e){ return null; }
 }
 // --
 
@@ -3177,17 +3319,14 @@ function updateMergeTab(){
   if(ownEl) ownEl.textContent=`${owned} / ${total}`;
   if(szEl)  szEl.textContent=`${w}×${h} = ${total} pixels`;
 
-  if(total<4){
-    status.textContent='Minimum size is 2×2 (4 pixels).';
-    status.style.color='var(--red)'; btn.disabled=true;
-  } else if(total>100){
-    status.textContent='Maximum size is 10×10 (100 pixels).';
+  if(total<2){
+    status.textContent='Select at least 2 pixels to merge.';
     status.style.color='var(--red)'; btn.disabled=true;
   } else if(notOwned>0){
     status.textContent=`${notOwned} pixel${notOwned>1?'s':''} in selection not owned by you.`;
     status.style.color='var(--red)'; btn.disabled=true;
   } else {
-    status.textContent=`Ready to merge ${total} pixels into 1 cluster NFT.`;
+    status.textContent=`Ready to merge ${w}×${h} (${total} pixels) into 1 cluster NFT.`;
     status.style.color='var(--green)'; btn.disabled=false;
   }
 }
@@ -3197,7 +3336,7 @@ async function executeMerge(){
   const rect=getSelRect();
   const w=rect.c2-rect.c1+1, h=rect.r2-rect.r1+1;
   const total=w*h;
-  if(total<4||total>100){showToast('Invalid merge size.');return;}
+  if(total<2){showToast('Select at least 2 pixels to merge.');return;}
 
   const btn=document.getElementById('mergeBtnExecute');
   btn.disabled=true; btn.textContent='◈ MERGING...';
@@ -3422,15 +3561,21 @@ async function fetchGlobalCounter(){
     updateCounterDisplay(d.count||0);
   }catch(e){}
 }
+async function incrementGlobalCounter(){
+  try{
+    const r=await fetch('/api/counter',{method:'POST'});
+    if(!r.ok) return;
+    const d=await r.json();
+    updateCounterDisplay(d.count||0);
+  }catch(e){}
+}
 function updateCounterDisplay(n){
   const el=document.getElementById('globalCounter');
   if(!el) return;
-  const formatted=n.toLocaleString();
-  el.textContent=formatted;
-  // Flash animation on update
-  el.style.transform='scale(1.08)';
+  el.textContent=n.toLocaleString();
+  el.style.transform='scale(1.1)';
   el.style.color='#e879f9';
-  setTimeout(()=>{el.style.transform='';el.style.color='#00ffcc';},300);
+  setTimeout(()=>{el.style.transform='';el.style.color='#00ffcc';},350);
 }
 // ── END GLOBAL COUNTER ────────────────────────────────────────────
 function toggleToolsMenu(e){
