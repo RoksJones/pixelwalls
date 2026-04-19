@@ -1,32 +1,95 @@
 {
   "functions": {
-    "api/xlogin.js":              { "maxDuration": 10 },
-    "api/xcallback.js":           { "maxDuration": 10 },
-    "api/metadata.js":            { "maxDuration": 10 },
-    "api/pixel-image.js":         { "maxDuration": 10 },
-    "api/cluster-metadata.js":    { "maxDuration": 10 },
-    "api/mint-cnft.js":           { "maxDuration": 30 },
-    "api/update-cnft-metadata.js":{ "maxDuration": 15 },
-    "api/counter.js":             { "maxDuration": 5  }
+    "api/xlogin.js": {
+      "maxDuration": 10
+    },
+    "api/xcallback.js": {
+      "maxDuration": 10
+    },
+    "api/metadata.js": {
+      "maxDuration": 10
+    },
+    "api/pixel-image.js": {
+      "maxDuration": 10
+    },
+    "api/cluster-metadata.js": {
+      "maxDuration": 10
+    },
+    "api/mint-cnft.js": {
+      "maxDuration": 30
+    },
+    "api/update-cnft-metadata.js": {
+      "maxDuration": 15
+    },
+    "api/counter.js": {
+      "maxDuration": 5
+    },
+    "api/wall-state.js": {
+      "maxDuration": 10
+    },
+    "api/pixel-image-data.js": {
+      "maxDuration": 10
+    }
   },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options",   "value": "nosniff" },
-        { "key": "X-XSS-Protection",         "value": "1; mode=block" },
-        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
-        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/api/metadata/:col/:row",              "destination": "/api/metadata"          },
-    { "source": "/api/pixel-image/:col/:row",           "destination": "/api/pixel-image"       },
-    { "source": "/api/metadata/cluster/:c1/:r1/:c2/:r2","destination": "/api/cluster-metadata"  },
-    { "source": "/api/auth/twitter/callback",           "destination": "/api/xcallback"         },
-    { "source": "/api/auth/twitter/login",              "destination": "/api/xlogin"            },
-    { "source": "/profile/:col/:row",                   "destination": "/profile.html"          },
-    { "source": "/((?!api/)[^.]*)",                     "destination": "/index.html"            }
+    {
+      "source": "/api/metadata/:col/:row",
+      "destination": "/api/metadata"
+    },
+    {
+      "source": "/api/pixel-image/:col/:row",
+      "destination": "/api/pixel-image"
+    },
+    {
+      "source": "/api/metadata/cluster/:c1/:r1/:c2/:r2",
+      "destination": "/api/cluster-metadata"
+    },
+    {
+      "source": "/api/auth/twitter/callback",
+      "destination": "/api/xcallback"
+    },
+    {
+      "source": "/api/auth/twitter/login",
+      "destination": "/api/xlogin"
+    },
+    {
+      "source": "/profile/:col/:row",
+      "destination": "/profile.html"
+    },
+    {
+      "source": "/api/wall-state",
+      "destination": "/api/wall-state"
+    },
+    {
+      "source": "/api/pixel-image-data",
+      "destination": "/api/pixel-image-data"
+    },
+    {
+      "source": "/((?!api/)[^.]*)",
+      "destination": "/index.html"
+    }
   ]
 }
