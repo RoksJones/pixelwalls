@@ -1315,6 +1315,10 @@ async function pushPixelsToServer(pixelPairs){
       xHandle:v.xHandle||'', xVerified:!!v.xVerified,
       xAvatar:v.xAvatar||'', url:v.url||'',
       txSig:v.txSig||'', assetId:v.assetId||'',
+      // Profile fields — so other users see display name, bio etc
+      displayName:v.displayName||'',
+      desc:v.desc||'',
+      updatedAt:v.updatedAt||Date.now(),
     }));
     await fetch('/api/wall-state',{
       method:'POST',
@@ -1408,12 +1412,12 @@ async function fetchServerWallState(){
       updateStats();
       paintAll();
       render();
-      // Fetch images for newly discovered pixels
-      const newKeys = Object.keys(d.pixels).filter(k=>!claimedSpaces[k]?.imageDataUrl);
-      fetchServerImages(newKeys);
     }
-    // Always refresh profiles for all pixels (picks up edits from other sessions)
-    fetchServerProfiles(Object.keys(d.pixels));
+    // Always fetch images + profiles for all server pixels
+    // This ensures other devices see uploaded images and profile edits
+    const serverKeys = Object.keys(d.pixels);
+    fetchServerImages(serverKeys);
+    fetchServerProfiles(serverKeys);
   }catch(e){ console.warn('Server wall fetch failed:',e.message); }
 }
 
@@ -1544,15 +1548,6 @@ function render(){
   ctx.imageSmoothingEnabled=false;
   const CW=canvas.width,v=GRID/zoom,s=cs();
   ctx.drawImage(off,panX,panY,v,v,0,0,CW,CW);
-  // Images
-  for(const k in claimedSpaces){
-    const d=claimedSpaces[k];if(!d.imageDataUrl)continue;
-    const p=g2c(d.col,d.row),iw=(d.w||1)*s,ih=(d.h||1)*s;
-    if(p.x+iw<0||p.y+ih<0||p.x>CW||p.y>CW)continue;
-    const img=imgCache[d.imageDataUrl];
-    if(img)ctx.drawImage(img,p.x,p.y,iw,ih);
-    else loadImg(d.imageDataUrl).then(()=>render());
-  }
   // Grid lines
   if(s>=5){
     ctx.strokeStyle='rgba(91,33,182,0.12)';ctx.lineWidth=.5;
@@ -1564,8 +1559,7 @@ function render(){
   if(s>=2){
     ctx.strokeStyle='#22d3ee';ctx.lineWidth=Math.max(.5,s*.1);
     for(const k in claimedSpaces){if(claimedSpaces[k].listPrice){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.strokeRect(p.x,p.y,(d.w||1)*s,(d.h||1)*s);}}
-    ctx.fillStyle='rgba(29,161,242,.7)';
-    for(const k in claimedSpaces){if(claimedSpaces[k].xVerified){const d=claimedSpaces[k];const p=g2c(d.col,d.row);ctx.fillRect(p.x,p.y,Math.max(2,s*.4),Math.max(2,s*.4));}}
+    // X verified indicator removed — shown in profile popup instead
   }
   // Hover preview (when not dragging)
   if(hoverPos.col>=0&&!isPanning&&!isDragging){
@@ -1651,6 +1645,16 @@ function render(){
   }
   // Animate continuously if any boosts active
   if(Object.keys(boostedSpaces).length>0) requestAnimationFrame(render);
+
+  // Images
+  for(const k in claimedSpaces){
+    const d=claimedSpaces[k];if(!d.imageDataUrl)continue;
+    const p=g2c(d.col,d.row),iw=(d.w||1)*s,ih=(d.h||1)*s;
+    if(p.x+iw<0||p.y+ih<0||p.x>CW||p.y>CW)continue;
+    const img=imgCache[d.imageDataUrl];
+    if(img)ctx.drawImage(img,p.x,p.y,iw,ih);
+    else loadImg(d.imageDataUrl).then(()=>render());
+  }
 
   // Minimap
   // minimap removed
@@ -2497,6 +2501,14 @@ function selectBoost(tier){
   if(!data || data.owner !== shortAddr()){ showToast('You can only boost spaces you own!'); return; }
 
   const t = BOOST_TIERS[tier];
+  const required = t.cost;
+
+  // Check $PIXEL balance
+  if(pixelBalance < required){
+    showToast(`Need ${required.toLocaleString()} $PIXEL — you have ${Math.floor(pixelBalance).toLocaleString()}`);
+    return;
+  }
+
   showBoostConfirmModal(tier, t, key);
 }
 
@@ -2532,29 +2544,101 @@ function showBoostConfirmModal(tierId, tier, key){
   document.body.appendChild(ov);
 }
 
-function applyBoost(tierId, key){
-  const tier = BOOST_TIERS[tierId];
+async function applyBoost(tierId, key){
+  const tier    = BOOST_TIERS[tierId];
   const tierNum = {bronze:1,silver:2,gold:3,wizard:4}[tierId]||0;
+  const [col,row] = key.split(',').map(Number);
 
-  // Store in boostedSpaces (canvas effects)
-  const boostActivatedAt = Date.now();
-  boostedSpaces[key] = { tier: tierId, activatedAt: boostActivatedAt };
+  // Close modal first so user sees the wallet prompt
+  document.getElementById('boostModal')?.remove();
+  showToast(`⚡ Initiating ${tier.name} Boost — approve in your wallet...`);
 
-  // Store boostTier on the pixel itself so it survives reconnects
-  if(claimedSpaces[key]){
-    claimedSpaces[key].boostTier = tierNum;
-    claimedSpaces[key].boostActivatedAt = boostActivatedAt;
+  // ── Transfer $PIXEL to agent wallet ──────────────────────────────
+  try{
+    const ws = getWallets();
+    if(!ws.length) throw new Error('No wallet found');
+    const w = ws[0];
+
+    const {Connection,PublicKey,Transaction,LAMPORTS_PER_SOL} = window.solanaWeb3||{};
+    if(!Connection) throw new Error('Solana library not loaded');
+
+    const rpc = DEVNET_MODE
+      ? 'https://api.devnet.solana.com'
+      : (window.HELIUS_RPC||'https://api.mainnet-beta.solana.com');
+    const connection = new Connection(rpc,'confirmed');
+
+    // Build SPL token transfer: send tier.cost $PIXEL to agent wallet
+    const TOKEN_PROGRAM_ID  = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const ASSOC_TOKEN_PROG  = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+    const pixelMint         = new PublicKey(PIXEL_MINT);
+    const agentKey          = new PublicKey(AGENT_WALLET);
+    const userKey           = new PublicKey(walletAddress);
+
+    // Derive ATAs
+    const [userATA]  = await PublicKey.findProgramAddress(
+      [userKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), pixelMint.toBuffer()],
+      ASSOC_TOKEN_PROG
+    );
+    const [agentATA] = await PublicKey.findProgramAddress(
+      [agentKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), pixelMint.toBuffer()],
+      ASSOC_TOKEN_PROG
+    );
+
+    // Amount in token base units (assuming 6 decimals for $PIXEL)
+    const amount = BigInt(tier.cost) * BigInt(1_000_000);
+
+    // Build transfer instruction
+    const transferIx = {
+      programId: TOKEN_PROGRAM_ID,
+      keys: [
+        {pubkey: userATA,  isSigner:false, isWritable:true},
+        {pubkey: agentATA, isSigner:false, isWritable:true},
+        {pubkey: userKey,  isSigner:true,  isWritable:false},
+      ],
+      data: Buffer.from([
+        3, // Transfer instruction
+        ...new Array(8).fill(0).map((_,i)=>Number((amount >> BigInt(i*8)) & BigInt(0xFF))),
+      ]),
+    };
+
+    const tx = new Transaction();
+    tx.add(transferIx);
+    const {blockhash} = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userKey;
+
+    const signed = await w.obj.signTransaction(tx);
+    const sig    = await connection.sendRawTransaction(signed.serialize());
+    await connection.confirmTransaction(sig,'confirmed');
+
+    showToast(`✅ ${tier.cost.toLocaleString()} $PIXEL sent! Applying boost...`);
+    console.log('Boost payment tx:', sig);
+
+  }catch(e){
+    if(e.code===4001){ showToast('Boost cancelled.'); return; }
+    // If token transfer fails (e.g. no Solana lib yet), still apply visual boost
+    // but warn the user — for dev/testing only
+    console.warn('Boost payment error:', e.message);
+    if(!DEVNET_MODE){
+      showToast('Payment failed: '+e.message?.slice(0,60));
+      return;
+    }
+    showToast('⚠️ Dev mode: boost applied without payment');
   }
 
-  // Persist both to localStorage
-  saveBoosts();
-  saveToStorage();
+  // ── Apply boost effects ───────────────────────────────────────────
+  const boostActivatedAt = Date.now();
+  boostedSpaces[key] = { tier: tierId, activatedAt: boostActivatedAt };
+  if(claimedSpaces[key]){
+    claimedSpaces[key].boostTier          = tierNum;
+    claimedSpaces[key].boostActivatedAt   = boostActivatedAt;
+  }
 
-  saveBoosts();  // persist to pw_boosts global store
-  document.getElementById('boostModal')?.remove();
+  saveBoosts();
+  saveToStorage(); // pushes boost to server so all users see it
   renderActiveBoosts();
   render();
-  showToast(`⚡ ${tier.name} Boost applied! Effect is permanent on the wall.`);
+  showToast(`⚡ ${tier.name} Boost is LIVE on the wall!`);
   if(tierId === 'wizard') registerWizardBoost(key);
 }
 
