@@ -101,6 +101,8 @@ function sanitizePixel(raw) {
     xVerified:    !!raw.xVerified,
     xAvatar:      String(raw.xAvatar || '').slice(0, 300),
     url:          String(raw.url || '').slice(0, 200),
+    displayName:  String(raw.displayName || '').slice(0, 50),
+    desc:         String(raw.desc || '').slice(0, 200),
     txSig:        String(raw.txSig || '').slice(0, 100),
     assetId:      String(raw.assetId || '').slice(0, 100),
     // imageDataUrl intentionally excluded — too large for KV, stored separately
