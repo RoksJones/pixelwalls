@@ -1393,10 +1393,16 @@ async function fetchServerWallState(){
         }
         newPixels++;
       } else {
-        // Server has newer data — update color/boost but keep local image
+        // Local pixel exists — merge server data on top
         const local = claimedSpaces[k];
-        if(v.updatedAt > (local.updatedAt||0)){
-          claimedSpaces[k] = {...v, imageDataUrl: local.imageDataUrl||v.imageDataUrl};
+        const serverNewer  = v.updatedAt && v.updatedAt > (local.updatedAt||0);
+        const localIsStub  = local.devTest || !local.updatedAt; // hardcoded defaults
+        if(serverNewer || localIsStub){
+          claimedSpaces[k] = {
+            ...local,           // keep any local-only fields (e.g. imageDataUrl cached)
+            ...v,               // server fields override
+            imageDataUrl: local.imageDataUrl || v.imageDataUrl,
+          };
           wall[k] = claimedSpaces[k];
           if(v.boostTier>0){
             boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze',activatedAt:v.boostActivatedAt||0};
