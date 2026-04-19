@@ -1409,9 +1409,39 @@ async function fetchServerWallState(){
       paintAll();
       render();
       // Fetch images for newly discovered pixels
-      fetchServerImages(Object.keys(d.pixels).filter(k=>!claimedSpaces[k]?.imageDataUrl));
+      const newKeys = Object.keys(d.pixels).filter(k=>!claimedSpaces[k]?.imageDataUrl);
+      fetchServerImages(newKeys);
     }
+    // Always refresh profiles for all pixels (picks up edits from other sessions)
+    fetchServerProfiles(Object.keys(d.pixels));
   }catch(e){ console.warn('Server wall fetch failed:',e.message); }
+}
+
+// Fetch profile data from KV for displayed pixels and merge into claimedSpaces
+async function fetchServerProfiles(keys){
+  if(!keys||!keys.length) return;
+  // Batch fetch — 10 at a time with small delay to avoid rate limits
+  const batch = keys.slice(0, 10);
+  const fetches = batch.map(async key => {
+    const [col, row] = key.split(',').map(Number);
+    if(isNaN(col)||isNaN(row)) return;
+    try{
+      const r = await fetch(`/api/metadata/${col}/${row}`);
+      if(!r.ok) return;
+      const d = await r.json();
+      if(!claimedSpaces[key]) return;
+      // Merge profile fields from NFT metadata back into wall state
+      const attrs = {};
+      (d.attributes||[]).forEach(a => { attrs[a.trait_type] = a.value; });
+      const nameParts = (d.name||'').split(' — ');
+      const displayName = nameParts.length > 1 ? nameParts[0].trim() : '';
+      if(displayName) claimedSpaces[key].displayName = displayName;
+      if(attrs['X Handle']) claimedSpaces[key].xHandle = attrs['X Handle'];
+      if(attrs['Color'])    claimedSpaces[key].color   = attrs['Color'];
+      if(attrs['Website'])  claimedSpaces[key].url     = attrs['Website'];
+    }catch(e){}
+  });
+  await Promise.allSettled(fetches);
 }
 
 // Fetch image data for pixels that have images on server but not locally
@@ -2973,11 +3003,20 @@ function saveProfile(key, data){
   try{ localStorage.setItem('pw_prof_'+key, JSON.stringify(data)); }catch(e){}
 }
 
-function showPixelProfile(col, row){
+async function showPixelProfile(col, row){
   const key = col+','+row;
   const sp  = claimedSpaces[key];
   if(!sp) return;
-  const prof = getProfile(key);
+  // Try to get fresh profile from server first, fall back to localStorage
+  let prof = getProfile(key);
+  try{
+    const remote = await fetchRemoteProfile(col, row);
+    if(remote && Object.keys(remote).some(k=>remote[k])){
+      // Merge remote into local — remote wins for shared fields
+      prof = {...prof, ...remote};
+      saveProfile(key, prof); // cache locally
+    }
+  }catch(e){}
   const isMine = sp.owner === shortAddr();
   const rank = pixelBalance > 0 ? getRankFromBalance(pixelBalance) : null;
 
@@ -3202,36 +3241,61 @@ function saveProfileEdit(key){
 
   saveProfile(key, prof);
 
-  // Update canvas color if changed
+  // Merge ALL profile fields into claimedSpaces so wall + server both get them
   const [col, row] = key.split(',').map(Number);
   if(claimedSpaces[key]){
-    claimedSpaces[key].color = prof.color;
-    claimedSpaces[key].xHandle = prof.x;
-    claimedSpaces[key].xAvatar = prof.avatar;
-    paintPixel(col, row, prof.color);
+    Object.assign(claimedSpaces[key], {
+      color:       prof.color,
+      xHandle:     prof.x,
+      xAvatar:     prof.avatar,
+      xVerified:   !!prof.x,
+      url:         prof.website,
+      displayName: prof.displayName,
+      desc:        prof.desc,
+      updatedAt:   Date.now(),
+    });
+    ofc.fillStyle = prof.color;
+    ofc.fillRect(col, row, claimedSpaces[key].w||1, claimedSpaces[key].h||1);
     render();
   }
 
-  // Always push to Vercel KV so ALL users / browsers see the update
+  // Push full updated pixel to wall-state KV (makes it visible to all users)
+  saveToStorage();
+
+  // Also push profile fields to profile-specific KV key (for NFT metadata)
   syncProfileToKV(key, prof, claimedSpaces[key]);
 
+  // Push image if it was updated
+  if(claimedSpaces[key]?.imageDataUrl){
+    fetch('/api/pixel-image-data',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        col, row,
+        owner: walletAddress,
+        imageDataUrl: claimedSpaces[key].imageDataUrl
+      }),
+    }).catch(()=>{});
+  }
+
   document.getElementById('profileEditModal')?.remove();
-  showToast('✦ Profile saved! Syncing...');
+  showToast('✦ Profile saved! Syncing to all users...');
   renderMySpaces();
 }
 
 async function syncProfileToKV(key, prof, sp){
   // Push profile to Vercel KV so ALL browsers/users see it instantly.
   // Also updates NFT metadata URI since /api/metadata/col/row reads from KV.
-  if(!walletAddress) return;
   const [col,row] = key.split(',').map(Number);
+  const owner = walletAddress || sp?.owner || '';
+  if(!owner) return;
   try{
     const res = await fetch('/api/update-cnft-metadata', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         mintAddress: sp?.assetId || sp?.nftMint || null,
-        ownerWallet: walletAddress,
+        ownerWallet: owner,
         col, row,
         profile: prof,
       })
