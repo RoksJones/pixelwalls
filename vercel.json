@@ -29,6 +29,9 @@
     },
     "api/pixel-image-data.js": {
       "maxDuration": 10
+    },
+    "api/debug-pixel.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
@@ -78,14 +81,6 @@
     {
       "source": "/profile/:col/:row",
       "destination": "/profile.html"
-    },
-    {
-      "source": "/api/wall-state",
-      "destination": "/api/wall-state"
-    },
-    {
-      "source": "/api/pixel-image-data",
-      "destination": "/api/pixel-image-data"
     },
     {
       "source": "/((?!api/)[^.]*)",

@@ -1374,8 +1374,9 @@ function loadWallState(){
 async function fetchServerWallState(){
   try{
     const r = await fetch('/api/wall-state');
-    if(!r.ok) return;
+    if(!r.ok){ console.warn('[wall] fetch failed status',r.status); return; }
     const d = await r.json();
+    console.log('[wall] server state:', { kvReady:d.kvReady, count:d.count, pixels: d.pixels && Object.keys(d.pixels) });
     if(!d.kvReady || !d.pixels) return;
 
     let newPixels = 0;
@@ -1469,14 +1470,22 @@ async function fetchServerImages(keys){
       if(!r.ok) continue;
       const d = await r.json();
       if(d.imageDataUrl && claimedSpaces[key]){
-        claimedSpaces[key].imageDataUrl = d.imageDataUrl;
+        console.log('[img] got image for', key, '(', d.imageDataUrl.length, 'chars)');
+        // Guard against stray quote characters from previous buggy storage
+        let img = d.imageDataUrl;
+        if(typeof img === 'string' && img.startsWith('"') && img.endsWith('"')){
+          img = img.slice(1, -1);
+        }
+        claimedSpaces[key].imageDataUrl = img;
         // Cache to localStorage so subsequent loads are instant
         try{
           const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
-          if(wall[key]) wall[key].imageDataUrl = d.imageDataUrl;
+          if(wall[key]) wall[key].imageDataUrl = img;
           localStorage.setItem('pw_wall', JSON.stringify(wall));
         }catch(e){}
-        loadImg(d.imageDataUrl).then(()=>{ updated = true; render(); });
+        loadImg(img).then(()=>{ updated = true; render(); });
+      } else if(!d.imageDataUrl) {
+        console.log('[img] no image on server for', key);
       }
     }catch(e){}
   }
