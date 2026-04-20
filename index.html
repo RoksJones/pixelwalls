@@ -3111,14 +3111,50 @@ function recordWizardClick(key){
       wizards[key].color=d.color||wizards[key].color;
       wizards[key].avatar=d.xAvatar||wizards[key].avatar;}
     saveWizardSpaces(wizards);
-    renderWizardHall();
   }
+  // Always increment global server counter (even for boosts we don't have locally)
+  const [col,row] = key.split(',').map(Number);
+  if(!isNaN(col) && !isNaN(row)){
+    fetch('/api/wizard-click', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({col, row}),
+    }).catch(()=>{});
+  }
+  renderWizardHall();
 }
 
-function renderWizardHall(){
+// Cache for server wizard list — hydrated asynchronously
+let serverWizards = null;
+
+async function renderWizardHall(){
   const grid=document.getElementById('wizardHallGrid'); if(!grid) return;
-  const wizards=getWizardSpaces();
-  const entries=Object.entries(wizards).sort((a,b)=>(b[1].clicks||0)-(a[1].clicks||0));
+
+  // Merge local + server wizards (server is source of truth for cross-device visibility)
+  const local = getWizardSpaces();
+  const serverList = await fetchServerWizards();
+  const merged = {};
+
+  // Start with local entries
+  Object.entries(local).forEach(([k,w])=>{ merged[k] = {...w}; });
+
+  // Overlay server entries — server wins for all fields including clicks
+  (serverList || []).forEach(w => {
+    const key = w.col + ',' + w.row;
+    merged[key] = {
+      col: w.col, row: w.row,
+      owner:  w.owner  || merged[key]?.owner  || '',
+      handle: w.handle || merged[key]?.handle || '',
+      name:   w.displayName || w.handle || (w.owner||'').slice(0,8)+'...',
+      avatar: w.avatar || merged[key]?.avatar || '',
+      color:  w.color  || merged[key]?.color  || '#8b5cf6',
+      clicks: w.clicks,
+      boostedAt: w.boostedAt || merged[key]?.boostedAt || 0,
+    };
+  });
+
+  const entries = Object.entries(merged).sort((a,b)=>(b[1].clicks||0)-(a[1].clicks||0));
+
   if(!entries.length){
     grid.innerHTML=`<div class="wiz-empty">No Wizard Boosts yet — be the first legend on the wall.<br/><br/>
       <button class="aBtn aBtn-primary" style="max-width:260px;margin:0 auto;" onclick="document.getElementById('wall').scrollIntoView({behavior:'smooth'})">⚡ APPLY WIZARD BOOST</button></div>`;
@@ -3143,6 +3179,17 @@ function renderWizardHall(){
       </div>
     </div>`;
   }).join('');
+}
+
+// Fetch the global wizard list from KV so any visitor sees all legends
+async function fetchServerWizards(){
+  try{
+    const r = await fetch('/api/wizard-hall');
+    if(!r.ok) return null;
+    const d = await r.json();
+    serverWizards = d.wizards || [];
+    return serverWizards;
+  }catch(e){ return serverWizards; } // fall back to last cached value
 }
 
 function jumpToWizard(key){
@@ -3887,6 +3934,8 @@ window.addEventListener('load',async()=>{
   await tryAutoReconnect();await fetchTokenData();
   setInterval(fetchTokenData,30000);updateSelInfo();
   renderWizardHall();
+  // Refresh wizard hall every 30s so new boosts + clicks surface live
+  setInterval(renderWizardHall, 30000);
   document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
 });
 
