@@ -87,7 +87,7 @@ module.exports = async function handler(req, res) {
     displayName: (profile.displayName || '').slice(0, 50),
     desc:        (profile.desc        || '').slice(0, 160),
     color:       /^#[0-9a-fA-F]{6}$/.test(profile.color) ? profile.color : '#8b5cf6',
-    website:     (profile.website     || '').startsWith('http') ? profile.website.slice(0, 200) : '',
+    website:     (profile.website || '').length > 0 ? (profile.website.startsWith('http') ? profile.website : 'https://'+profile.website).slice(0, 200) : '',
     x:           (profile.x           || '').replace('@', '').slice(0, 50),
     telegram:    (profile.telegram    || '').replace('@', '').slice(0, 50),
     discord:     (profile.discord     || '').slice(0, 50),
