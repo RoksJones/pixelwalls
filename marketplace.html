@@ -463,9 +463,9 @@ function renderPagination(total){
 // ── BUY LISTING ───────────────────────────────────────────────────
 function buyListing(e, key, price){
   e.stopPropagation();
-  // Redirect to wall with the pixel pre-selected
+  // Navigate to the wall, zoom to the pixel, and auto-select it
   const [col,row]=key.split(',');
-  window.location.href=`index.html#wall?buy=${col},${row}&price=${price}`;
+  window.location.href=`/?goto=${col},${row}`;
 }
 
 // ── VIEW LISTING ──────────────────────────────────────────────────
@@ -496,7 +496,8 @@ function viewListing(l){
       ${l.boostTier?`<div style="font-size:7px;color:var(--gold);margin-bottom:12px;">⚡ ${boostNames[l.boostTier].toUpperCase()} BOOST</div>`:''}
       <div style="font-family:'VT323',monospace;font-size:32px;color:var(--gold);margin-bottom:4px;">${l.listPrice} SOL</div>
       <div style="font-family:'VT323',monospace;font-size:16px;color:var(--muted);margin-bottom:16px;">≈ $${usd} USD</div>
-      <button onclick="buyListing(event,'${l.key}',${l.listPrice})" style="width:100%;background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.6));border:1px solid var(--lav);color:var(--white);font-family:'Press Start 2P',monospace;font-size:7px;padding:14px;cursor:pointer;letter-spacing:1px;">🔮 BUY THIS PIXEL</button>
+      <button onclick="window.location.href='/?goto=${l.col},${l.row}'" style="width:100%;background:linear-gradient(135deg,var(--violet),rgba(139,92,246,.6));border:1px solid var(--lav);color:var(--white);font-family:'Press Start 2P',monospace;font-size:7px;padding:14px;cursor:pointer;letter-spacing:1px;">🔮 VIEW ON WALL & BUY</button>
+      <button onclick="window.location.href='/profile/${l.col}/${l.row}'" style="width:100%;margin-top:8px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-family:'Press Start 2P',monospace;font-size:7px;padding:10px;cursor:pointer;letter-spacing:1px;">✦ VIEW FULL PROFILE</button>
       <button onclick="document.getElementById('listingModal').remove()" style="width:100%;margin-top:8px;background:transparent;border:1px solid rgba(91,33,182,.3);color:var(--muted);font-family:'Press Start 2P',monospace;font-size:7px;padding:10px;cursor:pointer;letter-spacing:1px;">CLOSE</button>
     </div>
   </div>`;
