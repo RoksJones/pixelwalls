@@ -591,15 +591,76 @@ function showToast(msg){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
-window.addEventListener('load', () => {
-  // Always show the pixel preview to anyone visiting
-  const sp   = getWallPixel(pixelKey);
-  const prof = getProfile(pixelKey);
-  renderPreview(sp, prof);
+window.addEventListener('load', async () => {
+  // Render instant preview from localStorage cache first (if any)
+  const cachedSp   = getWallPixel(pixelKey);
+  const cachedProf = getProfile(pixelKey);
+  renderPreview(cachedSp, cachedProf);
+
+  // Fetch fresh server-side data so any visitor sees the real profile
+  await loadFromServer();
 
   // Try auto-connect
   tryAutoConnect();
 });
+
+// Fetch pixel + image + profile from Vercel KV so anyone viewing the page
+// sees the latest public data — not just the owner.
+async function loadFromServer(){
+  const [col, row] = pixelKey.split(',').map(Number);
+  if(isNaN(col) || isNaN(row)) return;
+
+  try{
+    // 1. Pixel data (owner, color, listPrice, handle, boostTier, displayName, desc)
+    const r1 = await fetch(`/api/wall-state?key=${col},${row}`);
+    const d1 = await r1.json().catch(()=>({}));
+    console.log('[profile viewer] wall-state →', r1.status, d1);
+    if(r1.ok && d1.pixel){
+      // Merge server data into localStorage cache so renderPreview sees it
+      saveWallPixel(pixelKey, d1.pixel);
+    }
+
+    // 2. Image data (stored separately because it's large)
+    const r2 = await fetch(`/api/pixel-image-data?col=${col}&row=${row}`);
+    const d2 = await r2.json().catch(()=>({}));
+    console.log('[profile viewer] image →', r2.status, d2?.imageDataUrl ? '(has image)' : '(no image)');
+    if(r2.ok && d2.imageDataUrl){
+      saveWallPixel(pixelKey, { imageDataUrl: d2.imageDataUrl });
+    }
+
+    // 3. Full profile from NFT metadata endpoint (displayName, desc, socials, website, etc.)
+    const r3 = await fetch(`/api/metadata/${col}/${row}`);
+    const d3 = await r3.json().catch(()=>({}));
+    console.log('[profile viewer] metadata →', r3.status);
+    if(r3.ok && d3 && d3.attributes){
+      const attrs = {};
+      d3.attributes.forEach(a => { attrs[a.trait_type] = a.value; });
+      const nameParts = (d3.name||'').split(' — ');
+      const displayName = nameParts.length > 1 ? nameParts[0].trim() : '';
+      // Reconstruct full profile object from metadata
+      const serverProf = {
+        displayName: displayName || cachedProf?.displayName || '',
+        desc:        (d3.description||'').split('\n')[0] || cachedProf?.desc || '',
+        color:       attrs['Color']   || cachedProf?.color   || '#5b21b6',
+        x:           attrs['X Handle']|| cachedProf?.x       || '',
+        website:     attrs['Website'] || cachedProf?.website || '',
+        telegram:    attrs['Telegram']|| cachedProf?.telegram|| '',
+        discord:     attrs['Discord'] || cachedProf?.discord || '',
+        github:      attrs['GitHub']  || cachedProf?.github  || '',
+        avatar:      cachedProf?.avatar || '',
+      };
+      saveProfile(pixelKey, serverProf);
+    }
+
+    // Re-render with server data
+    const freshSp   = getWallPixel(pixelKey);
+    const freshProf = getProfile(pixelKey);
+    currentImageDataUrl = freshSp?.imageDataUrl || null;
+    renderPreview(freshSp, freshProf);
+  }catch(e){
+    console.warn('[profile viewer] server load failed:', e);
+  }
+}
 </script>
 </body>
 </html>
