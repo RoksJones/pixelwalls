@@ -1612,6 +1612,52 @@ function render(){
 
     if(p.x+pw<0||p.y+ph<0||p.x>canvas.width||p.y>canvas.height) continue;
 
+    // Zoomed-out fallback: when pixel is too small to fit a border inside,
+    // draw a visible boost marker AROUND the pixel so viewers can see it from far away.
+    // This is essential for discovery — wizard boosts should be visible even at 1x zoom.
+    if(s < 4){
+      const cx = p.x + pw/2, cy = p.y + ph/2;
+      const markerSize = Math.max(4, Math.min(12, s * 8));
+      ctx.save();
+      if(bv.tier === 'wizard'){
+        // Rainbow pulsing dot for wizard boost
+        const hue = (now/15) % 360;
+        const pulse = 0.7 + 0.3 * Math.sin(now/400);
+        ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+        ctx.shadowColor = `hsl(${hue}, 100%, 60%)`;
+        ctx.shadowBlur = 12 * pulse;
+        ctx.beginPath();
+        ctx.arc(cx, cy, markerSize * pulse, 0, Math.PI * 2);
+        ctx.fill();
+      } else if(bv.tier === 'gold'){
+        const shimmer = 0.7 + 0.3 * Math.sin(now/300);
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 8 * shimmer;
+        ctx.beginPath();
+        ctx.arc(cx, cy, markerSize * shimmer, 0, Math.PI * 2);
+        ctx.fill();
+      } else if(bv.tier === 'silver'){
+        const pulse = 0.7 + 0.3 * Math.sin(now/400);
+        ctx.fillStyle = '#c0c0c0';
+        ctx.shadowColor = '#c0c0c0';
+        ctx.shadowBlur = 6 * pulse;
+        ctx.beginPath();
+        ctx.arc(cx, cy, markerSize * pulse, 0, Math.PI * 2);
+        ctx.fill();
+      } else if(bv.tier === 'bronze'){
+        ctx.fillStyle = '#cd7f32';
+        ctx.shadowColor = '#cd7f32';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(cx, cy, markerSize, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      continue; // skip the zoomed-in border logic
+    }
+
     ctx.save();
     // Clip strictly to this pixel's own area — no neighbour bleed
     ctx.beginPath();
