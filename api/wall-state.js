@@ -47,18 +47,24 @@ async function kvSet(key, value, exSeconds) {
 }
 
 async function kvHSet(hashKey, field, value) {
-  // Store individual pixel as hash field for O(1) lookup
+  // Store individual pixel as hash field for O(1) lookup.
+  // Upstash REST expects array body: ["field1","value1","field2","value2"]
   const url = process.env.KV_REST_API_URL;
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return false;
   try {
-    await fetch(`${url}/hset/${encodeURIComponent(hashKey)}`, {
+    const r = await fetch(`${url}/hset/${encodeURIComponent(hashKey)}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: JSON.stringify(value) }),
+      body: JSON.stringify([field, JSON.stringify(value)]),
     });
+    const d = await r.json().catch(() => ({}));
+    if (d.error) { console.warn('kvHSet error:', d.error); return false; }
     return true;
-  } catch { return false; }
+  } catch (e) {
+    console.warn('kvHSet network error:', e.message);
+    return false;
+  }
 }
 
 async function kvHGetAll(hashKey) {
@@ -71,15 +77,28 @@ async function kvHGetAll(hashKey) {
     });
     const d = await r.json();
     if (!d.result) return null;
-    // Parse each field value
+
     const out = {};
-    const entries = d.result;
-    for (let i = 0; i < entries.length; i += 2) {
-      try { out[entries[i]] = JSON.parse(entries[i + 1]); }
-      catch { out[entries[i]] = entries[i + 1]; }
+    // Upstash REST may return EITHER:
+    //   (a) flat array ["field1","val1","field2","val2", ...]
+    //   (b) object {"field1":"val1","field2":"val2", ...}
+    if (Array.isArray(d.result)) {
+      for (let i = 0; i < d.result.length; i += 2) {
+        const k = d.result[i]; const v = d.result[i + 1];
+        if (k === undefined) continue;
+        try { out[k] = JSON.parse(v); } catch { out[k] = v; }
+      }
+    } else if (typeof d.result === 'object') {
+      for (const k in d.result) {
+        const v = d.result[k];
+        try { out[k] = JSON.parse(v); } catch { out[k] = v; }
+      }
     }
     return out;
-  } catch { return null; }
+  } catch (e) {
+    console.warn('kvHGetAll error:', e.message);
+    return null;
+  }
 }
 
 // ── SANITIZE PIXEL DATA ───────────────────────────────────────────

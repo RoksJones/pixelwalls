@@ -21,7 +21,7 @@ async function setKV(key, value) {
   const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return false;
   try {
-    await fetch(`${url}/set/${key}`, {
+    const r = await fetch(`${url}/set/${encodeURIComponent(key)}`, {
       method:  'POST',
       headers: {
         Authorization:  `Bearer ${token}`,
@@ -29,8 +29,10 @@ async function setKV(key, value) {
       },
       body: JSON.stringify(value),
     });
+    const d = await r.json().catch(() => ({}));
+    if (d.error) { console.warn('setKV error:', d.error, 'for key', key); return false; }
     return true;
-  } catch { return false; }
+  } catch (e) { console.warn('setKV exception:', e.message); return false; }
 }
 
 async function verifyOwnership(assetId, claimedOwner, rpcUrl) {

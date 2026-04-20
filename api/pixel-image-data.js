@@ -31,15 +31,24 @@ async function kvGet(key) {
 async function kvSet(key, value) {
   const url = process.env.KV_REST_API_URL;
   const tok = process.env.KV_REST_API_TOKEN;
-  if (!url || !tok) return false;
+  if (!url || !tok) return { ok: false, reason: 'no-kv-env' };
   try {
-    await fetch(`${url}/set/${encodeURIComponent(key)}`, {
+    // Send as JSON-wrapped string so we can round-trip strings safely
+    const r = await fetch(`${url}/set/${encodeURIComponent(key)}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(value),
     });
-    return true;
-  } catch { return false; }
+    const d = await r.json().catch(() => ({}));
+    if (d.error) {
+      console.warn('kvSet error:', d.error, 'for key', key, 'body length:', JSON.stringify(value).length);
+      return { ok: false, reason: d.error };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.warn('kvSet exception:', e.message);
+    return { ok: false, reason: e.message };
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -72,15 +81,17 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: `Image too large (max ${MAX_IMAGE_SIZE / 1024}KB)` });
     }
 
-    const saved = await kvSet(`img_${colNum}_${rowNum}`, imageDataUrl);
+    const result = await kvSet(`img_${colNum}_${rowNum}`, imageDataUrl);
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({
-      success: saved,
+    return res.status(result.ok ? 200 : 500).json({
+      success: result.ok,
       col: colNum,
       row: rowNum,
-      message: saved
+      size: imageDataUrl.length,
+      reason: result.reason || null,
+      message: result.ok
         ? 'Image saved. Visible to all users.'
-        : 'KV not configured. Image stored locally only.',
+        : `Image save failed: ${result.reason}`,
     });
   }
 
