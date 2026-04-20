@@ -215,47 +215,95 @@ async function fetchSolPrice(){
   }catch(e){}
 }
 
-// ── LOAD LISTINGS FROM LOCALSTORAGE + ON-CHAIN ────────────────────
-// Listings are stored in localStorage across all wallets that have
-// connected to pixelwalls.xyz on this browser. For production this
-// will be replaced with an RPC call to read all PixelSpace PDAs
-// with listPrice > 0.
-function loadListings(){
+// ── LOAD LISTINGS FROM KV SERVER ───────────────────────────────────
+// Fetches ALL claimed pixels from Vercel KV, filters for listPrice > 0.
+// This makes the marketplace visible to everyone, not just the wallet holder.
+async function loadListings(){
   const listings = [];
-  // Read all localStorage keys for all wallets
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(!key||!key.startsWith('pw_')) continue;
-    if(key.startsWith('pw_prof_')||key.startsWith('pw_xwallet_')||
-       key.startsWith('pw_ref')||key.startsWith('pw_inv')) continue;
-    try{
-      const data=JSON.parse(localStorage.getItem(key)||'[]');
-      if(Array.isArray(data)){
-        data.forEach(([k,v])=>{
-          if(v&&v.listPrice&&parseFloat(v.listPrice)>0){
-            const prof=getProfile(k);
+
+  // 1. Fetch from server — source of truth for all users
+  try{
+    const r = await fetch('/api/wall-state');
+    if(r.ok){
+      const d = await r.json();
+      if(d.kvReady && d.pixels){
+        Object.entries(d.pixels).forEach(([k,v])=>{
+          if(v && v.listPrice && parseFloat(v.listPrice) > 0){
             listings.push({
-              key:k,
-              col:v.col||parseInt(k.split(',')[0]),
-              row:v.row||parseInt(k.split(',')[1]),
-              owner:v.owner||'Unknown',
-              xHandle:v.xHandle||prof?.x||null,
-              xAvatar:v.xAvatar||prof?.avatar||null,
-              color:v.color||prof?.color||'#5b21b6',
-              imageDataUrl:v.imageDataUrl||null,
-              listPrice:parseFloat(v.listPrice),
-              boostTier:v.boostTier||0,
-              w:v.w||1, h:v.h||1,
-              listedAt:v.listedAt||0,
+              key: k,
+              col: v.col || parseInt(k.split(',')[0]),
+              row: v.row || parseInt(k.split(',')[1]),
+              owner: v.owner || 'Unknown',
+              xHandle: v.xHandle || '',
+              xAvatar: v.xAvatar || '',
+              color: v.color || '#5b21b6',
+              imageDataUrl: null, // fetched separately below
+              listPrice: parseFloat(v.listPrice),
+              boostTier: v.boostTier || 0,
+              displayName: v.displayName || '',
+              w: v.w || 1, h: v.h || 1,
+              listedAt: v.updatedAt || 0,
             });
           }
         });
       }
+    }
+  }catch(e){ console.warn('Marketplace: server fetch failed', e); }
+
+  // 2. Merge any local-only listings (pixels the user listed but hasn't synced yet)
+  try{
+    const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
+    const seen = new Set(listings.map(l=>l.key));
+    Object.entries(wall).forEach(([k,v])=>{
+      if(seen.has(k)) return;
+      if(v && v.listPrice && parseFloat(v.listPrice) > 0){
+        listings.push({
+          key: k,
+          col: v.col || parseInt(k.split(',')[0]),
+          row: v.row || parseInt(k.split(',')[1]),
+          owner: v.owner || 'Unknown',
+          xHandle: v.xHandle || '',
+          xAvatar: v.xAvatar || '',
+          color: v.color || '#5b21b6',
+          imageDataUrl: v.imageDataUrl || null,
+          listPrice: parseFloat(v.listPrice),
+          boostTier: v.boostTier || 0,
+          displayName: v.displayName || '',
+          w: v.w || 1, h: v.h || 1,
+          listedAt: v.updatedAt || 0,
+        });
+      }
+    });
+  }catch(e){}
+
+  // 3. Fetch images for server listings (async background)
+  fetchListingImages(listings);
+
+  return listings;
+}
+
+// Fetch images for each listing from KV in background
+async function fetchListingImages(listings){
+  for(const l of listings){
+    if(l.imageDataUrl) continue; // already have it
+    try{
+      const r = await fetch(`/api/pixel-image-data?col=${l.col}&row=${l.row}`);
+      if(!r.ok) continue;
+      const d = await r.json();
+      if(d.imageDataUrl){
+        l.imageDataUrl = d.imageDataUrl;
+        // Re-render the specific card if visible
+        const card = document.querySelector(`[data-listing-key="${l.key}"]`);
+        if(card){
+          const preview = card.querySelector('.card-pixel-preview');
+          if(preview){
+            const img = preview.querySelector('.card-pixel-img') || preview.querySelector('.card-pixel-color');
+            if(img) img.outerHTML = `<img class="card-pixel-img" src="${d.imageDataUrl}" alt="Pixel"/>`;
+          }
+        }
+      }
     }catch(e){}
   }
-  // Deduplicate by key
-  const seen=new Set();
-  return listings.filter(l=>{ if(seen.has(l.key)) return false; seen.add(l.key); return true; });
 }
 
 function getProfile(key){
@@ -353,6 +401,7 @@ function renderPage(page){
 function makeCard(l){
   const card=document.createElement('div');
   card.className='listing-card';
+  card.setAttribute('data-listing-key', l.key);
   const boostNames=['','Mage','Sorcerer','Warlock','Wizard'];
   const boostClasses=['','boosted-bronze','boosted-silver','boosted-gold','boosted-wizard'];
   if(l.boostTier) card.classList.add(boostClasses[l.boostTier]);
@@ -464,19 +513,17 @@ function showToast(msg){
 // ── INIT ──────────────────────────────────────────────────────────
 window.addEventListener('load',async()=>{
   await fetchSolPrice();
-  allListings=loadListings();
+  allListings = await loadListings();
 
-  // Update claimed count from localStorage (approximate)
-  let claimedCount=0;
-  for(let i=0;i<localStorage.length;i++){
-    const key=localStorage.key(i);
-    if(!key||!key.startsWith('pw_')||key.startsWith('pw_prof_')||key.startsWith('pw_xwallet_')||key.startsWith('pw_ref')||key.startsWith('pw_inv')) continue;
-    try{
-      const d=JSON.parse(localStorage.getItem(key)||'[]');
-      if(Array.isArray(d)) claimedCount+=d.length;
-    }catch(e){}
-  }
-  document.getElementById('statClaimed').textContent=claimedCount.toLocaleString()||'—';
+  // Update claimed count from server data
+  try{
+    const r = await fetch('/api/wall-state');
+    if(r.ok){
+      const d = await r.json();
+      const count = d.count || Object.keys(d.pixels||{}).length || 0;
+      document.getElementById('statClaimed').textContent = count.toLocaleString() || '—';
+    }
+  }catch(e){}
 
   // Remove loading skeletons
   const skeletons=document.getElementById('loadingSkeletons');
@@ -484,12 +531,11 @@ window.addEventListener('load',async()=>{
 
   applyFilters();
 
-  // TODO: Replace localStorage fetch with on-chain RPC call after contract deploys
-  // const connection = new Connection(HELIUS_RPC);
-  // const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
-  //   filters: [{ dataSize: 96+8 }, { memcmp: { offset: 8+2+2+32+32, bytes: bs58.encode(Buffer.from([1])) } }]
-  // });
-  // Parse PDAs where listPrice > 0
+  // Auto-refresh listings every 60s
+  setInterval(async()=>{
+    allListings = await loadListings();
+    applyFilters();
+  }, 60000);
 });
 </script>
 </body>
