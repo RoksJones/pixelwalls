@@ -3115,7 +3115,7 @@ function recordWizardClick(key){
   // Always increment global server counter (even for boosts we don't have locally)
   const [col,row] = key.split(',').map(Number);
   if(!isNaN(col) && !isNaN(row)){
-    fetch('/api/wizard-click', {
+    fetch('/api/wizard-hall', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({col, row}),
