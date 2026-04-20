@@ -21,13 +21,10 @@ async function setKV(key, value) {
   const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return false;
   try {
-    const r = await fetch(`${url}/set/${encodeURIComponent(key)}`, {
+    const r = await fetch(url, {
       method:  'POST',
-      headers: {
-        Authorization:  `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(value),
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['SET', key, JSON.stringify(value)]),
     });
     const d = await r.json().catch(() => ({}));
     if (d.error) { console.warn('setKV error:', d.error, 'for key', key); return false; }

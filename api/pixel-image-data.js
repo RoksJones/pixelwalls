@@ -17,36 +17,38 @@ async function kvGet(key) {
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return null;
   try {
-    const r = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
-      headers: { Authorization: `Bearer ${tok}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['GET', key]),
     });
     const d = await r.json();
     if (!d.result) return null;
-    // Upstash stores the raw body we sent (JSON.stringify output). Parse it back.
     try { return JSON.parse(d.result); }
-    catch { return d.result; } // already a plain string
+    catch { return d.result; }
   } catch { return null; }
 }
 
 async function kvSet(key, value) {
+  // Upstash universal command form — most reliable for large values
   const url = process.env.KV_REST_API_URL;
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return { ok: false, reason: 'no-kv-env' };
+  const payload = JSON.stringify(['SET', key, JSON.stringify(value)]);
   try {
-    // Send as JSON-wrapped string so we can round-trip strings safely
-    const r = await fetch(`${url}/set/${encodeURIComponent(key)}`, {
+    const r = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(value),
+      body: payload,
     });
     const d = await r.json().catch(() => ({}));
     if (d.error) {
-      console.warn('kvSet error:', d.error, 'for key', key, 'body length:', JSON.stringify(value).length);
+      console.warn('kvSet error:', d.error, 'for key', key, 'payload bytes:', payload.length);
       return { ok: false, reason: d.error };
     }
-    return { ok: true };
+    return { ok: true, size: payload.length };
   } catch (e) {
-    console.warn('kvSet exception:', e.message);
+    console.warn('kvSet exception:', e.message, 'for key', key);
     return { ok: false, reason: e.message };
   }
 }

@@ -13,13 +13,14 @@ async function kvGet(key) {
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return { error: 'KV not configured' };
   try {
-    const r = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
-      headers: { Authorization: `Bearer ${tok}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['GET', key]),
     });
     const d = await r.json();
     if (!d.result) return null;
-    try { return JSON.parse(d.result); }
-    catch { return d.result; }
+    try { return JSON.parse(d.result); } catch { return d.result; }
   } catch (e) { return { error: e.message }; }
 }
 
@@ -28,13 +29,14 @@ async function kvHGet(hashKey, field) {
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return { error: 'KV not configured' };
   try {
-    const r = await fetch(`${url}/hget/${encodeURIComponent(hashKey)}/${encodeURIComponent(field)}`, {
-      headers: { Authorization: `Bearer ${tok}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['HGET', hashKey, field]),
     });
     const d = await r.json();
     if (!d.result) return null;
-    try { return JSON.parse(d.result); }
-    catch { return d.result; }
+    try { return JSON.parse(d.result); } catch { return d.result; }
   } catch (e) { return { error: e.message }; }
 }
 

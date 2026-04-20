@@ -21,49 +21,52 @@ async function kvGet(key) {
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return null;
   try {
-    const r = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
-      headers: { Authorization: `Bearer ${tok}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['GET', key]),
     });
     const d = await r.json();
-    return d.result ? JSON.parse(d.result) : null;
+    if (!d.result) return null;
+    try { return JSON.parse(d.result); } catch { return d.result; }
   } catch { return null; }
 }
 
-async function kvSet(key, value, exSeconds) {
+async function kvSet(key, value) {
+  // Use Upstash universal command form for reliability
   const url = process.env.KV_REST_API_URL;
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return false;
   try {
-    const body = exSeconds
-      ? JSON.stringify({ EX: exSeconds })
-      : '{}';
-    await fetch(`${url}/set/${encodeURIComponent(key)}`, {
+    const r = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(value),
+      body: JSON.stringify(['SET', key, JSON.stringify(value)]),
     });
+    const d = await r.json().catch(() => ({}));
+    if (d.error) { console.warn('kvSet error:', d.error, 'for', key); return false; }
     return true;
-  } catch { return false; }
+  } catch (e) { console.warn('kvSet exception:', e.message); return false; }
 }
 
 async function kvHSet(hashKey, field, value) {
-  // Store individual pixel as hash field for O(1) lookup.
-  // Upstash REST expects array body: ["field1","value1","field2","value2"]
+  // Use Upstash universal command form — body is ["CMD", "arg1", "arg2", ...]
+  // This is the most reliable format per Upstash REST docs.
   const url = process.env.KV_REST_API_URL;
   const tok = process.env.KV_REST_API_TOKEN;
-  if (!url || !tok) return false;
+  if (!url || !tok) return { ok: false, reason: 'no-kv-env' };
   try {
-    const r = await fetch(`${url}/hset/${encodeURIComponent(hashKey)}`, {
+    const r = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify([field, JSON.stringify(value)]),
+      body: JSON.stringify(['HSET', hashKey, field, JSON.stringify(value)]),
     });
     const d = await r.json().catch(() => ({}));
-    if (d.error) { console.warn('kvHSet error:', d.error); return false; }
-    return true;
+    if (d.error) { console.warn('kvHSet error:', d.error, 'for', hashKey, field); return { ok: false, reason: d.error }; }
+    return { ok: true };
   } catch (e) {
-    console.warn('kvHSet network error:', e.message);
-    return false;
+    console.warn('kvHSet exception:', e.message);
+    return { ok: false, reason: e.message };
   }
 }
 
@@ -72,16 +75,15 @@ async function kvHGetAll(hashKey) {
   const tok = process.env.KV_REST_API_TOKEN;
   if (!url || !tok) return null;
   try {
-    const r = await fetch(`${url}/hgetall/${encodeURIComponent(hashKey)}`, {
-      headers: { Authorization: `Bearer ${tok}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['HGETALL', hashKey]),
     });
     const d = await r.json();
     if (!d.result) return null;
 
     const out = {};
-    // Upstash REST may return EITHER:
-    //   (a) flat array ["field1","val1","field2","val2", ...]
-    //   (b) object {"field1":"val1","field2":"val2", ...}
     if (Array.isArray(d.result)) {
       for (let i = 0; i < d.result.length; i += 2) {
         const k = d.result[i]; const v = d.result[i + 1];
@@ -194,9 +196,11 @@ module.exports = async function handler(req, res) {
         kvHSet(WALL_KEY, fieldKey, pixel),
         kvSet(`${PIXEL_PFX}${pixel.col}_${pixel.row}`, pixel),
       ]);
+      const hsetOk = (typeof h1 === 'object') ? !!h1.ok : !!h1;
+      const setOk  = !!h2;
 
-      if (h1 || h2) saved.push(fieldKey);
-      else failed.push(fieldKey);
+      if (hsetOk || setOk) saved.push({ key: fieldKey, hset: hsetOk, set: setOk });
+      else failed.push({ key: fieldKey, hsetReason: h1?.reason || 'unknown' });
     }
 
     res.setHeader('Cache-Control', 'no-store');

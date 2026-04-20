@@ -13,11 +13,14 @@ async function getKV(key) {
   const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return null;
   try {
-    const r = await fetch(`${url}/get/${key}`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(['GET', key]),
     });
     const d = await r.json();
-    return d.result ? JSON.parse(d.result) : null;
+    if (!d.result) return null;
+    try { return JSON.parse(d.result); } catch { return d.result; }
   } catch { return null; }
 }
 
