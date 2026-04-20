@@ -1312,6 +1312,8 @@ async function pushPixelsToServer(pixelPairs){
       color:v.color, w:v.w||1, h:v.h||1,
       price:v.price||0.01, listPrice:v.listPrice||null,
       boostTier:v.boostTier||0,
+      boostActivatedAt:v.boostActivatedAt||0,
+      boostTxSig:v.boostTxSig||'',
       xHandle:v.xHandle||'', xVerified:!!v.xVerified,
       xAvatar:v.xAvatar||'', url:v.url||'',
       txSig:v.txSig||'', assetId:v.assetId||'',
@@ -1389,9 +1391,6 @@ async function fetchServerWallState(){
         wall[k] = v;
         totalClaimed++;
         totalVol += parseFloat(v.price||0);
-        if(v.boostTier>0){
-          boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze',activatedAt:v.boostActivatedAt||0};
-        }
         newPixels++;
       } else {
         // Local pixel exists — merge server data on top
@@ -1405,10 +1404,20 @@ async function fetchServerWallState(){
             imageDataUrl: local.imageDataUrl || v.imageDataUrl,
           };
           wall[k] = claimedSpaces[k];
-          if(v.boostTier>0){
-            boostedSpaces[k]={tier:tierNames[v.boostTier]||'bronze',activatedAt:v.boostActivatedAt||0};
-          }
         }
+      }
+      // Always reflect server boost state (on every fetch, not just new pixels)
+      // This is crucial: viewers need to see boost effects applied by others
+      if(v.boostTier>0){
+        boostedSpaces[k]={
+          tier: tierNames[v.boostTier]||'bronze',
+          activatedAt: v.boostActivatedAt || Date.now()
+        };
+      } else if(boostedSpaces[k] && !v.boostTier){
+        // Server says no boost — but keep locally saved boost if it's newer
+        // (handles race: boost applied locally, not yet synced to server)
+        const localBoostNewer = claimedSpaces[k]?.boostActivatedAt > (v.updatedAt||0);
+        if(!localBoostNewer) delete boostedSpaces[k];
       }
     });
 
@@ -2655,6 +2664,8 @@ async function applyBoost(tierId, key){
   if(claimedSpaces[key]){
     claimedSpaces[key].boostTier          = tierNum;
     claimedSpaces[key].boostActivatedAt   = boostActivatedAt;
+    claimedSpaces[key].boostTxSig         = sig || '';
+    claimedSpaces[key].updatedAt          = Date.now(); // force server to accept this as newer
   }
 
   saveBoosts();
