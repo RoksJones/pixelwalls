@@ -63,13 +63,15 @@ module.exports = async function handler(req, res) {
     if (isNaN(col) || isNaN(row)) {
       return res.status(400).json({ error: 'Missing col/row' });
     }
-    const data = await kvGet(`img_${col}_${row}`);
+    const reqType = req.query?.type || 'pixel';
+    const kvKey = reqType === 'banner' ? `banner_${col}_${row}` : `img_${col}_${row}`;
+    const data = await kvGet(kvKey);
     res.setHeader('Cache-Control', 'public, max-age=300');
-    return res.status(200).json({ imageDataUrl: data || null });
+    return res.status(200).json({ imageDataUrl: data || null, type: reqType });
   }
 
   if (req.method === 'POST') {
-    const { col, row, owner, imageDataUrl } = req.body || {};
+    const { col, row, owner, imageDataUrl, type } = req.body || {};
     const colNum = parseInt(col, 10);
     const rowNum = parseInt(row, 10);
 
@@ -83,17 +85,19 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: `Image too large (max ${MAX_IMAGE_SIZE / 1024}KB)` });
     }
 
-    const result = await kvSet(`img_${colNum}_${rowNum}`, imageDataUrl);
+    const kvKey = type === 'banner' ? `banner_${colNum}_${rowNum}` : `img_${colNum}_${rowNum}`;
+    const result = await kvSet(kvKey, imageDataUrl);
     res.setHeader('Cache-Control', 'no-store');
     return res.status(result.ok ? 200 : 500).json({
       success: result.ok,
       col: colNum,
       row: rowNum,
+      type: type || 'pixel',
       size: imageDataUrl.length,
       reason: result.reason || null,
       message: result.ok
-        ? 'Image saved. Visible to all users.'
-        : `Image save failed: ${result.reason}`,
+        ? `${type === 'banner' ? 'Banner' : 'Image'} saved. Visible to all users.`
+        : `Save failed: ${result.reason}`,
     });
   }
 
