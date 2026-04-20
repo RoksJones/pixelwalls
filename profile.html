@@ -138,6 +138,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px
 <div class="toast" id="toast"></div>
 
 <input type="file" id="imgFile" accept="image/*" style="display:none;" onchange="handleImageFile(event)"/>
+<input type="file" id="bannerFile" accept="image/*" style="display:none;" onchange="handleBannerFile(event)"/>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────
@@ -268,9 +269,18 @@ function renderPreview(sp, prof){
   if(prof?.telegram) socials.push('✈ '+prof.telegram);
   if(prof?.discord)  socials.push('◈ '+prof.discord);
   if(prof?.github)   socials.push('◉ '+prof.github);
-  if(prof?.website)  socials.push('◆ Link');
+  if(prof?.website){
+    const url = prof.website.startsWith('http') ? prof.website : 'https://'+prof.website;
+    const display = prof.website.replace(/^https?:\/\//, '').slice(0,30);
+    socials.push({text:'◆ '+display, url});
+  }
   document.getElementById('prevSocials').innerHTML =
-    socials.map(s=>`<span class="preview-social">${s}</span>`).join('');
+    socials.map(s => {
+      if(typeof s === 'object' && s.url){
+        return `<a class="preview-social" href="${s.url}" target="_blank" style="text-decoration:none;color:var(--cyan);cursor:pointer;">${s.text}</a>`;
+      }
+      return `<span class="preview-social">${s}</span>`;
+    }).join('');
 }
 
 // ── RENDER EDIT FORM ──────────────────────────────────────────────
@@ -278,6 +288,19 @@ function renderEditForm(sp, prof){
   const color = prof?.color || sp?.color || '#5b21b6';
   document.getElementById('mainContent').innerHTML = `
     <div class="form-section">✦ DISPLAY</div>
+
+    <div class="form-row">
+      <label class="form-label">BANNER IMAGE</label>
+      <div class="img-upload-area" id="bannerUploadArea" onclick="document.getElementById('bannerFile').click()" style="height:80px;">
+        ${sp?.bannerDataUrl
+          ? '<img src="'+sp.bannerDataUrl+'" id="bannerPreview" style="width:100%;height:100%;object-fit:cover;"/>'
+          : '<div class="img-upload-icon">🖼️</div><div class="img-upload-text">CLICK TO UPLOAD BANNER</div>'}
+        <div class="img-upload-overlay">
+          <div class="img-upload-icon">🔄</div>
+          <div class="img-upload-text">CHANGE BANNER</div>
+        </div>
+      </div>
+    </div>
 
     <div class="form-row">
       <label class="form-label">PIXEL IMAGE</label>
@@ -404,6 +427,33 @@ function onColorChange(val){
 }
 
 // ── IMAGE UPLOAD ──────────────────────────────────────────────────
+let pendingBannerDataUrl = null;
+
+function handleBannerFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200; canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      const scale = Math.max(1200/img.width, 300/img.height);
+      const sw = img.width*scale, sh = img.height*scale;
+      ctx.drawImage(img, (1200-sw)/2, (300-sh)/2, sw, sh);
+      pendingBannerDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+      const area = document.getElementById('bannerUploadArea');
+      if(area) area.innerHTML = `<img src="${pendingBannerDataUrl}" id="bannerPreview" style="width:100%;height:100%;object-fit:cover;"/>
+        <div class="img-upload-overlay"><div class="img-upload-icon">🔄</div><div class="img-upload-text">CHANGE BANNER</div></div>`;
+      showToast('✦ Banner ready — click SAVE to apply');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function handleImageFile(e){
   const file = e.target.files[0];
   if(!file) return;
@@ -521,7 +571,33 @@ async function saveProfile_(){
     failures.push('wall-state (network)');
   }
 
-  // 2. Push image separately if uploaded (large payload, separate KV key)
+  // 2a. Push banner if uploaded
+  if(pendingBannerDataUrl){
+    try{
+      const rb = await fetch('/api/pixel-image-data', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          col, row,
+          owner: walletAddress || sp.owner || '',
+          imageDataUrl: pendingBannerDataUrl,
+          type: 'banner',
+        }),
+      });
+      const db = await rb.json().catch(()=>({}));
+      console.log('[profile] banner →', rb.status, db);
+      if(!rb.ok || db.success === false){
+        failures.push(`banner (${rb.status})`);
+      }
+      // Also save to wall pixel for local rendering
+      saveWallPixel(pixelKey, { bannerDataUrl: pendingBannerDataUrl });
+    }catch(e){
+      console.error('[profile] banner error:', e);
+      failures.push('banner (network)');
+    }
+  }
+
+  // 2b. Push image separately if uploaded (large payload, separate KV key)
   if(pendingImageDataUrl){
     try{
       const r2 = await fetch('/api/pixel-image-data', {
@@ -651,6 +727,15 @@ async function loadFromServer(){
       };
       saveProfile(pixelKey, serverProf);
     }
+
+    // 4. Load banner image
+    try{
+      const r4 = await fetch(`/api/pixel-image-data?col=${col}&row=${row}&type=banner`);
+      const d4 = await r4.json().catch(()=>({}));
+      if(r4.ok && d4.imageDataUrl){
+        saveWallPixel(pixelKey, { bannerDataUrl: d4.imageDataUrl });
+      }
+    }catch(e){}
 
     // Re-render with server data
     const freshSp   = getWallPixel(pixelKey);
