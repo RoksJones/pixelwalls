@@ -126,6 +126,9 @@ function sanitizePixel(raw) {
     desc:         String(raw.desc || '').slice(0, 200),
     txSig:        String(raw.txSig || '').slice(0, 100),
     assetId:      String(raw.assetId || '').slice(0, 100),
+    // Boost persistence — these were being dropped which caused boosts to "disappear" on reload
+    boostActivatedAt: parseInt(raw.boostActivatedAt) || 0,
+    boostTxSig:   String(raw.boostTxSig || '').slice(0, 100),
     // imageDataUrl intentionally excluded — too large for KV, stored separately
     updatedAt:    Date.now(),
   };
