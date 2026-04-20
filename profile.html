@@ -502,17 +502,29 @@ async function saveProfile_(){
     assetId: sp.assetId || '',
   };
 
+  const failures = [];
+
+  // 1. Push pixel data to wall-state (REQUIRED — this is what other users see)
   try{
-    // 1. Push pixel data to wall-state
-    await fetch('/api/wall-state', {
+    const r1 = await fetch('/api/wall-state', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({pixels: [fullPixel]}),
     });
+    const d1 = await r1.json().catch(()=>({}));
+    console.log('[profile] wall-state →', r1.status, d1);
+    if(!r1.ok || d1.success === false){
+      failures.push(`wall-state (${r1.status})`);
+    }
+  }catch(e){
+    console.error('[profile] wall-state network error:', e);
+    failures.push('wall-state (network)');
+  }
 
-    // 2. Push image separately if uploaded
-    if(pendingImageDataUrl){
-      await fetch('/api/pixel-image-data', {
+  // 2. Push image separately if uploaded (large payload, separate KV key)
+  if(pendingImageDataUrl){
+    try{
+      const r2 = await fetch('/api/pixel-image-data', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -521,10 +533,20 @@ async function saveProfile_(){
           imageDataUrl: pendingImageDataUrl,
         }),
       });
+      const d2 = await r2.json().catch(()=>({}));
+      console.log('[profile] pixel-image-data →', r2.status, d2);
+      if(!r2.ok || d2.success === false){
+        failures.push(`image-data (${r2.status})`);
+      }
+    }catch(e){
+      console.error('[profile] image-data network error:', e);
+      failures.push('image-data (network)');
     }
+  }
 
-    // 3. Push extended profile fields to metadata endpoint
-    await fetch('/api/update-cnft-metadata', {
+  // 3. Push extended profile fields to metadata endpoint (for NFT metadata)
+  try{
+    const r3 = await fetch('/api/update-cnft-metadata', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -534,11 +556,25 @@ async function saveProfile_(){
         profile: prof,
       }),
     });
-
-    showToast('✦ Saved! Visible to all users.');
+    const d3 = await r3.json().catch(()=>({}));
+    console.log('[profile] update-cnft-metadata →', r3.status, d3);
+    if(!r3.ok){
+      failures.push(`metadata (${r3.status})`);
+    }
   }catch(e){
-    console.warn('Server sync failed:', e);
-    showToast('✦ Saved locally. Server sync may take a moment.');
+    console.error('[profile] metadata network error:', e);
+    failures.push('metadata (network)');
+  }
+
+  // Report result honestly to the user
+  if(failures.length === 0){
+    showToast('✦ Saved! Visible to all users.');
+  } else if(failures.length < 3){
+    showToast('⚠ Partial save — ' + failures.join(', ') + '. Check console.');
+    console.warn('[profile] Some endpoints failed:', failures);
+  } else {
+    showToast('✕ Server sync failed. Changes kept locally only.');
+    console.error('[profile] All server pushes failed:', failures);
   }
 
   // Bounce back to wall
