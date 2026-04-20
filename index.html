@@ -3277,12 +3277,10 @@ async function showPixelProfile(col, row){
   ov.innerHTML = `<div class="pixel-profile" style="${boostGlow}">
     <div class="pf-banner" style="${bannerUrl ? 'background-image:url('+bannerUrl+');background-size:cover;background-position:center;' : ''}">
       ${bannerUrl ? '' : '<div class="pf-banner-pixel">'+bannerPixels+'</div>'}
-      <div class="pf-avatar-wrap">
-        <div class="pf-avatar" style="border-color:${baseColor};">${avatarHtml}</div>
-      </div>
+      ${bannerUrl ? '' : '<div class="pf-avatar-wrap"><div class="pf-avatar" style="border-color:'+baseColor+';">'+avatarHtml+'</div></div>'}
       <button class="pf-close" onclick="document.getElementById('pixelProfileOverlay').remove()">✕</button>
     </div>
-    <div class="pf-body">
+    <div class="pf-body" style="${bannerUrl ? 'padding-top:20px;' : ''}">
       <div class="pf-name">${prof.displayName || sp.owner?.slice(0,8)+'...'||'Unknown'}</div>
       <div class="pf-coord">(${col}, ${row})</div>
       ${rankBadge}
