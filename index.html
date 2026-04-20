@@ -517,7 +517,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="tools-menu-soon">
           <span class="tool-icon" style="opacity:.4;">◈</span>
           <span class="tool-info">
-            <span class="tool-name" style="opacity:.4;">HIDDEN</span>
+            <span class="tool-name" style="opacity:.4;">SPRITE ANIMATOR</span>
             <span class="tool-desc">Coming soon</span>
           </span>
           <span class="tool-badge locked">$PIXEL</span>
@@ -525,7 +525,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="tools-menu-soon">
           <span class="tool-icon" style="opacity:.4;">✦</span>
           <span class="tool-info">
-            <span class="tool-name" style="opacity:.4;">HIDDEN</span>
+            <span class="tool-name" style="opacity:.4;">AI PIXEL GENERATOR</span>
             <span class="tool-desc">Coming soon</span>
           </span>
           <span class="tool-badge locked">$PIXEL</span>
@@ -722,7 +722,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="sb-card">
           <div class="sb-title">⚡ BOOST WITH $PIXEL</div>
           <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
-            Spend $PIXEL to make your space stand out on the wall. Boosted pixels get visual effects that draw attention. $PIXEL used for boosts is sent to the agent wallet and held until manually burned.
+            Spend $PIXEL to make your space stand out on the wall. Boosted pixels get visual effects that draw attention. $PIXEL used for boosts funds the staking reward pool — more boosts = more rewards for holders.
           </div>
           <div id="boostSpaceInfo" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">Select your space first → then pick a boost.</div>
         </div>
@@ -771,7 +771,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         </div>
         <div class="sb-card">
           <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204,.5);line-height:1.7;">
-            $PIXEL used for boosts is held in the agent wallet until the Archmage manually burns it. No distributions. No promises. Just fire.
+            $PIXEL used for boosts goes directly to the staking reward pool. More boosts = longer runway = bigger rewards for $PIXEL stakers.
           </div>
         </div>
 
@@ -781,7 +781,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="sb-card">
           <div class="sb-title">◈ MERGE PIXELS</div>
           <div style="font-family:'VT323',monospace;font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:12px;">
-            Select a rectangular block of pixels you own (2×2 minimum, 10×10 maximum) to merge into a single cluster NFT.
+            Select a rectangular block of pixels you own to merge into a single cluster NFT. Costs <span style="color:var(--gold);">10,000 $PIXEL per pixel</span> — funds the staking reward pool.
           </div>
           <div id="mergeStatus" style="font-family:'VT323',monospace;font-size:14px;color:var(--cyan);margin-bottom:10px;">
             Select pixels on the wall first.
@@ -791,13 +791,14 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
             <div class="info-row"><span class="info-key">YOUR PIXELS</span><span class="info-val" id="mergeOwnedCount">—</span></div>
             <div class="info-row"><span class="info-key">SIZE</span><span class="info-val" id="mergeSize">—</span></div>
           </div>
+          <div id="mergeCostInfo"></div>
           <button class="aBtn aBtn-primary" id="mergeBtnExecute" disabled onclick="executeMerge()" style="margin-bottom:8px;">◈ MERGE INTO CLUSTER NFT</button>
           <div style="font-family:'VT323',monospace;font-size:12px;color:var(--muted);line-height:1.6;">
-            ✦ Minimum: 2 pixels (any shape)<br/>
-            ✦ Any rectangle size — no upper limit<br/>
+            ✦ Minimum: 2 pixels (any rectangle)<br/>
+            ✦ Cost: 10,000 $PIXEL per pixel merged<br/>
             ✦ All pixels in selection must be yours<br/>
-            ✦ Merging is permanent — becomes a single NFT<br/>
-            ✦ Cluster NFT is tradeable as one unit
+            ✦ $PIXEL → staking reward pool<br/>
+            ✦ Merged cluster = single tradeable NFT
           </div>
         </div>
         <div class="sb-card">
@@ -2603,7 +2604,7 @@ function showBoostConfirmModal(tierId, tier, key){
     </div>
     <div class="price-showcase">
       <div class="price-sol" style="color:${tier.color};">${tier.label}</div>
-      <div class="price-usd">$PIXEL sent to agent wallet · held until burned</div>
+      <div class="price-usd">$PIXEL funds the staking reward pool</div>
     </div>
     <div style="background:rgba(0,0,0,.3);border:1px solid ${tier.color}33;padding:12px;margin:12px 0;font-family:'VT323',monospace;font-size:15px;line-height:1.8;">
       ${tierId==='bronze'?'✦ Glowing border — visible at all zoom levels':
@@ -3662,8 +3663,16 @@ function updateMergeTab(){
     status.textContent=`${notOwned} pixel${notOwned>1?'s':''} in selection not owned by you.`;
     status.style.color='var(--red)'; btn.disabled=true;
   } else {
-    status.textContent=`Ready to merge ${w}×${h} (${total} pixels) into 1 cluster NFT.`;
+    const mergeCost = total * 10000;
+    status.textContent=`Ready to merge ${w}×${h} (${total} pixels) — costs ${mergeCost.toLocaleString()} $PIXEL`;
     status.style.color='var(--green)'; btn.disabled=false;
+    // Show cost breakdown
+    const costEl = document.getElementById('mergeCostInfo');
+    if(costEl) costEl.innerHTML = `<div style="margin-top:8px;padding:8px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);font-family:'VT323',monospace;font-size:14px;color:var(--gold);line-height:1.6;">
+      ✦ ${total} pixels × 10,000 $PIXEL = <strong>${mergeCost.toLocaleString()} $PIXEL</strong><br/>
+      ✦ $PIXEL sent to agent wallet & burned<br/>
+      ✦ Merged cluster becomes a single tradeable NFT
+    </div>`;
   }
 }
 
@@ -3674,22 +3683,100 @@ async function executeMerge(){
   const total=w*h;
   if(total<2){showToast('Select at least 2 pixels to merge.');return;}
 
-  const btn=document.getElementById('mergeBtnExecute');
-  btn.disabled=true; btn.textContent='◈ MERGING...';
-  showToast('Sending merge transaction...');
+  // ── Check $PIXEL balance ──────────────────────────────────────
+  const mergeCost = total * 10000;
+  if(pixelBalance < mergeCost){
+    showToast(`Need ${mergeCost.toLocaleString()} $PIXEL — you have ${Math.floor(pixelBalance).toLocaleString()}`);
+    return;
+  }
 
-  // On-chain merge via smart contract merge_pixels instruction
-  // This marks all pixels as clustered=true and creates ClusterSpace PDA
-  // For now, record locally and call Vercel to mint cluster cNFT
+  const btn=document.getElementById('mergeBtnExecute');
+  btn.disabled=true; btn.textContent='◈ PAYING...';
+  showToast(`⚡ Merge costs ${mergeCost.toLocaleString()} $PIXEL — approve in wallet...`);
+
+  // ── Transfer $PIXEL to agent wallet ───────────────────────────
+  let mergeTxSig = '';
+  try{
+    const ws = getWallets();
+    if(!ws.length) throw new Error('No wallet found');
+    const wallet = ws[0];
+
+    const {Connection,PublicKey,Transaction} = window.solanaWeb3||{};
+    if(!Connection) throw new Error('Solana library not loaded');
+
+    const rpc = DEVNET_MODE
+      ? 'https://api.devnet.solana.com'
+      : (window.HELIUS_RPC||'https://api.mainnet-beta.solana.com');
+    const connection = new Connection(rpc,'confirmed');
+
+    const TOKEN_PROGRAM_ID  = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+    const ASSOC_TOKEN_PROG  = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+    const pixelMint         = new PublicKey(PIXEL_MINT);
+    const agentKey          = new PublicKey(AGENT_WALLET);
+    const userKey           = new PublicKey(walletAddress);
+
+    const [userATA]  = await PublicKey.findProgramAddress(
+      [userKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), pixelMint.toBuffer()],
+      ASSOC_TOKEN_PROG
+    );
+    const [agentATA] = await PublicKey.findProgramAddress(
+      [agentKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), pixelMint.toBuffer()],
+      ASSOC_TOKEN_PROG
+    );
+
+    // 6 decimals for $PIXEL
+    const amount = BigInt(mergeCost) * BigInt(1_000_000);
+
+    const transferIx = {
+      programId: TOKEN_PROGRAM_ID,
+      keys: [
+        {pubkey: userATA,  isSigner:false, isWritable:true},
+        {pubkey: agentATA, isSigner:false, isWritable:true},
+        {pubkey: userKey,  isSigner:true,  isWritable:false},
+      ],
+      data: Buffer.from([
+        3, // Transfer instruction
+        ...new Array(8).fill(0).map((_,i)=>Number((amount >> BigInt(i*8)) & BigInt(0xFF))),
+      ]),
+    };
+
+    const tx = new Transaction();
+    tx.add(transferIx);
+    const {blockhash} = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userKey;
+
+    const signed = await wallet.obj.signTransaction(tx);
+    mergeTxSig = await connection.sendRawTransaction(signed.serialize());
+    await connection.confirmTransaction(mergeTxSig,'confirmed');
+
+    showToast(`✅ ${mergeCost.toLocaleString()} $PIXEL sent! Merging pixels...`);
+    console.log('Merge payment tx:', mergeTxSig);
+
+  }catch(e){
+    if(e.code===4001){ showToast('Merge cancelled.'); btn.disabled=false; btn.textContent='◈ MERGE INTO CLUSTER NFT'; return; }
+    console.warn('Merge payment error:', e.message);
+    if(!DEVNET_MODE){
+      showToast('Payment failed: '+e.message?.slice(0,60));
+      btn.disabled=false; btn.textContent='◈ MERGE INTO CLUSTER NFT';
+      return;
+    }
+    showToast('⚠️ Dev mode: merge applied without payment');
+  }
+
+  // ── Apply merge ───────────────────────────────────────────────
+  btn.textContent='◈ MERGING...';
   try{
     const myAddr=shortAddr();
-    const clusterKey=rect.c1+','+rect.r1;
 
     // Mark all pixels as clustered locally
     for(let col=rect.c1;col<=rect.c2;col++){
       for(let row=rect.r1;row<=rect.r2;row++){
         const key=col+','+row;
-        if(claimedSpaces[key]) claimedSpaces[key].clustered=true;
+        if(claimedSpaces[key]){
+          claimedSpaces[key].clustered=true;
+          claimedSpaces[key].updatedAt=Date.now();
+        }
       }
     }
 
@@ -3698,7 +3785,9 @@ async function executeMerge(){
       colStart:rect.c1, rowStart:rect.r1,
       colEnd:rect.c2,   rowEnd:rect.r2,
       width:w, height:h, pixelCount:total,
-      owner:myAddr, mergedAt:Date.now()
+      owner:myAddr, mergedAt:Date.now(),
+      mergeTxSig,
+      pixelCost: mergeCost,
     };
     const myClusters=JSON.parse(localStorage.getItem('pw_clusters_'+walletAddress)||'[]');
     myClusters.push(cluster);
@@ -3707,22 +3796,26 @@ async function executeMerge(){
     saveToStorage();
     render();
     renderMyClusters();
-    showToast(`✦ ${w}×${h} cluster created! Minting NFT...`);
+    showToast(`✦ ${w}×${h} cluster merged! ${mergeCost.toLocaleString()} $PIXEL → staking pool. Minting NFT...`);
 
     // Mint cluster cNFT
     const r=await fetch('/api/mint-cnft',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        txSignature:'cluster',
-        buyerWallet:walletAddress,
+        txSignature: mergeTxSig || 'cluster',
+        buyerWallet: walletAddress,
         col:rect.c1, row:rect.r1,
         isCluster:true,
-        width:w, height:h
+        width:w, height:h,
+        pixelCost: mergeCost,
       })
     });
     const d=await r.json();
     if(d.success) showToast('✦ Cluster NFT minted!');
+
+    // Refresh $PIXEL balance
+    fetchPixelBalance(walletAddress);
 
   }catch(e){
     console.error('Merge error:',e);
@@ -4056,15 +4149,15 @@ window.addEventListener('load',async()=>{
     {n:'04', text:'Agent SOL buys $PIXEL weekly', sub:'Creates consistent market buy pressure'},
     {n:'05', text:'Bought $PIXEL → staking pool', sub:'Extends staker runway from real revenue'},
     {n:'06', text:'User buys a pixel boost ($PIXEL)', sub:'Mage 10K · Sorcerer 50K · Warlock 250K · Wizard 1M'},
-    {n:'07', text:'100% of boost $PIXEL → BURNED', sub:'Never re-enters circulation — permanent deflation'},
+    {n:'07', text:'100% of boost/merge $PIXEL → STAKING POOL', sub:'Funds staker rewards — more activity = bigger yield'},
   ];
   const af = document.getElementById('tkAgentFlow');
   if(af) agentSteps.forEach(s=>{
-    const isBurn = s.n === '07';
-    af.innerHTML += `<div class="tk-flow-step" style="border-left-color:${isBurn?'var(--red)':'var(--lav)'};">
+    const isStaking = s.n === '07';
+    af.innerHTML += `<div class="tk-flow-step" style="border-left-color:${isStaking?'var(--green)':'var(--lav)'};">
       <div class="tk-flow-num">${s.n}</div>
       <div>
-        <div class="tk-flow-text" style="color:${isBurn?'var(--red)':'var(--white)'};">${s.text}</div>
+        <div class="tk-flow-text" style="color:${isStaking?'var(--green)':'var(--white)'};">${s.text}</div>
         <div class="tk-flow-sub">${s.sub}</div>
       </div>
     </div>`;
@@ -4074,7 +4167,7 @@ window.addEventListener('load',async()=>{
   const revenueSteps = [
     {icon:'◆', title:'STREAM 1 — PIXEL SALES', col:'#8b5cf6', text:'Every pixel claimed sends SOL to treasury. Bonding curve: 0.01→0.50 SOL. Max revenue $20.9M at full sellout.'},
     {icon:'◆', title:'STREAM 2 — METEORA LP FEES', col:'#22d3ee', text:'1% fee on every $PIXEL swap, 24/7 automatic. At $50K daily volume = $182,500/yr. Grows with token traction.'},
-    {icon:'◆', title:'STREAM 3 — BOOST BURNS', col:'#fbbf24', text:'Every boost purchase destroys $PIXEL permanently. 100 Wizard boosts = 100M tokens gone. Each burn makes remaining tokens more scarce.'},
+    {icon:'◆', title:'STREAM 3 — BOOST & MERGE → STAKING', col:'#4ade80', text:'Every boost and merge sends $PIXEL to the staking reward pool. More wall activity = bigger staking yields for holders. Boosts: 10K–1M $PIXEL. Merges: 10K per pixel.'},
   ];
   const rf = document.getElementById('tkRevenueFlow');
   if(rf) revenueSteps.forEach(s=>{
