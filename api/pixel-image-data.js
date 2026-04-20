@@ -21,7 +21,10 @@ async function kvGet(key) {
       headers: { Authorization: `Bearer ${tok}` },
     });
     const d = await r.json();
-    return d.result || null;
+    if (!d.result) return null;
+    // Upstash stores the raw body we sent (JSON.stringify output). Parse it back.
+    try { return JSON.parse(d.result); }
+    catch { return d.result; } // already a plain string
   } catch { return null; }
 }
 
