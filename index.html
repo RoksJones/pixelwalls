@@ -509,7 +509,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <a class="tools-menu-item free" href="/pixelcraft.html">
           <span class="tool-icon">⬡</span>
           <span class="tool-info">
-            <span class="tool-name">HIDDEN</span>
+            <span class="tool-name">PIXEL ART GENERATOR</span>
             <span class="tool-desc">Turn any image into pixel art</span>
           </span>
           <span class="tool-badge free">FREE</span>
@@ -517,7 +517,7 @@ footer .disc{font-family:'VT323',monospace;font-size:13px;color:rgba(157,140,204
         <div class="tools-menu-soon">
           <span class="tool-icon" style="opacity:.4;">◈</span>
           <span class="tool-info">
-            <span class="tool-name" style="opacity:.4;">HIDDEN</span>
+            <span class="tool-name" style="opacity:.4;">SPRITE ANIMATOR</span>
             <span class="tool-desc">Coming soon</span>
           </span>
           <span class="tool-badge locked">$PIXEL</span>
@@ -1414,11 +1414,12 @@ async function fetchServerWallState(){
     // Save merged state back to localStorage
     try{ localStorage.setItem('pw_wall', JSON.stringify(wall)); }catch(e){}
 
-    if(newPixels > 0){
-      updateStats();
-      paintAll();
-      render();
-    }
+    // Always repaint — server might have updated color/boost/listPrice on
+    // an existing pixel even if no NEW pixels were added
+    updateStats();
+    paintAll();
+    render();
+
     // Always fetch images + profiles for all server pixels
     // This ensures other devices see uploaded images and profile edits
     const serverKeys = Object.keys(d.pixels);
@@ -1457,8 +1458,9 @@ async function fetchServerProfiles(keys){
 // Fetch image data for pixels that have images on server but not locally
 async function fetchServerImages(keys){
   if(!keys||!keys.length) return;
-  // Batch — only fetch first 20 to avoid hammering
-  const batch = keys.slice(0,20);
+  // Batch — only fetch first 30 to avoid hammering
+  const batch = keys.slice(0,30);
+  let updated = false;
   for(const key of batch){
     const [col,row] = key.split(',').map(Number);
     if(isNaN(col)||isNaN(row)) continue;
@@ -1468,7 +1470,13 @@ async function fetchServerImages(keys){
       const d = await r.json();
       if(d.imageDataUrl && claimedSpaces[key]){
         claimedSpaces[key].imageDataUrl = d.imageDataUrl;
-        loadImg(d.imageDataUrl).then(()=>render());
+        // Cache to localStorage so subsequent loads are instant
+        try{
+          const wall = JSON.parse(localStorage.getItem('pw_wall')||'{}');
+          if(wall[key]) wall[key].imageDataUrl = d.imageDataUrl;
+          localStorage.setItem('pw_wall', JSON.stringify(wall));
+        }catch(e){}
+        loadImg(d.imageDataUrl).then(()=>{ updated = true; render(); });
       }
     }catch(e){}
   }
