@@ -35,9 +35,6 @@
     },
     "api/wizard-hall.js": {
       "maxDuration": 10
-    },
-    "api/wizard-click.js": {
-      "maxDuration": 5
     }
   },
   "headers": [
