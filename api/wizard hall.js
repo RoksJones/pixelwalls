@@ -1,11 +1,12 @@
 // api/wizard-hall.js
-// Global Wizard Boost Hall of Fame — visible to everyone, not just the booster.
-// Reads all pixels from KV, filters for Wizard tier (boostTier === 4),
-// merges per-pixel click counts, returns sorted leaderboard.
+// Global Wizard Boost Hall of Fame — visible to everyone.
+// GET  /api/wizard-hall          → leaderboard of all Wizard-boosted pixels
+// POST /api/wizard-hall          → increment click counter (body: {col, row})
 
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
 };
 
 async function upstashCmd(cmd) {
@@ -49,9 +50,33 @@ async function getClicks(col, row) {
 module.exports = async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET')    return res.status(405).json({ error: 'GET only' });
 
   const kvConfigured = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+  // ── POST: increment click counter ────────────────────────────────
+  if (req.method === 'POST') {
+    const col = parseInt(req.body?.col, 10);
+    const row = parseInt(req.body?.row, 10);
+    if (isNaN(col) || isNaN(row) || col < 0 || col > 999 || row < 0 || row > 999) {
+      return res.status(400).json({ error: 'Invalid col/row' });
+    }
+    if (!kvConfigured) return res.status(503).json({ error: 'KV not configured' });
+
+    // Verify the pixel actually has a wizard boost before counting
+    const pixelRaw = await upstashCmd(['GET', `pixel_${col}_${row}`]);
+    let pixel = null;
+    try { pixel = pixelRaw ? JSON.parse(pixelRaw) : null; } catch {}
+    if (!pixel || (pixel.boostTier || 0) !== 4) {
+      return res.status(400).json({ error: 'Pixel is not wizard-boosted' });
+    }
+
+    const newCount = await upstashCmd(['INCR', `wizard_clicks_${col}_${row}`]);
+    return res.status(200).json({ col, row, clicks: newCount || 0 });
+  }
+
+  // ── GET: leaderboard ─────────────────────────────────────────────
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
   if (!kvConfigured) {
     return res.status(200).json({ wizards: [], count: 0, kvReady: false });
   }
@@ -59,30 +84,24 @@ module.exports = async function handler(req, res) {
   const pixels = await getAllPixels();
   const wizardKeys = Object.entries(pixels).filter(([, v]) => (v?.boostTier || 0) === 4);
 
-  // Fetch clicks in parallel
   const wizards = await Promise.all(wizardKeys.map(async ([k, v]) => {
     const clicks = await getClicks(v.col, v.row);
     return {
-      key: k,
-      col: v.col,
-      row: v.row,
-      owner: v.owner || '',
-      handle: v.xHandle || '',
-      avatar: v.xAvatar || '',
-      color: v.color || '#8b5cf6',
+      key:         k,
+      col:         v.col,
+      row:         v.row,
+      owner:       v.owner       || '',
+      handle:      v.xHandle     || '',
+      avatar:      v.xAvatar     || '',
+      color:       v.color       || '#8b5cf6',
       displayName: v.displayName || '',
-      boostedAt: v.boostActivatedAt || 0,
+      boostedAt:   v.boostActivatedAt || 0,
       clicks,
     };
   }));
 
-  // Sort by clicks desc, then by boostedAt asc (earlier boosters rank higher on ties)
   wizards.sort((a, b) => (b.clicks - a.clicks) || (a.boostedAt - b.boostedAt));
 
   res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
-  return res.status(200).json({
-    wizards,
-    count: wizards.length,
-    kvReady: true,
-  });
+  return res.status(200).json({ wizards, count: wizards.length, kvReady: true });
 };
