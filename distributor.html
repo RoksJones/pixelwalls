@@ -92,8 +92,8 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 </nav>
 <div id="gateScreen" class="gate">
   <div class="gate-icon">🔒</div>
-  <div class="gate-title">NFT-GATED TOOL</div>
-  <div class="gate-msg">Requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> (owned pixel) or <strong style="color:var(--green);">10,000+ $PIXEL</strong>.</div>
+  <div class="gate-title">PIXELWALLS NFT REQUIRED</div>
+  <div class="gate-msg">Requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> — you must own at least 1 pixel on the wall.</div>
   <button class="gate-btn" onclick="connectWallet()">⚡ CONNECT WALLET</button>
   <div id="gateError"></div>
 </div>
@@ -116,6 +116,11 @@ tokenMint='',tokenInfo=null,walletCount=5,solPerWallet=0.05,slippage=1,
 solPrice=170,pixelPrice=0,feePaid=false;
 const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58e(b){const d=[0];for(let i=0;i<b.length;i++){let c=b[i];for(let j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0;}while(c){d.push(c%58);c=(c/58)|0;}}let s='';for(let i=0;i<b.length&&b[i]===0;i++)s+='1';for(let i=d.length-1;i>=0;i--)s+=B58[d[i]];return s;}
+// Base58 decoder
+function b58d(str){const bytes=[0];for(let i=0;i<str.length;i++){const c=B58.indexOf(str[i]);if(c<0)throw new Error('Bad b58');let carry=c;for(let j=0;j<bytes.length;j++){carry+=bytes[j]*58;bytes[j]=carry&0xff;carry>>=8;}while(carry){bytes.push(carry&0xff);carry>>=8;}}for(let i=0;i<str.length&&str[i]==='1';i++)bytes.push(0);return new Uint8Array(bytes.reverse());}
+// Reconstruct Solana Keypair from our stored b58 secretKey
+function toKeypair(w){return window.solanaWeb3.Keypair.fromSecretKey(b58d(w.secretKey));}
+function getConn(){return new window.solanaWeb3.Connection(RPC_URL,'confirmed');}
 async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
 const RPC_URL='https://api.mainnet-beta.solana.com';
 async function rpc(m,p=[]){const r=await fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;}
@@ -141,19 +146,10 @@ if(r.ok){
     if(owned.length>0){log('✦ Verified: '+owned.length+' pixel(s)','success');unlockApp();return;}
   }
 }
-// Check 2: $PIXEL token balance >= 10K
-log('Gate: checking $PIXEL balance...');
-const tok=await rpc('getTokenAccountsByOwner',[userPub,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]);
-const accs=tok?.value||[];
-if(accs.length>0){
-  const bal=accs[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;
-  log('Gate: $PIXEL balance = '+Math.floor(bal).toLocaleString());
-  if(bal>=10000){log('✦ Access via '+Math.floor(bal).toLocaleString()+' $PIXEL','success');unlockApp();return;}
-}
-// Denied
+// Denied — NFT only, no $PIXEL fallback
 err.style.display='block';
-err.textContent='✕ Need 1 owned pixel or 10,000+ $PIXEL. Connected: '+short;
-log('Denied — no pixel ownership or insufficient $PIXEL','error');
+err.textContent='✕ No Pixelwalls NFT found. You must own at least 1 pixel.';
+log('Denied — no pixel ownership','error');
 }catch(e){err.style.display='block';err.textContent='Error: '+e.message;log('Gate error: '+e.message,'error');}}
 function unlockApp(){document.getElementById('gateScreen').style.display='none';document.getElementById('mainApp').style.display='flex';fetchPrices();render();}
 async function fetchPrices(){try{const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+CA);if(!r.ok)return;const d=await r.json();const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const p=arr[0];if(p.priceUsd)pixelPrice=parseFloat(p.priceUsd);if(p.priceUsd&&p.priceNative){const s=parseFloat(p.priceUsd)/parseFloat(p.priceNative);if(s>10&&s<10000)solPrice=s;}}}catch(e){}}
