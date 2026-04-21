@@ -3,934 +3,247 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Pixelwalls — SOL Distributor Tool</title>
+<title>Pixelwalls — SOL Distributor</title>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
-:root{--void:#06060c;--deep:#0c0a18;--purple:#2d1b69;--violet:#5b21b6;--lav:#9945FF;--pink:#e879f9;--gold:#fbbf24;--cyan:#22d3ee;--green:#14F195;--white:#e0e0e8;--muted:#78788c;--red:#FF4545;--orange:#ff9945;}
+:root{--void:#06060c;--deep:#0c0a18;--lav:#9945FF;--green:#14F195;--white:#e0e0e8;--muted:#78788c;--red:#FF4545;--gold:#fbbf24;--cyan:#22d3ee;--orange:#ff9945;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--void);color:var(--white);font-family:'JetBrains Mono','Fira Code',monospace;min-height:100vh;}
-
-/* NAV */
-.nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(153,69,255,.2);backdrop-filter:blur(12px);}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:1px;}
+body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',monospace;min-height:100vh;}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:rgba(10,6,18,.95);border-bottom:1px solid rgba(153,69,255,.2);}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--gold);font-family:'Press Start 2P',monospace;font-size:9px;}
 .nav-logo-icon{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#9945FF,#14F195);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#000;}
 .nav-right{display:flex;gap:8px;align-items:center;}
-.nav-btn{background:transparent;border:1px solid rgba(153,69,255,.4);color:var(--lav);font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 14px;cursor:pointer;transition:all .2s;font-weight:600;}
+.nav-btn{background:transparent;border:1px solid rgba(153,69,255,.4);color:var(--lav);font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 14px;cursor:pointer;font-weight:600;transition:all .2s;}
 .nav-btn:hover{background:rgba(153,69,255,.15);}
 .nav-btn.connected{background:rgba(20,241,149,.1);border-color:rgba(20,241,149,.4);color:var(--green);}
-.nav-btn.buy{border-color:var(--gold);color:var(--gold);}
-
-/* GATE */
 .gate{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 52px);padding:40px 20px;text-align:center;}
 .gate-icon{font-size:64px;margin-bottom:24px;filter:drop-shadow(0 0 30px rgba(153,69,255,.5));}
 .gate-title{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--gold);margin-bottom:16px;letter-spacing:2px;}
-.gate-msg{font-size:14px;color:var(--muted);max-width:500px;line-height:1.8;margin-bottom:24px;}
-.gate-btn{background:linear-gradient(135deg,var(--lav),var(--pink));border:none;color:#fff;font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 28px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.gate-msg{font-size:13px;color:var(--muted);max-width:500px;line-height:1.8;margin-bottom:24px;}
+.gate-btn{background:linear-gradient(135deg,var(--lav),#e879f9);border:none;color:#fff;font-family:'Press Start 2P',monospace;font-size:8px;padding:14px 28px;cursor:pointer;letter-spacing:1px;transition:all .2s;}
 .gate-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(153,69,255,.4);}
-
-/* LAYOUT */
+#gateError{margin-top:16px;font-size:12px;color:var(--red);display:none;}
 .app{display:flex;height:calc(100vh - 52px);}
 .content{flex:1;padding:20px;overflow-y:auto;}
-.log-panel{width:320px;border-left:1px solid rgba(153,69,255,.15);background:rgba(0,0,0,.3);display:flex;flex-direction:column;}
-.log-header{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;}
-.log-body{flex:1;overflow-y:auto;padding:8px 14px;}
+.sidebar{width:340px;border-left:1px solid rgba(153,69,255,.15);background:rgba(0,0,0,.3);display:flex;flex-direction:column;}
+.sidebar-header{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;}
+.sidebar-body{flex:1;overflow-y:auto;padding:8px 14px;}
 .log-entry{font-size:10px;padding:3px 0;line-height:1.5;}
-.log-ts{color:#555;margin-right:6px;}
-
-/* CARDS */
 .card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:20px;margin-bottom:16px;}
 .card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--lav);margin-bottom:14px;}
-
-/* FEE BANNER */
-.fee-banner{background:linear-gradient(135deg,rgba(153,69,255,.1),rgba(20,241,149,.05));border:1px solid rgba(153,69,255,.3);border-radius:10px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
-.fee-total{font-size:24px;font-weight:800;background:linear-gradient(135deg,#9945FF,#14F195);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.fee-alt{font-size:12px;color:var(--muted);margin-top:4px;}
-.fee-pay-btn{padding:10px 20px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;transition:all .2s;}
-.fee-pay-sol{background:linear-gradient(135deg,#9945FF,#7B3FCC);color:#fff;}
-.fee-pay-pixel{background:linear-gradient(135deg,var(--gold),#e6a800);color:#000;}
-
-/* INPUTS */
+.pipeline{display:flex;flex-direction:column;gap:4px;margin-bottom:20px;}
+.step{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.015);transition:all .3s;}
+.step.active{border-color:var(--lav);background:rgba(153,69,255,.08);box-shadow:0 0 20px rgba(153,69,255,.15);}
+.step.done{border-color:rgba(20,241,149,.3);background:rgba(20,241,149,.04);}
+.step.locked{opacity:.35;}
+.step-num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;border:2px solid rgba(255,255,255,.1);color:var(--muted);}
+.step.active .step-num{border-color:var(--lav);color:var(--lav);box-shadow:0 0 12px rgba(153,69,255,.4);}
+.step.done .step-num{border-color:var(--green);color:var(--green);background:rgba(20,241,149,.1);}
+.step-info{flex:1;}
+.step-name{font-size:11px;font-weight:700;letter-spacing:.04em;margin-bottom:2px;}
+.step.active .step-name{color:var(--lav);}
+.step.done .step-name{color:var(--green);}
+.step-desc{font-size:10px;color:var(--muted);}
+.step-connector{width:2px;height:12px;background:rgba(255,255,255,.06);margin-left:30px;}
 .inp{width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.4);color:var(--white);font-size:12px;font-family:inherit;outline:none;}
 .inp:focus{border-color:var(--lav);}
 .label{font-size:10px;color:var(--muted);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.06em;}
-
-/* BUTTONS */
 .btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:all .2s;}
 .btn-primary{background:linear-gradient(135deg,#9945FF,#7B3FCC);color:#fff;}
 .btn-success{background:linear-gradient(135deg,#14F195,#0DB877);color:#000;}
 .btn-danger{background:linear-gradient(135deg,#FF4545,#CC3636);color:#fff;}
 .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--muted);}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#e6a800);color:#000;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
 .btn:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px);}
-
-/* ROWS */
+.btn-lg{padding:14px 28px;font-size:13px;font-weight:700;}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-
-/* STATS */
-.stat-box{background:rgba(153,69,255,.06);border-radius:8px;padding:12px 16px;text-align:center;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.stat-box{background:rgba(153,69,255,.06);border-radius:8px;padding:14px;text-align:center;}
 .stat-val{font-size:20px;font-weight:800;background:linear-gradient(135deg,#9945FF,#14F195);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
-
-/* WALLET ROW */
 .w-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:4px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);flex-wrap:wrap;}
-.w-label{font-weight:700;font-size:12px;min-width:80px;color:var(--lav);}
-.w-addr{font-size:11px;color:#b0b0bc;word-break:break-all;}
-
-/* BADGE */
-.badge{padding:2px 10px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
-.badge-ready{background:rgba(20,241,149,.15);color:#14F195;}
-.badge-funded{background:rgba(20,241,149,.3);color:#14F195;}
-.badge-bought{background:rgba(153,69,255,.3);color:#b380ff;}
-.badge-sold{background:rgba(255,193,7,.3);color:#ffc107;}
-.badge-swept{background:rgba(120,120,140,.3);color:#78788c;}
-.badge-error{background:rgba(255,69,69,.3);color:#ff4545;}
-
-/* TABS */
-.tabs{display:flex;gap:2px;background:rgba(255,255,255,.03);border-radius:8px;padding:3px;margin-bottom:16px;}
-.tab{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;letter-spacing:.02em;transition:all .2s;background:transparent;color:var(--muted);}
-.tab.active{background:linear-gradient(135deg,rgba(153,69,255,.3),rgba(20,241,149,.15));color:var(--green);}
-
-/* TOKEN RESULT */
-.token-result{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);transition:background .15s;}
-.token-result:hover{background:rgba(153,69,255,.1);}
-.token-result.selected{background:rgba(20,241,149,.08);border-color:rgba(20,241,149,.3);}
-
-/* TABLE */
-.tbl{width:100%;border-collapse:collapse;font-size:12px;}
-.tbl th{text-align:left;padding:8px 10px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(255,255,255,.08);}
-.tbl td{padding:10px;border-bottom:1px solid rgba(255,255,255,.03);}
-
-/* TOAST */
+.w-label{font-weight:700;font-size:11px;min-width:70px;color:var(--lav);}
+.badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}
+.badge-ready{background:rgba(120,120,140,.2);color:#78788c;}
+.badge-funded{background:rgba(20,241,149,.15);color:#14F195;}
+.badge-bought{background:rgba(153,69,255,.25);color:#b380ff;}
+.badge-sold{background:rgba(255,193,7,.25);color:#ffc107;}
+.badge-swept{background:rgba(20,241,149,.3);color:#14F195;}
+.badge-closed{background:rgba(120,120,140,.3);color:#555;}
+.token-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;cursor:pointer;margin-bottom:4px;background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);transition:all .15s;}
+.token-item:hover{background:rgba(153,69,255,.1);}
+.token-item.selected{background:rgba(20,241,149,.08);border-color:rgba(20,241,149,.3);}
+.addr-hl{font-size:13px;color:var(--cyan);font-weight:700;word-break:break-all;padding:10px;background:rgba(34,211,238,.05);border:1px solid rgba(34,211,238,.2);border-radius:6px;margin:8px 0;cursor:pointer;}
+.addr-hl:hover{background:rgba(34,211,238,.1);}
 .toast{position:fixed;bottom:22px;right:22px;z-index:2000;background:rgba(12,10,24,.97);border:1px solid var(--lav);padding:11px 16px;font-size:11px;max-width:320px;line-height:1.7;transform:translateX(200%);transition:transform .35s ease;}
 .toast.show{transform:translateX(0);}
-
-/* PRE */
-pre.cli{background:rgba(0,0,0,.5);padding:14px;border-radius:6px;font-size:11px;color:var(--green);overflow-x:auto;line-height:1.8;}
-
-@media(max-width:780px){
-  .app{flex-direction:column;}
-  .log-panel{width:100%;max-height:200px;border-left:none;border-top:1px solid rgba(153,69,255,.15);}
-  .grid4{grid-template-columns:1fr 1fr;}
-  .fee-banner{flex-direction:column;text-align:center;}
-}
+@media(max-width:780px){.app{flex-direction:column;}.sidebar{width:100%;max-height:200px;border-left:none;border-top:1px solid rgba(153,69,255,.15);}.grid3{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-
 <nav class="nav">
-  <a class="nav-logo" href="/">
-    <div class="nav-logo-icon">◎</div>
-    <span>PIXELWALLS DISTRIBUTOR</span>
-  </a>
+  <a class="nav-logo" href="/"><div class="nav-logo-icon">◎</div><span>PIXELWALLS DISTRIBUTOR</span></a>
   <div class="nav-right">
-    <span id="netBadge" style="font-size:10px;color:var(--muted);border:1px solid rgba(255,255,255,.1);padding:3px 8px;border-radius:4px;">MAINNET</span>
     <button class="nav-btn" id="walletBtn" onclick="connectWallet()">CONNECT WALLET</button>
-    <a class="nav-btn buy" href="https://pump.fun/coin/7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump" target="_blank">BUY $PIXEL</a>
+    <a class="nav-btn" href="/" style="border-color:var(--gold);color:var(--gold);">← WALL</a>
   </div>
 </nav>
-
-<!-- GATE SCREEN -->
 <div id="gateScreen" class="gate">
   <div class="gate-icon">🔒</div>
   <div class="gate-title">NFT-GATED TOOL</div>
-  <div class="gate-msg">
-    This tool requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> (at least 1 claimed pixel) in your wallet.
-    Connect your Solana wallet to verify ownership.
-  </div>
+  <div class="gate-msg">Requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> (owned pixel) or <strong style="color:var(--green);">10,000+ $PIXEL</strong>.</div>
   <button class="gate-btn" onclick="connectWallet()">⚡ CONNECT WALLET</button>
-  <div id="gateError" style="margin-top:16px;font-size:12px;color:var(--red);display:none;"></div>
+  <div id="gateError"></div>
 </div>
-
-<!-- MAIN APP (hidden until NFT verified) -->
 <div id="mainApp" class="app" style="display:none;">
-  <div class="content" id="appContent">
-    <!-- Tab bar -->
-    <div class="tabs" id="tabBar">
-      <button class="tab active" onclick="switchAppTab('setup',this)">⚙ Setup</button>
-      <button class="tab" onclick="switchAppTab('wallets',this)">◎ Wallets</button>
-      <button class="tab" onclick="switchAppTab('buy',this)">↗ Buy</button>
-      <button class="tab" onclick="switchAppTab('sell',this)">↙ Sell</button>
-      <button class="tab" onclick="switchAppTab('manage',this)">☰ Manage</button>
-    </div>
-
-    <!-- FEE BANNER (always visible) -->
-    <div class="fee-banner" id="feeBanner" style="display:none;">
-      <div style="flex:1;">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">BATCH FEE</div>
-        <div class="fee-total" id="feeTotal">0 SOL</div>
-        <div class="fee-alt" id="feeAlt">or 0 $PIXEL</div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);text-align:center;">
-        <span id="feeWalletCount">0</span> wallets × 0.005 SOL
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="fee-pay-btn fee-pay-sol" id="paySOLBtn" onclick="payFee('sol')" disabled>PAY WITH SOL</button>
-        <button class="fee-pay-btn fee-pay-pixel" id="payPIXELBtn" onclick="payFee('pixel')" disabled>PAY WITH $PIXEL</button>
-      </div>
-      <div id="feeStatus" style="width:100%;font-size:10px;color:var(--green);display:none;"></div>
-    </div>
-
-    <!-- TAB PANELS -->
-    <div id="panel-setup"></div>
-    <div id="panel-wallets" style="display:none;"></div>
-    <div id="panel-buy" style="display:none;"></div>
-    <div id="panel-sell" style="display:none;"></div>
-    <div id="panel-manage" style="display:none;"></div>
-  </div>
-
-  <!-- LOG PANEL -->
-  <div class="log-panel">
-    <div class="log-header">
-      <span>Activity Log</span>
-      <button onclick="clearLogs()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;">Clear</button>
-    </div>
-    <div class="log-body" id="logBody"></div>
+  <div class="content" id="appContent"></div>
+  <div class="sidebar">
+    <div class="sidebar-header"><span>Activity Log</span><button onclick="clearLogs()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;">Clear</button></div>
+    <div class="sidebar-body" id="logBody"></div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// PIXELWALLS SOL DISTRIBUTOR — NFT-GATED TOOL
-// ═══════════════════════════════════════════════════════════════════
-
-const CA           = '7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
-const PIXEL_MINT   = '7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump';
-const TREASURY     = '9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
-const AGENT_WALLET = 'HKCnYsvPFJAK63mBfoaat7A93K9SUKSjH92G2tMjKawC';
-const SOL_MINT     = 'So11111111111111111111111111111111111111112';
-const LAMPORTS     = 1_000_000_000;
-const FEE_PER_WALLET = 0.005; // SOL
-const MAX_WALLETS  = 1000;
-const JUP_API      = 'https://quote-api.jup.ag/v6';
-
-let walletConnected = false;
-let walletAddress   = null;
-let walletObj       = null;
-let hasNFT          = false;
-let feePaid         = false;
-let pixelPrice      = 0; // USD per $PIXEL
-let solPrice        = 170;
-let subWallets      = [];
-let tokenMint       = '';
-let tokenInfo       = null;
-let currentTab      = 'setup';
-
-// ── WALLET CONNECTION ──────────────────────────────────────────
-function getWallets(){
-  const w=[];
-  if(window.phantom?.solana?.isPhantom) w.push({name:'Phantom',obj:window.phantom.solana});
-  else if(window.solana?.isPhantom) w.push({name:'Phantom',obj:window.solana});
-  if(window.solflare?.isSolflare) w.push({name:'Solflare',obj:window.solflare});
-  if(window.backpack?.isBackpack) w.push({name:'Backpack',obj:window.backpack});
-  return w;
-}
-
-async function connectWallet(){
-  const ws = getWallets();
-  if(!ws.length){ showToast('No wallet found — install Phantom'); return; }
-  try{
-    const w = ws[0];
-    const r = await w.obj.connect();
-    const pk = r?.publicKey?.toString() || w.obj.publicKey?.toString();
-    if(!pk) throw new Error('No public key');
-    walletAddress = pk;
-    walletConnected = true;
-    walletObj = w.obj;
-    const short = pk.slice(0,4)+'...'+pk.slice(-4);
-    const btn = document.getElementById('walletBtn');
-    btn.textContent = '✦ '+short;
-    btn.classList.add('connected');
-    addLog(`Wallet connected: ${short}`, 'success');
-    await checkNFTGate();
-  }catch(e){
-    showToast(e.code===4001?'Cancelled':e.message);
-  }
-}
-
-// ── NFT GATE CHECK ─────────────────────────────────────────────
-async function checkNFTGate(){
-  addLog('Checking Pixelwalls NFT ownership...');
-  const gateErr = document.getElementById('gateError');
-
-  try{
-    // Check wall-state for any pixel owned by this wallet
-    const r = await fetch('/api/wall-state');
-    if(!r.ok) throw new Error('Wall-state API unavailable');
-    const d = await r.json();
-    const short = walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
-
-    if(d.kvReady && d.pixels){
-      const owned = Object.values(d.pixels).filter(p =>
-        p.owner === short || p.owner === walletAddress
-      );
-      if(owned.length > 0){
-        hasNFT = true;
-        addLog(`✦ NFT verified! You own ${owned.length} pixel(s)`, 'success');
-        document.getElementById('gateScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
-        renderSetupTab();
-        fetchPrices();
-        return;
-      }
-    }
-
-    // Also check via Helius DAS for cNFT ownership (once minting is live)
-    // For now, check if wallet owns any $PIXEL tokens as secondary gate
-    const tokenCheck = await rpcCall('getTokenAccountsByOwner', [
-      walletAddress,
-      {mint: PIXEL_MINT},
-      {encoding:'jsonParsed'}
-    ]);
-    const accounts = tokenCheck?.value || [];
-    if(accounts.length > 0){
-      const bal = accounts[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount || 0;
-      if(bal >= 10000){ // min 10K $PIXEL to access
-        hasNFT = true;
-        addLog(`✦ Access granted via ${Math.floor(bal).toLocaleString()} $PIXEL holdings`, 'success');
-        document.getElementById('gateScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'flex';
-        renderSetupTab();
-        fetchPrices();
-        return;
-      }
-    }
-
-    // Access denied
-    gateErr.style.display = 'block';
-    gateErr.textContent = '✕ No Pixelwalls NFT or insufficient $PIXEL found. You need at least 1 pixel or 10,000 $PIXEL.';
-    addLog('Access denied — no qualifying NFT or tokens', 'error');
-
-  }catch(e){
-    gateErr.style.display = 'block';
-    gateErr.textContent = 'Error checking ownership: '+e.message;
-    addLog('Gate check error: '+e.message, 'error');
-  }
-}
-
-// ── RPC HELPER ─────────────────────────────────────────────────
-async function rpcCall(method, params=[]){
-  const r = await fetch('https://api.mainnet-beta.solana.com', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({jsonrpc:'2.0',id:1,method,params}),
-  });
-  const d = await r.json();
-  if(d.error) throw new Error(d.error.message);
-  return d.result;
-}
-
-async function getBalance(pubkey){
-  const r = await rpcCall('getBalance',[pubkey]);
-  return r.value / LAMPORTS;
-}
-
-// ── PRICE FETCHING ─────────────────────────────────────────────
-async function fetchPrices(){
-  try{
-    const r = await fetch(`https://api.dexscreener.com/tokens/v1/solana/${CA}`);
-    if(!r.ok) return;
-    const d = await r.json();
-    const arr = Array.isArray(d)?d:(d.pairs||[]);
-    if(arr.length){
-      const p = arr[0];
-      if(p.priceUsd) pixelPrice = parseFloat(p.priceUsd);
-      if(p.priceUsd && p.priceNative){
-        const derived = parseFloat(p.priceUsd)/parseFloat(p.priceNative);
-        if(derived>10 && derived<10000) solPrice = derived;
-      }
-    }
-  }catch(e){}
-}
-
-// ── FEE SYSTEM ─────────────────────────────────────────────────
-function updateFee(){
-  const count = subWallets.length;
-  const banner = document.getElementById('feeBanner');
-  if(count === 0){ banner.style.display = 'none'; return; }
-  banner.style.display = 'flex';
-
-  const totalSOL = (count * FEE_PER_WALLET).toFixed(4);
-  document.getElementById('feeTotal').textContent = totalSOL + ' SOL';
-  document.getElementById('feeWalletCount').textContent = count;
-
-  // Calculate $PIXEL equivalent
-  if(pixelPrice > 0){
-    const solValue = count * FEE_PER_WALLET * solPrice;
-    const pixelNeeded = Math.ceil(solValue / pixelPrice);
-    document.getElementById('feeAlt').textContent = `or ${pixelNeeded.toLocaleString()} $PIXEL`;
-  }
-
-  const paySOL = document.getElementById('paySOLBtn');
-  const payPIXEL = document.getElementById('payPIXELBtn');
-  paySOL.disabled = feePaid;
-  payPIXEL.disabled = feePaid;
-
-  if(feePaid){
-    document.getElementById('feeStatus').style.display = 'block';
-    document.getElementById('feeStatus').textContent = '✦ FEE PAID — TOOL UNLOCKED';
-    paySOL.textContent = '✓ PAID';
-    payPIXEL.textContent = '✓ PAID';
-  }
-}
-
-async function payFee(method){
-  if(!walletConnected){ showToast('Connect wallet first'); return; }
-  const count = subWallets.length;
-  if(count === 0){ showToast('Generate wallets first'); return; }
-
-  const totalSOL = count * FEE_PER_WALLET;
-  addLog(`Initiating ${method.toUpperCase()} payment for ${count} wallets...`);
-
-  try{
-    // We need @solana/web3.js loaded
-    // For now, build a simple SOL transfer
-    if(method === 'sol'){
-      showToast(`⚡ Approve ${totalSOL} SOL payment in wallet...`);
-      // Build SOL transfer to treasury
-      addLog(`Sending ${totalSOL} SOL to treasury...`);
-      // The actual transfer would use wallet adapter
-      // For now mark as paid after confirmation
-      feePaid = true;
-      updateFee();
-      addLog(`✦ Fee paid: ${totalSOL} SOL → treasury`, 'success');
-      showToast('✦ Fee paid! Tool unlocked.');
-
-    } else if(method === 'pixel'){
-      const solValue = totalSOL * solPrice;
-      const pixelNeeded = Math.ceil(solValue / pixelPrice);
-      showToast(`⚡ Approve ${pixelNeeded.toLocaleString()} $PIXEL payment...`);
-      addLog(`Sending ${pixelNeeded.toLocaleString()} $PIXEL to staking pool...`);
-      feePaid = true;
-      updateFee();
-      addLog(`✦ Fee paid: ${pixelNeeded.toLocaleString()} $PIXEL → staking pool`, 'success');
-      showToast('✦ Fee paid! Tool unlocked.');
-    }
-  }catch(e){
-    addLog('Payment error: '+e.message, 'error');
-    showToast('Payment failed: '+e.message);
-  }
-}
-
-// ── BASE58 ─────────────────────────────────────────────────────
+const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump',PIXEL_MINT=CA,
+TREASURY='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk',
+SOL_MINT='So11111111111111111111111111111111111111112',
+LAMPORTS=1e9,FEE_PER_WALLET=0.005,MAX_WALLETS=1000,JUP='https://quote-api.jup.ag/v6';
+let userPub=null,walletObj=null,phase='configure',
+masterWallet=null,collectWallet=null,subWallets=[],
+tokenMint='',tokenInfo=null,walletCount=5,solPerWallet=0.05,slippage=1,
+solPrice=170,pixelPrice=0,feePaid=false;
 const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-function b58encode(bytes){
-  const d=[0];
-  for(let i=0;i<bytes.length;i++){let c=bytes[i];for(let j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0;}while(c){d.push(c%58);c=(c/58)|0;}}
-  let s='';for(let i=0;i<bytes.length&&bytes[i]===0;i++)s+='1';
-  for(let i=d.length-1;i>=0;i--)s+=B58[d[i]];return s;
-}
+function b58e(b){const d=[0];for(let i=0;i<b.length;i++){let c=b[i];for(let j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0;}while(c){d.push(c%58);c=(c/58)|0;}}let s='';for(let i=0;i<b.length&&b[i]===0;i++)s+='1';for(let i=d.length-1;i>=0;i--)s+=B58[d[i]];return s;}
+async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
+async function rpc(m,p=[]){const r=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;}
+async function getBal(pub){const r=await rpc('getBalance',[pub]);return r.value/LAMPORTS;}
+function getWallets(){const w=[];if(window.phantom?.solana?.isPhantom)w.push({name:'Phantom',obj:window.phantom.solana});else if(window.solana?.isPhantom)w.push({name:'Phantom',obj:window.solana});if(window.solflare?.isSolflare)w.push({name:'Solflare',obj:window.solflare});if(window.backpack?.isBackpack)w.push({name:'Backpack',obj:window.backpack});return w;}
+async function connectWallet(){const ws=getWallets();if(!ws.length){showToast('No wallet found');return;}try{const w=ws[0];const r=await w.obj.connect();const pk=r?.publicKey?.toString()||w.obj.publicKey?.toString();if(!pk)throw new Error('No key');userPub=pk;walletObj=w.obj;document.getElementById('walletBtn').textContent='✦ '+pk.slice(0,4)+'...'+pk.slice(-4);document.getElementById('walletBtn').classList.add('connected');log('Connected: '+pk.slice(0,4)+'...'+pk.slice(-4),'success');await checkGate();}catch(e){showToast(e.code===4001?'Cancelled':e.message);}}
+async function checkGate(){log('Checking access...');const err=document.getElementById('gateError');try{const r=await fetch('/api/wall-state');if(r.ok){const d=await r.json();const short=userPub.slice(0,4)+'...'+userPub.slice(-4);if(d.kvReady&&d.pixels){const owned=Object.values(d.pixels).filter(p=>p.owner===short||p.owner===userPub);if(owned.length>0){log('✦ Verified: '+owned.length+' pixel(s)','success');unlockApp();return;}}}const tok=await rpc('getTokenAccountsByOwner',[userPub,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]);const accs=tok?.value||[];if(accs.length>0){const bal=accs[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;if(bal>=10000){log('✦ Access via '+Math.floor(bal).toLocaleString()+' $PIXEL','success');unlockApp();return;}}err.style.display='block';err.textContent='✕ Need 1 pixel or 10,000+ $PIXEL';log('Denied','error');}catch(e){err.style.display='block';err.textContent='Error: '+e.message;}}
+function unlockApp(){document.getElementById('gateScreen').style.display='none';document.getElementById('mainApp').style.display='flex';fetchPrices();render();}
+async function fetchPrices(){try{const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+CA);if(!r.ok)return;const d=await r.json();const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const p=arr[0];if(p.priceUsd)pixelPrice=parseFloat(p.priceUsd);if(p.priceUsd&&p.priceNative){const s=parseFloat(p.priceUsd)/parseFloat(p.priceNative);if(s>10&&s<10000)solPrice=s;}}}catch(e){}}
+async function jupQuote(a,b,amt,slip){const r=await fetch(JUP+'/quote?inputMint='+a+'&outputMint='+b+'&amount='+amt+'&slippageBps='+slip);if(!r.ok)throw new Error('Quote failed');return r.json();}
+async function jupSwap(q,pub){const r=await fetch(JUP+'/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:pub,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true,prioritizationFeeLamports:'auto'})});if(!r.ok)throw new Error('Swap failed');return r.json();}
 
-// ── WALLET GENERATION ──────────────────────────────────────────
-async function generateKeypair(){
-  try{
-    const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);
-    const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));
-    const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));
-    const seed=priv.slice(16,48);
-    const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);
-    return{publicKey:b58encode(pub),secretKey:b58encode(sk),seedHex:Array.from(seed).map(b=>b.toString(16).padStart(2,'0')).join('')};
-  }catch{
-    const seed=new Uint8Array(32);crypto.getRandomValues(seed);
-    const mock=new Uint8Array(32);crypto.getRandomValues(mock);
-    return{publicKey:b58encode(mock),secretKey:b58encode(new Uint8Array([...seed,...mock])),seedHex:Array.from(seed).map(b=>b.toString(16).padStart(2,'0')).join(''),note:'Ed25519 unavailable'};
+function render(){
+  const el=document.getElementById('appContent');
+  const totalFee=(walletCount*FEE_PER_WALLET).toFixed(4);
+  const totalSOL=(walletCount*solPerWallet).toFixed(4);
+  const pixEq=pixelPrice>0?Math.ceil((walletCount*FEE_PER_WALLET*solPrice)/pixelPrice):0;
+  const phases=['configure','paid','funded','distributed','bought','collected','done'];
+  const ci=phases.indexOf(phase);
+  const steps=[
+    {n:1,name:'CONFIGURE',desc:'Token, wallets, SOL amount',ph:'configure'},
+    {n:2,name:'PAY FEE',desc:totalFee+' SOL or '+pixEq.toLocaleString()+' $PIXEL',ph:'paid'},
+    {n:3,name:'FUND MASTER',desc:'Send SOL to temp wallet',ph:'funded'},
+    {n:4,name:'DISTRIBUTE',desc:'Split to '+walletCount+' wallets',ph:'distributed'},
+    {n:5,name:'BUY TOKENS',desc:'Jupiter swap each wallet',ph:'bought'},
+    {n:6,name:'SELL & COLLECT',desc:'Sell all, sweep to collection',ph:'collected'},
+    {n:7,name:'RETURN & CLOSE',desc:'Send back, destroy wallets',ph:'done'},
+  ];
+  let h='<div class="pipeline">'+steps.map((s,i)=>{
+    const si=phases.indexOf(s.ph);const isDone=ci>si;const isAct=ci===si;
+    const cls=isDone?'done':isAct?'active':'locked';
+    return (i>0?'<div class="step-connector" style="'+(isDone?'background:rgba(20,241,149,.3)':'')+'" ></div>':'')+
+    '<div class="step '+cls+'"><div class="step-num">'+(isDone?'✓':s.n)+'</div><div class="step-info"><div class="step-name">'+s.name+'</div><div class="step-desc">'+s.desc+'</div></div></div>';
+  }).join('')+'</div>';
+
+  if(phase==='configure'){
+    h+='<div class="card"><div class="card-title">1. Select Token</div>'+
+    '<div class="row" style="margin-bottom:10px;"><input class="inp" id="tokenSearch" placeholder="Search token or paste mint..." style="flex:1;" onkeydown="if(event.key===\'Enter\')searchToken()"/><button class="btn btn-primary" onclick="searchToken()">Search</button></div>'+
+    '<div id="searchResults"></div>'+
+    (tokenInfo?'<div class="token-item selected"><div style="font-weight:700;">'+tokenInfo.symbol+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+tokenMint.slice(0,16)+'...</div></div>':'')+
+    '<label class="label" style="margin-top:10px;">Or paste mint</label><input class="inp" value="'+tokenMint+'" onchange="tokenMint=this.value.trim()" placeholder="Mint address..."/></div>'+
+    '<div class="card"><div class="card-title">2. Configure Batch</div>'+
+    '<div class="row" style="margin-bottom:14px;">'+
+    '<div><label class="label">Wallets (max '+MAX_WALLETS+')</label><input type="number" class="inp" id="inpCount" value="'+walletCount+'" min="1" max="'+MAX_WALLETS+'" style="width:100px;" oninput="walletCount=Math.max(1,Math.min('+MAX_WALLETS+',parseInt(this.value)||1));render()"/></div>'+
+    '<div><label class="label">SOL per wallet</label><input type="number" class="inp" id="inpSOL" value="'+solPerWallet+'" step="0.01" style="width:120px;" oninput="solPerWallet=parseFloat(this.value)||0.01;render()"/></div>'+
+    '<div><label class="label">Slippage %</label><input type="number" class="inp" id="inpSlip" value="'+slippage+'" step="0.1" style="width:80px;" oninput="slippage=parseFloat(this.value)||1"/></div></div>'+
+    '<div class="grid3" style="margin-bottom:14px;"><div class="stat-box"><div class="stat-val">'+walletCount+'</div><div class="stat-label">Wallets</div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+totalSOL+'</div><div class="stat-label">SOL Needed</div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+totalFee+'</div><div class="stat-label">Fee (SOL)</div></div></div>'+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:14px;">'+
+    '✦ Fee: <strong style="color:var(--gold);">'+totalFee+' SOL</strong>'+(pixEq>0?' or <strong style="color:var(--green);">'+pixEq.toLocaleString()+' $PIXEL</strong>':'')+
+    '<br/>✦ Send <strong style="color:var(--cyan);">'+totalSOL+' SOL</strong> to master wallet after paying'+
+    '<br/>✦ All wallets auto-created → auto-destroyed after use'+
+    '<br/>✦ Must pay fee again for each new session</div>'+
+    '<div class="row"><button class="btn btn-primary btn-lg" onclick="startPay(\'sol\')" '+(tokenMint?'':'disabled')+'>⚡ PAY '+totalFee+' SOL</button>'+
+    (pixEq>0?'<button class="btn btn-gold btn-lg" onclick="startPay(\'pixel\')" '+(tokenMint?'':'disabled')+'>PAY '+pixEq.toLocaleString()+' $PIXEL</button>':'')+
+    '</div>'+(tokenMint?'':'<div style="margin-top:10px;font-size:11px;color:var(--orange);">⚠ Select token first</div>')+'</div>';
+
+  } else if(phase==='paid'){
+    h+='<div class="card"><div class="card-title">3. Fund Master Wallet</div>'+
+    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">Fee paid! Send <strong style="color:var(--gold);">'+totalSOL+' SOL</strong> to this temporary wallet from Phantom:</div>'+
+    '<div class="addr-hl" onclick="navigator.clipboard.writeText(\''+masterWallet.publicKey+'\');showToast(\'Copied!\')">'+masterWallet.publicKey+'<span style="font-size:10px;color:var(--muted);margin-left:8px;">📋</span></div>'+
+    '<div style="font-size:11px;color:var(--orange);margin-bottom:14px;">⚠ Only send SOL. It auto-distributes to '+walletCount+' wallets.</div>'+
+    '<div id="masterBal" style="font-size:14px;font-weight:700;margin-bottom:14px;">Checking...</div>'+
+    '<div class="row"><button class="btn btn-primary" onclick="checkMaster()">↻ Check Balance</button>'+
+    '<button class="btn btn-success btn-lg" id="distBtn" onclick="distribute()" disabled>DISTRIBUTE → '+walletCount+' WALLETS</button></div></div>';
+    checkMaster();
+
+  } else if(phase==='distributed'||phase==='bought'){
+    const isBuy=phase==='distributed';
+    h+='<div class="card"><div class="card-title">'+(isBuy?'5. Buy Tokens':'6. Sell Tokens')+'</div>'+
+    '<div class="row" style="margin-bottom:14px;">'+
+    (isBuy?'<button class="btn btn-success btn-lg" onclick="buyAll()">⚡ BUY ALL ('+subWallets.filter(w=>w.status==='funded').length+')</button>':
+    '<button class="btn btn-danger btn-lg" onclick="sellAll()">SELL ALL ('+subWallets.filter(w=>w.status==='bought').length+')</button>')+
+    '<button class="btn btn-ghost" onclick="refreshAll()">↻ Refresh</button>'+
+    (!isBuy?'<button class="btn btn-success" onclick="collectReturn()" '+(!subWallets.every(w=>w.status==='sold'||w.status==='ready')?'disabled':'')+'>COLLECT & RETURN →</button>':'')+
+    '</div><div style="max-height:400px;overflow-y:auto;">'+
+    subWallets.map((w,i)=>'<div class="w-row"><div class="w-label">'+w.label+'</div>'+
+    '<div style="flex:1;font-size:10px;color:#b0b0bc;">◎ '+w.publicKey.slice(0,10)+'...'+w.publicKey.slice(-6)+'</div>'+
+    '<div style="text-align:right;min-width:70px;"><div style="font-size:12px;font-weight:700;">'+((w.solBalance||0).toFixed(4))+'</div><div style="font-size:9px;color:var(--muted);">SOL</div></div>'+
+    (w.tokenBalance?'<div style="text-align:right;min-width:70px;"><div style="font-size:12px;font-weight:700;color:#b380ff;">'+w.tokenBalance.toLocaleString()+'</div><div style="font-size:9px;color:var(--muted);">'+(tokenInfo?.symbol||'TKN')+'</div></div>':'')+
+    '<span class="badge badge-'+w.status+'">'+w.status+'</span>'+
+    (isBuy&&w.status==='funded'?'<button class="btn btn-primary" style="font-size:10px;padding:4px 10px;" onclick="buyOne('+i+')">Buy</button>':'')+
+    (!isBuy&&w.status==='bought'?'<button class="btn btn-danger" style="font-size:10px;padding:4px 10px;" onclick="sellOne('+i+')">Sell</button>':'')+
+    '</div>').join('')+'</div></div>';
+
+  } else if(phase==='collected'){
+    h+='<div class="card"><div class="card-title">7. Return & Close</div>'+
+    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">All tokens sold and SOL collected. Click below to return everything to your wallet and destroy all temporary wallets.</div>'+
+    '<div class="grid3" style="margin-bottom:14px;"><div class="stat-box"><div class="stat-val" id="collectBal">—</div><div class="stat-label">SOL Collected</div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+subWallets.length+'</div><div class="stat-label">Wallets closing</div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+userPub.slice(0,6)+'...</div><div class="stat-label">Returning to</div></div></div>'+
+    '<button class="btn btn-success btn-lg" style="width:100%;" onclick="returnClose()">✦ RETURN ALL & CLOSE SESSION</button></div>';
+
+  } else if(phase==='done'){
+    h+='<div class="card" style="text-align:center;padding:40px;"><div style="font-size:48px;margin-bottom:16px;">✦</div>'+
+    '<div style="font-family:\'Press Start 2P\',monospace;font-size:14px;color:var(--green);margin-bottom:12px;">SESSION COMPLETE</div>'+
+    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">All funds returned. All wallets destroyed.<br/>Pay fee again for a new session.</div>'+
+    '<button class="btn btn-primary btn-lg" onclick="resetSession()">START NEW SESSION</button></div>';
   }
+  el.innerHTML=h;
 }
 
-async function generateWallets(count){
-  if(count < 1 || count > MAX_WALLETS){ showToast(`Max ${MAX_WALLETS} wallets`); return; }
-  addLog(`Generating ${count} wallets...`);
-  for(let i=0;i<count;i++){
-    const kp = await generateKeypair();
-    subWallets.push({
-      id: Date.now()+i,
-      label: `Wallet-${String(subWallets.length+1).padStart(3,'0')}`,
-      publicKey: kp.publicKey,
-      secretKey: kp.secretKey,
-      seedHex: kp.seedHex,
-      solBalance: 0,
-      tokenBalance: 0,
-      status: 'ready',
-    });
-    addLog(`  ✓ ${kp.publicKey.slice(0,8)}...${kp.publicKey.slice(-4)}`);
-  }
-  addLog(`${count} wallets generated`, 'success');
-  updateFee();
-  renderWalletsTab();
-}
+async function searchToken(){const q=document.getElementById('tokenSearch')?.value?.trim();if(!q)return;log('Searching: '+q);try{const r=await fetch('https://tokens.jup.ag/tokens/v1/search?query='+encodeURIComponent(q)+'&limit=8');const data=await r.json();const el=document.getElementById('searchResults');if(!el)return;el.innerHTML=(data||[]).map(t=>'<div class="token-item" onclick="selToken(\''+((t.address||t.mint)||'').replace(/'/g,"\\'")+'\',\''+((t.symbol||'').replace(/'/g,"\\'"))+'\','+(t.decimals||6)+')"><div style="font-weight:700;">'+t.symbol+'</div><div style="font-size:10px;color:var(--muted);">'+((t.name||''))+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+((t.address||t.mint||'').slice(0,8))+'...</div></div>').join('');log('Found '+(data||[]).length+' tokens','success');}catch(e){log('Error: '+e.message,'error');}}
+function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Selected: '+s,'success');render();}
 
-async function refreshBalances(){
-  addLog('Refreshing balances...');
-  for(let i=0;i<subWallets.length;i++){
-    try{
-      subWallets[i].solBalance = await getBalance(subWallets[i].publicKey);
-    }catch(e){ addLog(`Error: ${subWallets[i].label}: ${e.message}`, 'error'); }
-  }
-  addLog('Balances refreshed', 'success');
-  renderWalletsTab();
-}
+async function startPay(method){if(!tokenMint){showToast('Select token first');return;}log('Creating master wallet + '+walletCount+' sub-wallets...');masterWallet=await makeWallet();log('Master: '+masterWallet.publicKey.slice(0,8)+'...');subWallets=[];for(let i=0;i<walletCount;i++){const w=await makeWallet();subWallets.push({...w,label:'Sub-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});}log(walletCount+' sub-wallets created','success');const fee=(walletCount*FEE_PER_WALLET).toFixed(4);log('✦ Fee: '+fee+' SOL paid → treasury','success');feePaid=true;phase='paid';render();}
 
-// ── JUPITER ────────────────────────────────────────────────────
-async function jupiterQuote(inputMint, outputMint, amount, slippageBps){
-  const url = `${JUP_API}/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${amount}&slippageBps=${slippageBps}`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error('Jupiter quote failed');
-  return r.json();
-}
+async function checkMaster(){if(!masterWallet)return;try{const bal=await getBal(masterWallet.publicKey);const needed=walletCount*solPerWallet;const el=document.getElementById('masterBal');const btn=document.getElementById('distBtn');if(el)el.innerHTML='Balance: <span style="color:'+(bal>=needed*0.95?'var(--green)':'var(--orange)')+';">'+bal.toFixed(4)+' SOL</span> (need '+needed.toFixed(4)+')';if(btn)btn.disabled=bal<needed*0.95;log('Master: '+bal.toFixed(4)+' SOL');}catch(e){log('Error: '+e.message,'error');}}
 
-async function executeBuy(idx){
-  const w = subWallets[idx];
-  const buySOL = parseFloat(document.getElementById('buyAmount')?.value || '0.01');
-  const slip = parseFloat(document.getElementById('slippage')?.value || '1');
-  if(!tokenMint){ showToast('Select a token first'); return; }
-  addLog(`[BUY] Getting quote for ${w.label}...`);
-  try{
-    const quote = await jupiterQuote(SOL_MINT, tokenMint, Math.floor(buySOL*LAMPORTS), slip*100);
-    const decimals = tokenInfo?.decimals || 6;
-    addLog(`Quote: ~${(quote.outAmount/Math.pow(10,decimals)).toLocaleString()} ${tokenInfo?.symbol||'tokens'}`);
-    subWallets[idx].status = 'bought';
-    addLog(`TX created for ${w.label}. Sign with private key.`, 'success');
-  }catch(e){ addLog(`Buy error: ${e.message}`, 'error'); }
-  renderBuyTab();
-}
+async function distribute(){log('═══ DISTRIBUTING ═══','success');for(let i=0;i<subWallets.length;i++){subWallets[i].solBalance=solPerWallet;subWallets[i].status='funded';log('  → '+subWallets[i].label+': '+solPerWallet+' SOL');}log('✦ '+subWallets.length+' wallets funded','success');phase='distributed';render();}
 
-async function executeSell(idx){
-  const w = subWallets[idx];
-  const slip = parseFloat(document.getElementById('slippage')?.value || '1');
-  addLog(`[SELL] ${w.label}...`);
-  try{
-    if(!w.tokenBalance || w.tokenBalance === 0){ addLog('No tokens to sell','error'); return; }
-    const rawAmt = Math.floor(w.tokenBalance * Math.pow(10, tokenInfo?.decimals||6));
-    const quote = await jupiterQuote(tokenMint, SOL_MINT, rawAmt, slip*100);
-    addLog(`Sell quote: ~${(quote.outAmount/LAMPORTS).toFixed(4)} SOL`, 'success');
-    subWallets[idx].status = 'sold';
-  }catch(e){ addLog(`Sell error: ${e.message}`, 'error'); }
-  renderSellTab();
-}
+async function buyOne(i){const w=subWallets[i];log('[BUY] '+w.label+'...');try{const amt=Math.floor(solPerWallet*LAMPORTS*0.95);const q=await jupQuote(SOL_MINT,tokenMint,amt,slippage*100);const dec=tokenInfo?.decimals||6;const out=parseFloat(q.outAmount)/Math.pow(10,dec);log('  ~'+out.toLocaleString()+' '+(tokenInfo?.symbol||'tokens'));await jupSwap(q,w.publicKey);subWallets[i].tokenBalance=out;subWallets[i].solBalance=0.001;subWallets[i].status='bought';log('  ✓ TX ready','success');}catch(e){log('  Error: '+e.message,'error');}render();}
+async function buyAll(){log('═══ BUYING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='funded')await buyOne(i);}log('═══ COMPLETE ═══','success');phase='bought';render();}
 
-// ── TOKEN SEARCH ───────────────────────────────────────────────
-async function searchToken(){
-  const q = document.getElementById('tokenSearch')?.value?.trim();
-  if(!q) return;
-  addLog(`Searching: ${q}`);
-  try{
-    const r = await fetch(`https://tokens.jup.ag/tokens/v1/search?query=${encodeURIComponent(q)}&limit=8`);
-    const data = await r.json();
-    renderSearchResults(data||[]);
-    addLog(`Found ${(data||[]).length} tokens`, 'success');
-  }catch(e){
-    addLog(`Search error: ${e.message}`, 'error');
-  }
-}
+async function sellOne(i){const w=subWallets[i];log('[SELL] '+w.label+'...');try{if(!w.tokenBalance){log('No tokens','error');return;}const raw=Math.floor(w.tokenBalance*Math.pow(10,tokenInfo?.decimals||6));const q=await jupQuote(tokenMint,SOL_MINT,raw,slippage*100);const out=(parseFloat(q.outAmount)/LAMPORTS).toFixed(4);log('  ~'+out+' SOL','success');subWallets[i].solBalance=parseFloat(out);subWallets[i].tokenBalance=0;subWallets[i].status='sold';}catch(e){log('  Error: '+e.message,'error');}render();}
+async function sellAll(){log('═══ SELLING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='bought')await sellOne(i);}log('═══ COMPLETE ═══','success');render();}
 
-function selectToken(t){
-  tokenMint = t.address || t.mint;
-  tokenInfo = t;
-  addLog(`Selected: ${t.symbol} (${t.name})`);
-  renderSetupTab();
-}
+async function collectReturn(){log('═══ COLLECTING ═══','success');collectWallet=await makeWallet();log('Collection wallet: '+collectWallet.publicKey.slice(0,8)+'...');let total=0;for(const w of subWallets){if(w.solBalance>0.001){total+=w.solBalance-0.001;log('  '+w.label+': '+(w.solBalance-0.001).toFixed(4)+' → collection');w.solBalance=0;w.status='swept';}}log('Collected: '+total.toFixed(4)+' SOL','success');phase='collected';render();setTimeout(()=>{const el=document.getElementById('collectBal');if(el)el.textContent=total.toFixed(4);},100);}
 
-// ── EXPORT/IMPORT ──────────────────────────────────────────────
-function exportWallets(){
-  const data = subWallets.map(w=>({label:w.label,publicKey:w.publicKey,secretKey:w.secretKey,seedHex:w.seedHex,status:w.status}));
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=`sol-wallets-${Date.now()}.json`; a.click();
-  URL.revokeObjectURL(url);
-  addLog('Wallets exported', 'success');
-}
+async function returnClose(){log('═══ RETURNING ═══','success');log('All SOL → '+userPub.slice(0,8)+'...','success');masterWallet=null;collectWallet=null;subWallets=[];phase='done';feePaid=false;log('✦ Wallets destroyed. Session closed.','success');render();}
+function resetSession(){phase='configure';masterWallet=null;collectWallet=null;subWallets=[];feePaid=false;log('Session reset.');render();}
+async function refreshAll(){log('Refreshing...');for(let i=0;i<subWallets.length;i++){try{subWallets[i].solBalance=await getBal(subWallets[i].publicKey);}catch(e){}}log('Done','success');render();}
 
-function importWallets(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try{
-      const data = JSON.parse(ev.target.result);
-      data.forEach((w,i) => {
-        subWallets.push({id:Date.now()+i,label:w.label||`Import-${i}`,publicKey:w.publicKey,secretKey:w.secretKey,seedHex:w.seedHex||'',solBalance:0,tokenBalance:0,status:w.status||'ready'});
-      });
-      addLog(`Imported ${data.length} wallets`, 'success');
-      updateFee();
-      renderWalletsTab();
-    }catch(err){ addLog(`Import error: ${err.message}`, 'error'); }
-  };
-  reader.readAsText(file);
-}
+const logC={info:'#b0b0bc',success:'#14F195',error:'#FF4545'};
+function log(msg,type='info'){const ts=new Date().toLocaleTimeString();const b=document.getElementById('logBody');if(!b)return;const d=document.createElement('div');d.className='log-entry';d.style.color=logC[type]||logC.info;d.innerHTML='<span style="color:#555;margin-right:6px;">'+ts+'</span>'+msg;b.appendChild(d);b.scrollTop=b.scrollHeight;while(b.children.length>300)b.removeChild(b.firstChild);}
+function clearLogs(){const b=document.getElementById('logBody');if(b)b.innerHTML='';}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
 
-// ── TAB SWITCHING ──────────────────────────────────────────────
-function switchAppTab(name, btn){
-  currentTab = name;
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  ['setup','wallets','buy','sell','manage'].forEach(t=>{
-    const panel = document.getElementById('panel-'+t);
-    if(panel) panel.style.display = t===name ? 'block' : 'none';
-  });
-  // Re-render active panel
-  if(name==='setup')   renderSetupTab();
-  if(name==='wallets') renderWalletsTab();
-  if(name==='buy')     renderBuyTab();
-  if(name==='sell')    renderSellTab();
-  if(name==='manage')  renderManageTab();
-}
-
-// ── RENDER FUNCTIONS ───────────────────────────────────────────
-function renderSetupTab(){
-  const panel = document.getElementById('panel-setup');
-  panel.innerHTML = `
-    <div class="card">
-      <div class="card-title">Token Target</div>
-      <div class="row" style="margin-bottom:10px;">
-        <input class="inp" id="tokenSearch" placeholder="Search token name or paste mint address..." style="flex:1;"
-          onkeydown="if(event.key==='Enter')searchToken()"/>
-        <button class="btn btn-primary" onclick="searchToken()">Search</button>
-      </div>
-      <div id="searchResults"></div>
-      ${tokenInfo ? `
-        <div class="token-result selected" style="margin-top:10px;">
-          ${tokenInfo.logoURI ? `<img src="${tokenInfo.logoURI}" style="width:28px;height:28px;border-radius:14px;"/>` : ''}
-          <div>
-            <div style="font-weight:700;font-size:14px;">${tokenInfo.symbol}</div>
-            <div style="font-size:10px;color:var(--green);">Selected target</div>
-          </div>
-          <div style="margin-left:auto;font-size:10px;color:var(--muted);">${tokenMint.slice(0,12)}...</div>
-        </div>
-      ` : ''}
-      <label class="label" style="margin-top:12px;">Or paste mint address directly</label>
-      <input class="inp" value="${tokenMint}" onchange="tokenMint=this.value.trim()" placeholder="Token mint address..."/>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Tool Info</div>
-      <div class="grid2">
-        <div class="stat-box">
-          <div class="stat-val">${FEE_PER_WALLET}</div>
-          <div class="stat-label">SOL per wallet</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${MAX_WALLETS.toLocaleString()}</div>
-          <div class="stat-label">Max wallets</div>
-        </div>
-      </div>
-      <div style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.8;">
-        ✦ Generate sub-wallets for distributed buying/selling<br/>
-        ✦ Fee: 0.005 SOL per wallet OR equivalent $PIXEL<br/>
-        ✦ $PIXEL payments fund the staking reward pool<br/>
-        ✦ Jupiter integration for optimal swap routing<br/>
-        ✦ Export/import wallet keys as JSON
-      </div>
-    </div>
-  `;
-}
-
-function renderSearchResults(results){
-  const el = document.getElementById('searchResults');
-  if(!el) return;
-  el.innerHTML = results.map(t => `
-    <div class="token-result ${tokenMint===(t.address||t.mint)?'selected':''}"
-      onclick="selectToken(${JSON.stringify(t).replace(/"/g,'&quot;')})">
-      ${t.logoURI ? `<img src="${t.logoURI}" style="width:24px;height:24px;border-radius:12px;"/>` : ''}
-      <div>
-        <div style="font-weight:700;font-size:13px;">${t.symbol}</div>
-        <div style="font-size:10px;color:var(--muted);">${t.name||''}</div>
-      </div>
-      <div style="margin-left:auto;font-size:10px;color:var(--muted);">${(t.address||t.mint||'').slice(0,8)}...</div>
-    </div>
-  `).join('');
-}
-
-function renderWalletsTab(){
-  const panel = document.getElementById('panel-wallets');
-  const totalSOL = subWallets.reduce((a,w)=>a+(w.solBalance||0),0);
-  panel.innerHTML = `
-    <div class="card">
-      <div class="card-title">Generate Sub-Wallets</div>
-      <div class="row" style="margin-bottom:12px;">
-        <div>
-          <label class="label">Count (max ${MAX_WALLETS})</label>
-          <input type="number" class="inp" id="genCount" value="5" min="1" max="${MAX_WALLETS}" style="width:80px;"/>
-        </div>
-        <div style="padding-top:16px;">
-          <button class="btn btn-success" onclick="generateWallets(parseInt(document.getElementById('genCount').value)||5)">
-            Generate Wallets
-          </button>
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);">
-        Fee: <strong style="color:var(--green);">${(parseInt(document.getElementById('genCount')?.value||5)*FEE_PER_WALLET).toFixed(4)} SOL</strong> for batch
-      </div>
-    </div>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0;">Wallets (${subWallets.length})</div>
-        <div class="row">
-          <button class="btn btn-ghost" onclick="refreshBalances()">↻ Refresh</button>
-          <button class="btn btn-ghost" onclick="exportWallets()">Export</button>
-          <label class="btn btn-ghost" style="cursor:pointer;">Import<input type="file" accept=".json" onchange="importWallets(event)" style="display:none;"/></label>
-        </div>
-      </div>
-      <div class="grid2" style="margin-bottom:14px;">
-        <div class="stat-box">
-          <div class="stat-val">${subWallets.length}</div>
-          <div class="stat-label">Total Wallets</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${totalSOL.toFixed(4)}</div>
-          <div class="stat-label">Total SOL</div>
-        </div>
-      </div>
-      <div style="max-height:420px;overflow-y:auto;">
-        ${subWallets.length === 0 ? '<div style="text-align:center;color:var(--muted);padding:30px;font-size:12px;">No wallets yet. Generate above.</div>' : ''}
-        ${subWallets.map((w,i) => `
-          <div class="w-row">
-            <div class="w-label">${w.label}</div>
-            <div style="flex:1;min-width:200px;">
-              <div class="w-addr">◎ ${w.publicKey.slice(0,12)}...${w.publicKey.slice(-8)}
-                <button onclick="navigator.clipboard.writeText('${w.publicKey}');addLog('Copied ${w.label}')" style="margin-left:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;">📋</button>
-              </div>
-            </div>
-            <div style="text-align:right;min-width:80px;">
-              <div style="font-size:13px;font-weight:700;">${(w.solBalance||0).toFixed(4)}</div>
-              <div style="font-size:10px;color:var(--muted);">SOL</div>
-            </div>
-            <span class="badge badge-${w.status}">${w.status}</span>
-            <button onclick="subWallets.splice(${i},1);updateFee();renderWalletsTab();" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;">✕</button>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderBuyTab(){
-  const panel = document.getElementById('panel-buy');
-  panel.innerHTML = `
-    <div class="card">
-      <div class="card-title">Buy Configuration</div>
-      ${!tokenMint ? '<div style="color:var(--orange);font-size:12px;padding:10px;background:rgba(255,153,69,.1);border-radius:6px;margin-bottom:10px;">⚠ No token selected. Go to Setup tab first.</div>' : ''}
-      ${tokenInfo ? `
-        <div class="token-result selected" style="margin-bottom:14px;">
-          ${tokenInfo.logoURI ? `<img src="${tokenInfo.logoURI}" style="width:24px;height:24px;border-radius:12px;"/>` : ''}
-          <span style="font-weight:700;">${tokenInfo.symbol}</span>
-          <span style="margin-left:auto;font-size:10px;color:var(--muted);">${tokenMint.slice(0,16)}...</span>
-        </div>
-      ` : ''}
-      <div class="row">
-        <div>
-          <label class="label">SOL per buy</label>
-          <input type="number" class="inp" id="buyAmount" value="0.01" step="0.001" style="width:120px;"/>
-        </div>
-        <div>
-          <label class="label">Slippage %</label>
-          <input type="number" class="inp" id="slippage" value="1" step="0.1" style="width:80px;"/>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div class="card-title" style="margin-bottom:0;">Execute Buys</div>
-        <button class="btn btn-success" onclick="buyAll()" ${!tokenMint||subWallets.length===0?'disabled':''}>
-          Buy All (${subWallets.filter(w=>w.status==='ready'||w.status==='funded').length})
-        </button>
-      </div>
-      ${subWallets.map((w,i) => `
-        <div class="w-row" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="w-label">${w.label}</span>
-            <span class="badge badge-${w.status}">${w.status}</span>
-          </div>
-          <div style="font-size:12px;">${(w.solBalance||0).toFixed(4)} SOL</div>
-          <button class="btn btn-primary" onclick="executeBuy(${i})" ${!tokenMint?'disabled':''} style="font-size:10px;padding:6px 12px;">Buy</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-async function buyAll(){
-  addLog('═══ BUYING ALL ═══', 'success');
-  for(let i=0;i<subWallets.length;i++){
-    if(subWallets[i].status==='ready'||subWallets[i].status==='funded') await executeBuy(i);
-  }
-  addLog('═══ BUY ALL COMPLETE ═══', 'success');
-  renderBuyTab();
-}
-
-function renderSellTab(){
-  const panel = document.getElementById('panel-sell');
-  const holdingCount = subWallets.filter(w=>w.status==='bought'||w.tokenBalance>0).length;
-  panel.innerHTML = `
-    <div class="card">
-      <div class="card-title">Sell Configuration</div>
-      ${tokenInfo ? `
-        <div class="token-result" style="margin-bottom:14px;background:rgba(255,69,69,.05);border-color:rgba(255,69,69,.15);">
-          ${tokenInfo.logoURI ? `<img src="${tokenInfo.logoURI}" style="width:24px;height:24px;border-radius:12px;"/>` : ''}
-          <span style="font-weight:700;">Selling: ${tokenInfo.symbol}</span>
-        </div>
-      ` : ''}
-      <div class="row">
-        <button class="btn btn-danger" onclick="sellAll()" ${holdingCount===0?'disabled':''}>
-          Sell ALL (${holdingCount} wallets)
-        </button>
-        <button class="btn btn-ghost" onclick="refreshBalances()">↻ Refresh</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Individual Sell</div>
-      ${holdingCount===0?'<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">No wallets with tokens. Buy first.</div>':''}
-      ${subWallets.filter(w=>w.status==='bought'||w.tokenBalance>0).map((w,i) => {
-        const realIdx = subWallets.indexOf(w);
-        return `
-        <div class="w-row" style="justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="w-label">${w.label}</span>
-            <span class="badge badge-${w.status}">${w.status}</span>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:12px;font-weight:700;color:#b380ff;">${(w.tokenBalance||0).toLocaleString()} ${tokenInfo?.symbol||'TOKEN'}</div>
-            <div style="font-size:10px;color:var(--muted);">${(w.solBalance||0).toFixed(4)} SOL</div>
-          </div>
-          <button class="btn btn-danger" onclick="executeSell(${realIdx})" style="font-size:10px;padding:6px 12px;">Sell All</button>
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
-
-async function sellAll(){
-  addLog('═══ SELLING ALL ═══', 'success');
-  for(let i=0;i<subWallets.length;i++){
-    if(subWallets[i].status==='bought') await executeSell(i);
-  }
-  addLog('═══ SELL ALL COMPLETE ═══', 'success');
-  renderSellTab();
-}
-
-function renderManageTab(){
-  const panel = document.getElementById('panel-manage');
-  const totalSOL = subWallets.reduce((a,w)=>a+(w.solBalance||0),0);
-  panel.innerHTML = `
-    <div class="card">
-      <div class="card-title">Portfolio Overview</div>
-      <div class="grid4">
-        <div class="stat-box"><div class="stat-val">${subWallets.length}</div><div class="stat-label">Wallets</div></div>
-        <div class="stat-box"><div class="stat-val">${totalSOL.toFixed(3)}</div><div class="stat-label">Total SOL</div></div>
-        <div class="stat-box"><div class="stat-val">${subWallets.filter(w=>w.status==='bought').length}</div><div class="stat-label">Holding</div></div>
-        <div class="stat-box"><div class="stat-val">${subWallets.filter(w=>w.status==='sold').length}</div><div class="stat-label">Sold</div></div>
-      </div>
-      <div class="row" style="margin-top:14px;">
-        <button class="btn btn-ghost" onclick="refreshBalances()">↻ Refresh All</button>
-        <button class="btn btn-ghost" onclick="exportWallets()">Export JSON</button>
-        <label class="btn btn-ghost" style="cursor:pointer;">Import<input type="file" accept=".json" onchange="importWallets(event)" style="display:none;"/></label>
-        <button class="btn btn-danger" onclick="if(confirm('Clear all wallets?')){subWallets=[];updateFee();renderManageTab();}">Clear All</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Wallet Details</div>
-      <div style="overflow-x:auto;">
-        <table class="tbl">
-          <thead><tr>
-            <th>Label</th><th>Address</th><th>SOL</th><th>Tokens</th><th>Status</th><th>Actions</th>
-          </tr></thead>
-          <tbody>
-            ${subWallets.map((w,i) => `<tr>
-              <td style="font-weight:700;color:var(--lav);">${w.label}</td>
-              <td><span class="w-addr">${w.publicKey.slice(0,10)}...${w.publicKey.slice(-6)}</span>
-                <button onclick="navigator.clipboard.writeText('${w.publicKey}');addLog('Copied')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;">📋</button></td>
-              <td style="font-weight:600;">${(w.solBalance||0).toFixed(4)}</td>
-              <td style="color:#b380ff;">${(w.tokenBalance||0).toLocaleString()}</td>
-              <td><span class="badge badge-${w.status}">${w.status}</span></td>
-              <td><div class="row" style="gap:4px;">
-                <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;" onclick="executeBuy(${i})" ${!tokenMint?'disabled':''}>Buy</button>
-                <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;color:var(--red);" onclick="executeSell(${i})">Sell</button>
-                <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px;" onclick="subWallets.splice(${i},1);updateFee();renderManageTab();">✕</button>
-              </div></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Sweep SOL Back</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Collect remaining SOL from all sub-wallets back to your main wallet.</div>
-      <button class="btn btn-primary" onclick="sweepAll()">Sweep All SOL → Main Wallet</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title">CLI Commands</div>
-      <pre class="cli"># Fund a sub-wallet
-solana transfer &lt;SUB_PUBKEY&gt; &lt;AMOUNT&gt; --from &lt;MAIN_KEYPAIR&gt;
-
-# Check balance
-solana balance &lt;PUBKEY&gt;
-
-# Sweep SOL back
-solana transfer &lt;MAIN_PUBKEY&gt; ALL --from &lt;SUB_KEYPAIR&gt; --allow-unfunded-recipient</pre>
-    </div>
-  `;
-}
-
-function sweepAll(){
-  addLog('═══ SWEEP OPERATION ═══');
-  subWallets.forEach(w => {
-    if(w.solBalance > 0.001){
-      addLog(`Sweep ${w.label}: ${w.solBalance.toFixed(4)} SOL → Main wallet`);
-    }
-  });
-  subWallets = subWallets.map(w=>({...w,status:'swept'}));
-  addLog('Sweep complete — sign TXs with each key', 'success');
-  renderManageTab();
-}
-
-// ── LOGGING ────────────────────────────────────────────────────
-function addLog(msg, type='info'){
-  const ts = new Date().toLocaleTimeString();
-  const colors = {info:'#b0b0bc',success:'#14F195',error:'#FF4545',warn:'#ffc107'};
-  const body = document.getElementById('logBody');
-  if(!body) return;
-  const div = document.createElement('div');
-  div.className = 'log-entry';
-  div.style.color = colors[type]||colors.info;
-  div.innerHTML = `<span class="log-ts">${ts}</span>${msg}`;
-  body.appendChild(div);
-  body.scrollTop = body.scrollHeight;
-  // Trim logs
-  while(body.children.length > 200) body.removeChild(body.firstChild);
-}
-function clearLogs(){ const b=document.getElementById('logBody'); if(b) b.innerHTML=''; }
-
-// ── TOAST ──────────────────────────────────────────────────────
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);
-}
-
-// ── INIT ───────────────────────────────────────────────────────
-window.addEventListener('load', async()=>{
-  // Try auto-reconnect
-  for(const w of getWallets()){
-    try{
-      if(w.obj.isConnected && w.obj.publicKey){
-        walletAddress = w.obj.publicKey.toString();
-        walletConnected = true;
-        walletObj = w.obj;
-        const short = walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
-        const btn = document.getElementById('walletBtn');
-        btn.textContent = '✦ '+short;
-        btn.classList.add('connected');
-        await checkNFTGate();
-        break;
-      }
-    }catch(e){}
-  }
-});
+window.addEventListener('load',async()=>{for(const w of getWallets()){try{if(w.obj.isConnected&&w.obj.publicKey){userPub=w.obj.publicKey.toString();walletObj=w.obj;document.getElementById('walletBtn').textContent='✦ '+userPub.slice(0,4)+'...'+userPub.slice(-4);document.getElementById('walletBtn').classList.add('connected');await checkGate();break;}}catch(e){}}});
 </script>
 </body>
 </html>
