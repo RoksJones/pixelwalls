@@ -1,6 +1,3 @@
-Current wall-state
-
-
 // api/wall-state.js
 // Global wall state — stores and serves ALL claimed pixels across all users.
 // Backed by Vercel KV. Without this, pixels are only visible in the buyer's browser.
