@@ -184,7 +184,7 @@ function render(){
     '<div class="row" style="margin-bottom:10px;"><input class="inp" id="tokenSearch" placeholder="Search token or paste mint..." style="flex:1;" onkeydown="if(event.key===\'Enter\')searchToken()"/><button class="btn btn-primary" onclick="searchToken()">Search</button></div>'+
     '<div id="searchResults"></div>'+
     (tokenInfo?'<div class="token-item selected"><div style="font-weight:700;">'+tokenInfo.symbol+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+tokenMint.slice(0,16)+'...</div></div>':'')+
-    '<label class="label" style="margin-top:10px;">Or paste mint</label><input class="inp" value="'+tokenMint+'" onchange="tokenMint=this.value.trim()" placeholder="Mint address..."/></div>'+
+    '<label class="label" style="margin-top:10px;">Or paste mint</label><input class="inp" value="'+tokenMint+'" onchange="tokenMint=this.value.trim();if(tokenMint.length>=32)searchToken()" placeholder="Mint address..."/></div>'+
     '<div class="card"><div class="card-title">2. Configure Batch</div>'+
     '<div class="row" style="margin-bottom:14px;">'+
     '<div><label class="label">Wallets (max '+MAX_WALLETS+')</label><input type="number" class="inp" id="inpCount" value="'+walletCount+'" min="1" max="'+MAX_WALLETS+'" style="width:100px;" oninput="walletCount=Math.max(1,Math.min('+MAX_WALLETS+',parseInt(this.value)||1));render()"/></div>'+
@@ -247,12 +247,67 @@ function render(){
   el.innerHTML=h;
 }
 
-async function searchToken(){const q=document.getElementById('tokenSearch')?.value?.trim();if(!q)return;log('Searching: '+q);try{
-// Try mint address lookup first
-let data=[];
-if(q.length>30){try{const r2=await fetch('https://tokens.jup.ag/token/'+q);if(r2.ok){const t=await r2.json();if(t&&t.symbol)data=[t];}}catch(e){}}
-// If not a mint or not found, search by name
-if(!data.length){const r=await fetch('https://tokens.jup.ag/tokens?tags=verified');if(r.ok){const all=await r.json();const ql=q.toLowerCase();data=(all||[]).filter(t=>(t.symbol||'').toLowerCase().includes(ql)||(t.name||'').toLowerCase().includes(ql)||(t.address||'')==q).slice(0,8);}}const el=document.getElementById('searchResults');if(!el)return;el.innerHTML=(data||[]).map(t=>'<div class="token-item" onclick="selToken(\''+((t.address||t.mint)||'').replace(/'/g,"\\'")+'\',\''+((t.symbol||'').replace(/'/g,"\\'"))+'\','+(t.decimals||6)+')"><div style="font-weight:700;">'+t.symbol+'</div><div style="font-size:10px;color:var(--muted);">'+((t.name||''))+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+((t.address||t.mint||'').slice(0,8))+'...</div></div>').join('');log('Found '+(data||[]).length+' tokens','success');}catch(e){log('Error: '+e.message,'error');}}
+async function searchToken(){
+  const q=document.getElementById('tokenSearch')?.value?.trim();
+  if(!q)return;
+  log('Searching: '+q);
+  const el=document.getElementById('searchResults');
+  if(!el)return;
+
+  // Route 1: If it looks like a mint address (32+ chars), look up directly
+  if(q.length >= 32){
+    try{
+      // Use DexScreener to get token info by mint
+      const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+q);
+      if(r.ok){
+        const data=await r.json();
+        const pairs=Array.isArray(data)?data:(data.pairs||[]);
+        if(pairs.length>0){
+          const p=pairs[0];
+          const mint=p.baseToken?.address===q?p.baseToken.address:p.quoteToken?.address;
+          const sym=p.baseToken?.address===q?p.baseToken.symbol:p.quoteToken?.symbol;
+          const name=p.baseToken?.address===q?p.baseToken.name:p.quoteToken?.name;
+          el.innerHTML='<div class="token-item" onclick="selToken(\''+q+'\',\''+sym+'\',6)"><div style="font-weight:700;">'+sym+'</div><div style="font-size:10px;color:var(--muted);">'+name+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+q.slice(0,8)+'...</div></div>';
+          log('Found: '+sym+' ('+name+')','success');
+          return;
+        }
+      }
+    }catch(e){}
+    // Fallback: just accept the mint as-is
+    el.innerHTML='<div class="token-item" onclick="selToken(\''+q+'\',\'UNKNOWN\',6)"><div style="font-weight:700;">Use this mint</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+q.slice(0,8)+'...</div></div>';
+    log('Mint accepted — select to use','success');
+    return;
+  }
+
+  // Route 2: Search by name/ticker via DexScreener
+  try{
+    const r=await fetch('https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(q));
+    if(!r.ok) throw new Error('Search API error');
+    const data=await r.json();
+    const pairs=data.pairs||[];
+    // Deduplicate by base token address, only Solana
+    const seen=new Set();
+    const tokens=[];
+    for(const p of pairs){
+      if(p.chainId!=='solana')continue;
+      const addr=p.baseToken?.address;
+      if(!addr||seen.has(addr))continue;
+      seen.add(addr);
+      tokens.push({address:addr, symbol:p.baseToken.symbol, name:p.baseToken.name, priceUsd:p.priceUsd});
+      if(tokens.length>=10)break;
+    }
+    el.innerHTML=tokens.map(t=>
+      '<div class="token-item" onclick="selToken(\''+t.address+'\',\''+t.symbol.replace(/'/g,'')+'\',6)">'+
+      '<div><div style="font-weight:700;">'+t.symbol+'</div><div style="font-size:10px;color:var(--muted);">'+t.name+'</div></div>'+
+      '<div style="margin-left:auto;text-align:right;"><div style="font-size:10px;color:var(--green);">$'+(t.priceUsd||'?')+'</div><div style="font-size:9px;color:var(--muted);">'+t.address.slice(0,8)+'...</div></div></div>'
+    ).join('');
+    log('Found '+tokens.length+' Solana tokens','success');
+  }catch(e){
+    log('Search failed: '+e.message,'error');
+    el.innerHTML='<div style="color:var(--red);font-size:11px;padding:10px;">Search failed. Try pasting the mint address directly.</div>';
+  }
+}
+
 function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Selected: '+s,'success');render();}
 
 async function startPay(method){if(!tokenMint){showToast('Select token first');return;}log('Creating master wallet + '+walletCount+' sub-wallets...');masterWallet=await makeWallet();log('Master: '+masterWallet.publicKey.slice(0,8)+'...');subWallets=[];for(let i=0;i<walletCount;i++){const w=await makeWallet();subWallets.push({...w,label:'Sub-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});}log(walletCount+' sub-wallets created','success');const fee=(walletCount*FEE_PER_WALLET).toFixed(4);log('✦ Fee: '+fee+' SOL paid → treasury','success');feePaid=true;phase='paid';render();}
