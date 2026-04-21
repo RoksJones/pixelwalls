@@ -80,6 +80,7 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 .toast.show{transform:translateX(0);}
 @media(max-width:780px){.app{flex-direction:column;}.sidebar{width:100%;max-height:200px;border-left:none;border-top:1px solid rgba(153,69,255,.15);}.grid3{grid-template-columns:1fr;}}
 </style>
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
 </head>
 <body>
 <nav class="nav">
@@ -92,7 +93,7 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 <div id="gateScreen" class="gate">
   <div class="gate-icon">🔒</div>
   <div class="gate-title">NFT-GATED TOOL</div>
-  <div class="gate-msg">Requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> (owned pixel) or <strong style="color:var(--green);">100,000,000+ $PIXEL</strong>.</div>
+  <div class="gate-msg">Requires a <strong style="color:var(--gold);">Pixelwalls NFT</strong> (owned pixel) or <strong style="color:var(--green);">10,000+ $PIXEL</strong>.</div>
   <button class="gate-btn" onclick="connectWallet()">⚡ CONNECT WALLET</button>
   <div id="gateError"></div>
 </div>
@@ -116,11 +117,44 @@ solPrice=170,pixelPrice=0,feePaid=false;
 const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58e(b){const d=[0];for(let i=0;i<b.length;i++){let c=b[i];for(let j=0;j<d.length;j++){c+=d[j]<<8;d[j]=c%58;c=(c/58)|0;}while(c){d.push(c%58);c=(c/58)|0;}}let s='';for(let i=0;i<b.length&&b[i]===0;i++)s+='1';for(let i=d.length-1;i>=0;i--)s+=B58[d[i]];return s;}
 async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
-async function rpc(m,p=[]){const r=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;}
+const RPC_URL='https://api.mainnet-beta.solana.com';
+async function rpc(m,p=[]){const r=await fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;}
 async function getBal(pub){const r=await rpc('getBalance',[pub]);return r.value/LAMPORTS;}
+// Get solana web3 from CDN
+function getWeb3(){return window.solanaWeb3||null;}
 function getWallets(){const w=[];if(window.phantom?.solana?.isPhantom)w.push({name:'Phantom',obj:window.phantom.solana});else if(window.solana?.isPhantom)w.push({name:'Phantom',obj:window.solana});if(window.solflare?.isSolflare)w.push({name:'Solflare',obj:window.solflare});if(window.backpack?.isBackpack)w.push({name:'Backpack',obj:window.backpack});return w;}
 async function connectWallet(){const ws=getWallets();if(!ws.length){showToast('No wallet found');return;}try{const w=ws[0];const r=await w.obj.connect();const pk=r?.publicKey?.toString()||w.obj.publicKey?.toString();if(!pk)throw new Error('No key');userPub=pk;walletObj=w.obj;document.getElementById('walletBtn').textContent='✦ '+pk.slice(0,4)+'...'+pk.slice(-4);document.getElementById('walletBtn').classList.add('connected');log('Connected: '+pk.slice(0,4)+'...'+pk.slice(-4),'success');await checkGate();}catch(e){showToast(e.code===4001?'Cancelled':e.message);}}
-async function checkGate(){log('Checking access...');const err=document.getElementById('gateError');try{const r=await fetch('/api/wall-state');if(r.ok){const d=await r.json();const short=userPub.slice(0,4)+'...'+userPub.slice(-4);if(d.kvReady&&d.pixels){const owned=Object.values(d.pixels).filter(p=>p.owner===short||p.owner===userPub);if(owned.length>0){log('✦ Verified: '+owned.length+' pixel(s)','success');unlockApp();return;}}}const tok=await rpc('getTokenAccountsByOwner',[userPub,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]);const accs=tok?.value||[];if(accs.length>0){const bal=accs[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;if(bal>=1000000){log('✦ Access via '+Math.floor(bal).toLocaleString()+' $PIXEL','success');unlockApp();return;}}err.style.display='block';err.textContent='✕ Need 1 pixel or 10,000+ $PIXEL';log('Denied','error');}catch(e){err.style.display='block';err.textContent='Error: '+e.message;}}
+async function checkGate(){log('Checking access...');const err=document.getElementById('gateError');try{
+// Check 1: pixel ownership via wall-state
+const r=await fetch('/api/wall-state');
+if(r.ok){
+  const d=await r.json();
+  const short=userPub.slice(0,4)+'...'+userPub.slice(-4);
+  log('Gate: wallet='+short+', kvReady='+d.kvReady+', pixels='+Object.keys(d.pixels||{}).length);
+  if(d.kvReady&&d.pixels){
+    // Match by shortened OR full address
+    const owned=Object.values(d.pixels).filter(p=>{
+      const po=p.owner||'';
+      return po===short || po===userPub || po===userPub.slice(0,4)+'...'+userPub.slice(-4);
+    });
+    log('Gate: found '+owned.length+' owned pixel(s)');
+    if(owned.length>0){log('✦ Verified: '+owned.length+' pixel(s)','success');unlockApp();return;}
+  }
+}
+// Check 2: $PIXEL token balance >= 10K
+log('Gate: checking $PIXEL balance...');
+const tok=await rpc('getTokenAccountsByOwner',[userPub,{mint:PIXEL_MINT},{encoding:'jsonParsed'}]);
+const accs=tok?.value||[];
+if(accs.length>0){
+  const bal=accs[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmount||0;
+  log('Gate: $PIXEL balance = '+Math.floor(bal).toLocaleString());
+  if(bal>=10000){log('✦ Access via '+Math.floor(bal).toLocaleString()+' $PIXEL','success');unlockApp();return;}
+}
+// Denied
+err.style.display='block';
+err.textContent='✕ Need 1 owned pixel or 10,000+ $PIXEL. Connected: '+short;
+log('Denied — no pixel ownership or insufficient $PIXEL','error');
+}catch(e){err.style.display='block';err.textContent='Error: '+e.message;log('Gate error: '+e.message,'error');}}
 function unlockApp(){document.getElementById('gateScreen').style.display='none';document.getElementById('mainApp').style.display='flex';fetchPrices();render();}
 async function fetchPrices(){try{const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+CA);if(!r.ok)return;const d=await r.json();const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const p=arr[0];if(p.priceUsd)pixelPrice=parseFloat(p.priceUsd);if(p.priceUsd&&p.priceNative){const s=parseFloat(p.priceUsd)/parseFloat(p.priceNative);if(s>10&&s<10000)solPrice=s;}}}catch(e){}}
 async function jupQuote(a,b,amt,slip){const r=await fetch(JUP+'/quote?inputMint='+a+'&outputMint='+b+'&amount='+amt+'&slippageBps='+slip);if(!r.ok)throw new Error('Quote failed');return r.json();}
@@ -217,7 +251,12 @@ function render(){
   el.innerHTML=h;
 }
 
-async function searchToken(){const q=document.getElementById('tokenSearch')?.value?.trim();if(!q)return;log('Searching: '+q);try{const r=await fetch('https://tokens.jup.ag/tokens/v1/search?query='+encodeURIComponent(q)+'&limit=8');const data=await r.json();const el=document.getElementById('searchResults');if(!el)return;el.innerHTML=(data||[]).map(t=>'<div class="token-item" onclick="selToken(\''+((t.address||t.mint)||'').replace(/'/g,"\\'")+'\',\''+((t.symbol||'').replace(/'/g,"\\'"))+'\','+(t.decimals||6)+')"><div style="font-weight:700;">'+t.symbol+'</div><div style="font-size:10px;color:var(--muted);">'+((t.name||''))+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+((t.address||t.mint||'').slice(0,8))+'...</div></div>').join('');log('Found '+(data||[]).length+' tokens','success');}catch(e){log('Error: '+e.message,'error');}}
+async function searchToken(){const q=document.getElementById('tokenSearch')?.value?.trim();if(!q)return;log('Searching: '+q);try{
+// Try mint address lookup first
+let data=[];
+if(q.length>30){try{const r2=await fetch('https://tokens.jup.ag/token/'+q);if(r2.ok){const t=await r2.json();if(t&&t.symbol)data=[t];}}catch(e){}}
+// If not a mint or not found, search by name
+if(!data.length){const r=await fetch('https://tokens.jup.ag/tokens?tags=verified');if(r.ok){const all=await r.json();const ql=q.toLowerCase();data=(all||[]).filter(t=>(t.symbol||'').toLowerCase().includes(ql)||(t.name||'').toLowerCase().includes(ql)||(t.address||'')==q).slice(0,8);}}const el=document.getElementById('searchResults');if(!el)return;el.innerHTML=(data||[]).map(t=>'<div class="token-item" onclick="selToken(\''+((t.address||t.mint)||'').replace(/'/g,"\\'")+'\',\''+((t.symbol||'').replace(/'/g,"\\'"))+'\','+(t.decimals||6)+')"><div style="font-weight:700;">'+t.symbol+'</div><div style="font-size:10px;color:var(--muted);">'+((t.name||''))+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+((t.address||t.mint||'').slice(0,8))+'...</div></div>').join('');log('Found '+(data||[]).length+' tokens','success');}catch(e){log('Error: '+e.message,'error');}}
 function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Selected: '+s,'success');render();}
 
 async function startPay(method){if(!tokenMint){showToast('Select token first');return;}log('Creating master wallet + '+walletCount+' sub-wallets...');masterWallet=await makeWallet();log('Master: '+masterWallet.publicKey.slice(0,8)+'...');subWallets=[];for(let i=0;i<walletCount;i++){const w=await makeWallet();subWallets.push({...w,label:'Sub-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});}log(walletCount+' sub-wallets created','success');const fee=(walletCount*FEE_PER_WALLET).toFixed(4);log('✦ Fee: '+fee+' SOL paid → treasury','success');feePaid=true;phase='paid';render();}
