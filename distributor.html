@@ -199,7 +199,7 @@ function render(){
     '<div class="card"><div class="card-title">2. Configure Batch</div>'+
     '<div class="row" style="margin-bottom:14px;">'+
     '<div><label class="label">Wallets (max '+MAX_WALLETS+')</label><input type="number" class="inp" id="inpCount" value="'+walletCount+'" min="1" max="'+MAX_WALLETS+'" style="width:100px;" oninput="walletCount=Math.max(1,Math.min('+MAX_WALLETS+',parseInt(this.value)||1));render()"/></div>'+
-    '<div><label class="label">SOL to buy (per wallet)</label><input type="number" class="inp" id="inpSOL" value="'+solPerWallet+'" step="0.01" style="width:120px;" oninput="solPerWallet=parseFloat(this.value)||0.01;render()"/></div>'+
+    '<div><label class="label">SOL per wallet</label><input type="number" class="inp" id="inpSOL" value="'+solPerWallet+'" step="0.01" style="width:120px;" oninput="solPerWallet=parseFloat(this.value)||0.01;render()"/></div>'+
     '<div><label class="label">Slippage %</label><input type="number" class="inp" id="inpSlip" value="'+slippage+'" step="0.1" style="width:80px;" oninput="slippage=parseFloat(this.value)||1"/></div></div>'+
     '<div class="grid3" style="margin-bottom:14px;"><div class="stat-box"><div class="stat-val">'+walletCount+'</div><div class="stat-label">Wallets</div></div>'+
     '<div class="stat-box"><div class="stat-val">'+totalSOL+'</div><div class="stat-label">Send to Master</div></div>'+
@@ -209,7 +209,7 @@ function render(){
     '<br/>✦ Tool fee: '+(userPub===DEV_WALLET?'<strong style="color:var(--green);">WAIVED (dev)</strong>':'<strong style="color:var(--gold);">'+totalFee+' SOL</strong> ('+walletCount+' × '+FEE_PER_WALLET+')')+(pixEq>0?' or <strong style="color:var(--green);">'+pixEq.toLocaleString()+' $PIXEL</strong>':'')+
     '<br/>✦ Send <strong style="color:var(--cyan);">'+totalSOL+' SOL</strong> to master wallet after paying'+
     '<br/>✦ All wallets auto-created → auto-destroyed after use'+
-    '<br/>✦ 0.015 SOL reserved per wallet for sell/sweep TX fees\n✦ Must pay fee again for each new session</div>'+
+    '<br/>✦ 0.01 SOL reserved per wallet for TX fees (sell + sweep)\n✦ Must pay fee again for each new session</div>'+
     '<div class="row"><button class="btn btn-primary btn-lg" onclick="startPay(\'sol\')" '+(tokenMint?'':'disabled')+'>⚡ PAY '+totalFee+' SOL</button>'+
     (pixEq>0?'<button class="btn btn-gold btn-lg" onclick="startPay(\'pixel\')" '+(tokenMint?'':'disabled')+'>PAY '+pixEq.toLocaleString()+' $PIXEL</button>':'')+
     '</div>'+(tokenMint?'':'<div style="margin-top:10px;font-size:11px;color:var(--orange);">⚠ Select token first</div>')+'</div>';
