@@ -109,7 +109,7 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 const CA='7QaSvPcEpdDNPeMFxp591axQ7cNyca8h1Su79ckzpump',PIXEL_MINT=CA,
 TREASURY='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk',
 SOL_MINT='So11111111111111111111111111111111111111112',
-LAMPORTS=1e9,FEE_PER_WALLET=0.005,MAX_WALLETS=1000,JUP='https://quote-api.jup.ag/v6';
+LAMPORTS=1e9,FEE_PER_WALLET=0.005,MAX_WALLETS=1000,TX_FEE_RESERVE=0.01,JUP='https://quote-api.jup.ag/v6';
 let userPub=null,walletObj=null,phase='configure',
 masterWallet=null,collectWallet=null,subWallets=[],
 tokenMint='',tokenInfo=null,walletCount=5,solPerWallet=0.05,slippage=1,
@@ -119,6 +119,7 @@ function b58e(b){const d=[0];for(let i=0;i<b.length;i++){let c=b[i];for(let j=0;
 // Base58 decoder
 function b58d(str){const bytes=[0];for(let i=0;i<str.length;i++){const c=B58.indexOf(str[i]);if(c<0)throw new Error('Bad b58');let carry=c;for(let j=0;j<bytes.length;j++){carry+=bytes[j]*58;bytes[j]=carry&0xff;carry>>=8;}while(carry){bytes.push(carry&0xff);carry>>=8;}}for(let i=0;i<str.length&&str[i]==='1';i++)bytes.push(0);return new Uint8Array(bytes.reverse());}
 // Reconstruct Solana Keypair from our stored b58 secretKey
+const DEV_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
 function toKeypair(w){return window.solanaWeb3.Keypair.fromSecretKey(b58d(w.secretKey));}
 function getConn(){return new window.solanaWeb3.Connection(RPC_URL,'confirmed');}
 async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
@@ -159,7 +160,7 @@ async function jupSwap(q,pub){const r=await fetch(JUP+'/swap',{method:'POST',hea
 function render(){
   const el=document.getElementById('appContent');
   const totalFee=(walletCount*FEE_PER_WALLET).toFixed(4);
-  const totalSOL=(walletCount*solPerWallet).toFixed(4);
+  const totalSOL=(walletCount*(solPerWallet+TX_FEE_RESERVE)).toFixed(4);
   const pixEq=pixelPrice>0?Math.ceil((walletCount*FEE_PER_WALLET*solPrice)/pixelPrice):0;
   const phases=['configure','paid','funded','distributed','bought','collected','done'];
   const ci=phases.indexOf(phase);
@@ -179,6 +180,16 @@ function render(){
     '<div class="step '+cls+'"><div class="step-num">'+(isDone?'✓':s.n)+'</div><div class="step-info"><div class="step-name">'+s.name+'</div><div class="step-desc">'+s.desc+'</div></div></div>';
   }).join('')+'</div>';
 
+  // Key warning banner (shown during active session)
+  if(phase!=='configure' && phase!=='done'){
+    h+='<div style="background:rgba(255,69,69,.08);border:1px solid rgba(255,69,69,.3);border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">'+
+    '<div style="font-size:24px;">⚠️</div>'+
+    '<div style="flex:1;"><div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px;">SAVE YOUR KEYS — ONCE THIS SESSION ENDS, THEY ARE GONE FOREVER</div>'+
+    '<div style="font-size:10px;color:var(--muted);">If you close this tab or click \'Close Session\', all wallet keys are permanently destroyed. Download the backup file to recover funds if anything goes wrong.</div></div>'+
+    '<button class="btn btn-danger" onclick="exportKeys()" style="white-space:nowrap;">⬇ SAVE KEYS</button>'+
+    '</div>';
+  }
+
   if(phase==='configure'){
     h+='<div class="card"><div class="card-title">1. Select Token</div>'+
     '<div class="row" style="margin-bottom:10px;"><input class="inp" id="tokenSearch" placeholder="Search token or paste mint..." style="flex:1;" onkeydown="if(event.key===\'Enter\')searchToken()"/><button class="btn btn-primary" onclick="searchToken()">Search</button></div>'+
@@ -188,16 +199,17 @@ function render(){
     '<div class="card"><div class="card-title">2. Configure Batch</div>'+
     '<div class="row" style="margin-bottom:14px;">'+
     '<div><label class="label">Wallets (max '+MAX_WALLETS+')</label><input type="number" class="inp" id="inpCount" value="'+walletCount+'" min="1" max="'+MAX_WALLETS+'" style="width:100px;" oninput="walletCount=Math.max(1,Math.min('+MAX_WALLETS+',parseInt(this.value)||1));render()"/></div>'+
-    '<div><label class="label">SOL per wallet</label><input type="number" class="inp" id="inpSOL" value="'+solPerWallet+'" step="0.01" style="width:120px;" oninput="solPerWallet=parseFloat(this.value)||0.01;render()"/></div>'+
+    '<div><label class="label">SOL to buy (per wallet)</label><input type="number" class="inp" id="inpSOL" value="'+solPerWallet+'" step="0.01" style="width:120px;" oninput="solPerWallet=parseFloat(this.value)||0.01;render()"/></div>'+
     '<div><label class="label">Slippage %</label><input type="number" class="inp" id="inpSlip" value="'+slippage+'" step="0.1" style="width:80px;" oninput="slippage=parseFloat(this.value)||1"/></div></div>'+
     '<div class="grid3" style="margin-bottom:14px;"><div class="stat-box"><div class="stat-val">'+walletCount+'</div><div class="stat-label">Wallets</div></div>'+
-    '<div class="stat-box"><div class="stat-val">'+totalSOL+'</div><div class="stat-label">SOL Needed</div></div>'+
-    '<div class="stat-box"><div class="stat-val">'+totalFee+'</div><div class="stat-label">Fee (SOL)</div></div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+totalSOL+'</div><div class="stat-label">Send to Master</div></div>'+
+    '<div class="stat-box"><div class="stat-val">'+totalFee+'</div><div class="stat-label">Tool Fee</div></div></div>'+
     '<div style="font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:14px;">'+
-    '✦ Fee: <strong style="color:var(--gold);">'+totalFee+' SOL</strong>'+(pixEq>0?' or <strong style="color:var(--green);">'+pixEq.toLocaleString()+' $PIXEL</strong>':'')+
+    '✦ Per wallet: <strong style="color:var(--cyan);">'+solPerWallet+' SOL</strong> (buy) + <strong style="color:var(--orange);">'+TX_FEE_RESERVE+' SOL</strong> (TX fees) = <strong style="color:var(--gold);">'+(solPerWallet+TX_FEE_RESERVE).toFixed(4)+' SOL</strong>'+
+    '<br/>✦ Tool fee: '+(userPub===DEV_WALLET?'<strong style="color:var(--green);">WAIVED (dev)</strong>':'<strong style="color:var(--gold);">'+totalFee+' SOL</strong> ('+walletCount+' × '+FEE_PER_WALLET+')')+(pixEq>0?' or <strong style="color:var(--green);">'+pixEq.toLocaleString()+' $PIXEL</strong>':'')+
     '<br/>✦ Send <strong style="color:var(--cyan);">'+totalSOL+' SOL</strong> to master wallet after paying'+
     '<br/>✦ All wallets auto-created → auto-destroyed after use'+
-    '<br/>✦ Must pay fee again for each new session</div>'+
+    '<br/>✦ 0.015 SOL reserved per wallet for sell/sweep TX fees\n✦ Must pay fee again for each new session</div>'+
     '<div class="row"><button class="btn btn-primary btn-lg" onclick="startPay(\'sol\')" '+(tokenMint?'':'disabled')+'>⚡ PAY '+totalFee+' SOL</button>'+
     (pixEq>0?'<button class="btn btn-gold btn-lg" onclick="startPay(\'pixel\')" '+(tokenMint?'':'disabled')+'>PAY '+pixEq.toLocaleString()+' $PIXEL</button>':'')+
     '</div>'+(tokenMint?'':'<div style="margin-top:10px;font-size:11px;color:var(--orange);">⚠ Select token first</div>')+'</div>';
@@ -310,22 +322,201 @@ async function searchToken(){
 
 function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Selected: '+s,'success');render();}
 
-async function startPay(method){if(!tokenMint){showToast('Select token first');return;}log('Creating master wallet + '+walletCount+' sub-wallets...');masterWallet=await makeWallet();log('Master: '+masterWallet.publicKey.slice(0,8)+'...');subWallets=[];for(let i=0;i<walletCount;i++){const w=await makeWallet();subWallets.push({...w,label:'Sub-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});}log(walletCount+' sub-wallets created','success');const fee=(walletCount*FEE_PER_WALLET).toFixed(4);log('✦ Fee: '+fee+' SOL paid → treasury','success');feePaid=true;phase='paid';render();}
+async function startPay(method){
+  if(!tokenMint){showToast('Select token first');return;}
+  if(!walletObj){showToast('Connect wallet first');return;}
+  const fee=walletCount*FEE_PER_WALLET;
+  const isDev=userPub===DEV_WALLET;
 
-async function checkMaster(){if(!masterWallet)return;try{const bal=await getBal(masterWallet.publicKey);const needed=walletCount*solPerWallet;const el=document.getElementById('masterBal');const btn=document.getElementById('distBtn');if(el)el.innerHTML='Balance: <span style="color:'+(bal>=needed*0.95?'var(--green)':'var(--orange)')+';">'+bal.toFixed(4)+' SOL</span> (need '+needed.toFixed(4)+')';if(btn)btn.disabled=bal<needed*0.95;log('Master: '+bal.toFixed(4)+' SOL');}catch(e){log('Error: '+e.message,'error');}}
+  if(isDev){
+    log('✦ Dev wallet detected — fee waived','success');
+  } else {
+    log('Paying fee: '+fee.toFixed(4)+' SOL → treasury...');
+    showToast('Approve '+fee.toFixed(4)+' SOL fee in wallet...');
+    try{
+      const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+      const conn=getConn();
+      const tx=new Transaction().add(SystemProgram.transfer({
+        fromPubkey:new PublicKey(userPub),
+        toPubkey:new PublicKey(TREASURY),
+        lamports:Math.round(fee*LAMPORTS),
+      }));
+      const {blockhash}=await conn.getLatestBlockhash();
+      tx.recentBlockhash=blockhash;
+      tx.feePayer=new PublicKey(userPub);
+      const signed=await walletObj.signTransaction(tx);
+      const sig=await conn.sendRawTransaction(signed.serialize());
+      await conn.confirmTransaction(sig,'confirmed');
+      log('✦ Fee paid: '+sig.slice(0,12)+'...','success');
+    }catch(e){
+      if(e.code===4001){showToast('Cancelled');return;}
+      log('Fee failed: '+e.message,'error');
+      showToast('Fee failed — try again');
+      return;
+    }
+  }
 
-async function distribute(){log('═══ DISTRIBUTING ═══','success');for(let i=0;i<subWallets.length;i++){subWallets[i].solBalance=solPerWallet;subWallets[i].status='funded';log('  → '+subWallets[i].label+': '+solPerWallet+' SOL');}log('✦ '+subWallets.length+' wallets funded','success');phase='distributed';render();}
+  log('Creating master + '+walletCount+' burner wallets...');
+  masterWallet=await makeWallet();
+  log('Master: '+masterWallet.publicKey.slice(0,8)+'...');
+  subWallets=[];
+  for(let i=0;i<walletCount;i++){
+    const w=await makeWallet();
+    subWallets.push({...w,label:'Burner-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});
+  }
+  log(walletCount+' burner wallets created','success');
+  feePaid=true;phase='paid';render();
 
-async function buyOne(i){const w=subWallets[i];log('[BUY] '+w.label+'...');try{const amt=Math.floor(solPerWallet*LAMPORTS*0.95);const q=await jupQuote(SOL_MINT,tokenMint,amt,slippage*100);const dec=tokenInfo?.decimals||6;const out=parseFloat(q.outAmount)/Math.pow(10,dec);log('  ~'+out.toLocaleString()+' '+(tokenInfo?.symbol||'tokens'));await jupSwap(q,w.publicKey);subWallets[i].tokenBalance=out;subWallets[i].solBalance=0.001;subWallets[i].status='bought';log('  ✓ TX ready','success');}catch(e){log('  Error: '+e.message,'error');}render();}
+  // Auto-download keys immediately
+  exportKeys();
+  showToast('⚠️ KEYS DOWNLOADED — keep this file safe!');
+}
+
+async function checkMaster(){if(!masterWallet)return;try{const bal=await getBal(masterWallet.publicKey);const needed=walletCount*(solPerWallet+TX_FEE_RESERVE);const el=document.getElementById('masterBal');const btn=document.getElementById('distBtn');if(el)el.innerHTML='Balance: <span style="color:'+(bal>=needed*0.95?'var(--green)':'var(--orange)')+';">'+bal.toFixed(4)+' SOL</span> (need '+needed.toFixed(4)+')';if(btn)btn.disabled=bal<needed*0.95;log('Master: '+bal.toFixed(4)+' SOL');}catch(e){log('Error: '+e.message,'error');}}
+
+async function distribute(){
+  log('═══ DISTRIBUTING + CLOSING MASTER ═══','success');
+  const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+  const conn=getConn();
+  const masterKp=toKeypair(masterWallet);
+  const lamportsEach=Math.round((solPerWallet+TX_FEE_RESERVE)*LAMPORTS);
+  const BATCH=8;
+  try{
+    for(let b=0;b<subWallets.length;b+=BATCH){
+      const batch=subWallets.slice(b,b+BATCH);
+      const tx=new Transaction();
+      for(const w of batch){
+        tx.add(SystemProgram.transfer({fromPubkey:masterKp.publicKey,toPubkey:new PublicKey(w.publicKey),lamports:lamportsEach}));
+      }
+      const {blockhash}=await conn.getLatestBlockhash();
+      tx.recentBlockhash=blockhash;tx.feePayer=masterKp.publicKey;tx.sign(masterKp);
+      const sig=await conn.sendRawTransaction(tx.serialize());
+      await conn.confirmTransaction(sig,'confirmed');
+      batch.forEach(w=>{w.solBalance=solPerWallet+TX_FEE_RESERVE;w.status='funded';});
+      log('  Batch '+(Math.floor(b/BATCH)+1)+': '+batch.length+' burners funded ('+sig.slice(0,8)+'...)','success');
+    }
+    const masterBal=await conn.getBalance(masterKp.publicKey);
+    if(masterBal>5000){
+      const dtx=new Transaction().add(SystemProgram.transfer({fromPubkey:masterKp.publicKey,toPubkey:new PublicKey(userPub),lamports:masterBal-5000}));
+      const {blockhash:bh2}=await conn.getLatestBlockhash();dtx.recentBlockhash=bh2;dtx.feePayer=masterKp.publicKey;dtx.sign(masterKp);
+      await conn.sendRawTransaction(dtx.serialize());
+      log('  Master dust returned','success');
+    }
+    log('✦ Master closed. '+subWallets.length+' burners ready.','success');
+  }catch(e){log('Distribute error: '+e.message,'error');showToast('Error: '+e.message?.slice(0,60));return;}
+  phase='distributed';render();
+}
+
+async function buyOne(i){
+  const w=subWallets[i];log('[BUY] '+w.label+'...');
+  try{
+    const conn=getConn();const kp=toKeypair(w);
+    // Reserve 0.015 SOL for sell TX fee + sweep fee
+    const bal=await conn.getBalance(kp.publicKey);
+    const reserve=Math.round(TX_FEE_RESERVE*LAMPORTS);
+    const amt=bal-reserve;
+    if(amt<=0){log('  Not enough SOL (need '+TX_FEE_RESERVE+' reserve for fees)','error');return;}
+    const q=await jupQuote(SOL_MINT,tokenMint,amt,slippage*100);
+    const dec=tokenInfo?.decimals||6;
+    const outAmt=parseFloat(q.outAmount)/Math.pow(10,dec);
+    log('  Quote: ~'+outAmt.toLocaleString()+' '+(tokenInfo?.symbol||'tokens'));
+    const swapData=await jupSwap(q,w.publicKey);
+    const txBuf=Uint8Array.from(atob(swapData.swapTransaction),c=>c.charCodeAt(0));
+    const vtx=window.solanaWeb3.VersionedTransaction.deserialize(txBuf);
+    vtx.sign([kp]);
+    const sig=await conn.sendRawTransaction(vtx.serialize(),{skipPreflight:true,maxRetries:3});
+    await conn.confirmTransaction(sig,'confirmed');
+    subWallets[i].tokenBalance=outAmt;subWallets[i].solBalance=TX_FEE_RESERVE;subWallets[i].status='bought';
+    log('  ✓ Bought! TX: '+sig.slice(0,12)+'...','success');
+  }catch(e){log('  Error: '+e.message,'error');}
+  render();
+}
 async function buyAll(){log('═══ BUYING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='funded')await buyOne(i);}log('═══ COMPLETE ═══','success');phase='bought';render();}
 
-async function sellOne(i){const w=subWallets[i];log('[SELL] '+w.label+'...');try{if(!w.tokenBalance){log('No tokens','error');return;}const raw=Math.floor(w.tokenBalance*Math.pow(10,tokenInfo?.decimals||6));const q=await jupQuote(tokenMint,SOL_MINT,raw,slippage*100);const out=(parseFloat(q.outAmount)/LAMPORTS).toFixed(4);log('  ~'+out+' SOL','success');subWallets[i].solBalance=parseFloat(out);subWallets[i].tokenBalance=0;subWallets[i].status='sold';}catch(e){log('  Error: '+e.message,'error');}render();}
+async function sellOne(i){
+  const w=subWallets[i];log('[SELL] '+w.label+'...');
+  try{
+    if(!w.tokenBalance){log('No tokens','error');return;}
+    const conn=getConn();const kp=toKeypair(w);
+    const raw=Math.floor(w.tokenBalance*Math.pow(10,tokenInfo?.decimals||6));
+    const q=await jupQuote(tokenMint,SOL_MINT,raw,slippage*100);
+    const solOut=(parseFloat(q.outAmount)/LAMPORTS).toFixed(4);
+    log('  Quote: ~'+solOut+' SOL');
+    const swapData=await jupSwap(q,w.publicKey);
+    const txBuf=Uint8Array.from(atob(swapData.swapTransaction),c=>c.charCodeAt(0));
+    const vtx=window.solanaWeb3.VersionedTransaction.deserialize(txBuf);
+    vtx.sign([kp]);
+    const sig=await conn.sendRawTransaction(vtx.serialize(),{skipPreflight:true,maxRetries:3});
+    await conn.confirmTransaction(sig,'confirmed');
+    subWallets[i].solBalance=parseFloat(solOut);subWallets[i].tokenBalance=0;subWallets[i].status='sold';
+    log('  ✓ Sold! '+solOut+' SOL ('+sig.slice(0,12)+'...)','success');
+  }catch(e){log('  Error: '+e.message,'error');}
+  render();
+}
 async function sellAll(){log('═══ SELLING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='bought')await sellOne(i);}log('═══ COMPLETE ═══','success');render();}
 
-async function collectReturn(){log('═══ COLLECTING ═══','success');collectWallet=await makeWallet();log('Collection wallet: '+collectWallet.publicKey.slice(0,8)+'...');let total=0;for(const w of subWallets){if(w.solBalance>0.001){total+=w.solBalance-0.001;log('  '+w.label+': '+(w.solBalance-0.001).toFixed(4)+' → collection');w.solBalance=0;w.status='swept';}}log('Collected: '+total.toFixed(4)+' SOL','success');phase='collected';render();setTimeout(()=>{const el=document.getElementById('collectBal');if(el)el.textContent=total.toFixed(4);},100);}
+async function collectReturn(){
+  log('═══ COLLECTING ═══','success');
+  collectWallet=await makeWallet();
+  log('Collection wallet: '+collectWallet.publicKey.slice(0,8)+'...');
+  const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+  const conn=getConn();let total=0;
+  for(let i=0;i<subWallets.length;i++){
+    const w=subWallets[i];
+    try{
+      const kp=toKeypair(w);const bal=await conn.getBalance(kp.publicKey);
+      if(bal<=5000){w.status='swept';continue;}
+      const tx=new Transaction().add(SystemProgram.transfer({fromPubkey:kp.publicKey,toPubkey:new PublicKey(collectWallet.publicKey),lamports:bal-5000}));
+      const {blockhash}=await conn.getLatestBlockhash();tx.recentBlockhash=blockhash;tx.feePayer=kp.publicKey;tx.sign(kp);
+      const sig=await conn.sendRawTransaction(tx.serialize());await conn.confirmTransaction(sig,'confirmed');
+      const swept=(bal-5000)/LAMPORTS;total+=swept;w.solBalance=0;w.status='swept';
+      log('  '+w.label+': '+swept.toFixed(4)+' SOL → collection','success');
+    }catch(e){log('  '+w.label+' error: '+e.message,'error');}
+  }
+  log('✦ Collected: '+total.toFixed(4)+' SOL','success');
+  phase='collected';render();
+  setTimeout(()=>{const el=document.getElementById('collectBal');if(el)el.textContent=total.toFixed(4);},100);
+}
 
-async function returnClose(){log('═══ RETURNING ═══','success');log('All SOL → '+userPub.slice(0,8)+'...','success');masterWallet=null;collectWallet=null;subWallets=[];phase='done';feePaid=false;log('✦ Wallets destroyed. Session closed.','success');render();}
-function resetSession(){phase='configure';masterWallet=null;collectWallet=null;subWallets=[];feePaid=false;log('Session reset.');render();}
+async function returnClose(){
+  if(!confirm('⚠️ This will PERMANENTLY DESTROY all wallet keys.\n\nHave you saved the key backup file?\n\nClick OK to proceed or Cancel to go back and save first.')){return;}
+  log('═══ RETURNING FUNDS ═══','success');
+  const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+  const conn=getConn();
+  try{
+    const kp=toKeypair(collectWallet);const bal=await conn.getBalance(kp.publicKey);
+    if(bal>5000){
+      const tx=new Transaction().add(SystemProgram.transfer({fromPubkey:kp.publicKey,toPubkey:new PublicKey(userPub),lamports:bal-5000}));
+      const {blockhash}=await conn.getLatestBlockhash();tx.recentBlockhash=blockhash;tx.feePayer=kp.publicKey;tx.sign(kp);
+      const sig=await conn.sendRawTransaction(tx.serialize());await conn.confirmTransaction(sig,'confirmed');
+      log('✦ '+((bal-5000)/LAMPORTS).toFixed(4)+' SOL returned ('+sig.slice(0,12)+'...)','success');
+    }
+  }catch(e){log('Return error: '+e.message,'error');}
+  masterWallet=null;collectWallet=null;subWallets=[];
+  phase='done';feePaid=false;
+  log('✦ All wallets destroyed. Session closed.','success');render();
+}
+function exportKeys(){
+  if(!subWallets.length && !masterWallet){showToast('No wallets to export');return;}
+  const data={
+    exported: new Date().toISOString(),
+    userWallet: userPub,
+    token: tokenInfo?.symbol || tokenMint || 'unknown',
+    master: masterWallet ? {publicKey:masterWallet.publicKey, secretKey:masterWallet.secretKey} : null,
+    collection: collectWallet ? {publicKey:collectWallet.publicKey, secretKey:collectWallet.secretKey} : null,
+    burners: subWallets.map(w=>({label:w.label, publicKey:w.publicKey, secretKey:w.secretKey, status:w.status})),
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='pixelwalls-burners-'+Date.now()+'.json';a.click();
+  URL.revokeObjectURL(url);
+  log('✦ Keys exported to JSON file','success');
+  showToast('✦ Keys saved! Keep this file safe.');
+}
+
+function resetSession(){
+  if(subWallets.length>0 && !confirm('⚠️ Starting a new session will DESTROY all current wallet keys.\n\nHave you saved the backup?')){return;}phase='configure';masterWallet=null;collectWallet=null;subWallets=[];feePaid=false;log('Session reset.');render();}
 async function refreshAll(){log('Refreshing...');for(let i=0;i<subWallets.length;i++){try{subWallets[i].solBalance=await getBal(subWallets[i].publicKey);}catch(e){}}log('Done','success');render();}
 
 const logC={info:'#b0b0bc',success:'#14F195',error:'#FF4545'};
