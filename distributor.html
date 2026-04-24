@@ -350,8 +350,9 @@ function render(){
   if(phase==='configure'){
     h+='<div class="card" style="padding:12px 16px;margin-bottom:10px;border-color:rgba(255,255,255,.04);"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'+
     '<label class="label" style="margin:0;">RPC</label>'+
-    '<input class="inp" style="flex:1;font-size:10px;" value="'+RPC_URL+'" onchange="RPC_URL=this.value.trim();localStorage.setItem(\'pw_dist_rpc\',RPC_URL);log(\'RPC updated\',\'success\')" placeholder="https://mainnet.helius-rpc.com/?api-key=772302a3-3889-468f-b9c5-890179d469ec"/>'+
-    '<button class="btn btn-ghost" style="font-size:9px;padding:4px 8px;" onclick="RPC_URL=DEFAULT_RPC;localStorage.removeItem(\'pw_dist_rpc\');render();log(\'RPC reset to default\')">Reset</button>'+
+    '<input class="inp" style="flex:1;font-size:10px;" value="'+RPC_URL+'" oninput="RPC_URL=this.value.trim();localStorage.setItem(\'pw_dist_rpc\',RPC_URL);" onblur="log(\'RPC: \'+RPC_URL.slice(0,40)+\'...\',\'success\')" placeholder="https://mainnet.helius-rpc.com/?api-key=772302a3-3889-468f-b9c5-890179d469ec772302a3-3889-468f-b9c5-890179d469ec"/>'+
+    '<button class="btn btn-ghost" style="font-size:9px;padding:4px 8px;" onclick="RPC_URL=DEFAULT_RPC;localStorage.removeItem(\'pw_dist_rpc\');render();log(\'RPC reset\')">Reset</button>'+
+    '<button class="btn btn-ghost" style="font-size:9px;padding:4px 8px;" onclick="testRPC()">Test</button>'+
     '</div></div>'+
     '<div class="card"><div class="card-title">1. Select Token</div>'+
     '<div class="row" style="margin-bottom:10px;"><input class="inp" id="tokenSearch" placeholder="Search token or paste mint..." style="flex:1;" onkeydown="if(event.key===\'Enter\')searchToken()"/><button class="btn btn-primary" onclick="searchToken()">Search</button></div>'+
@@ -482,13 +483,13 @@ function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Select
 async function startPay(method){
   if(!tokenMint){showToast('Select token first');return;}
   if(!walletObj){showToast('Connect wallet first');return;}
-  if(!window.solanaWeb3){showToast('Solana library not loaded — refresh page');log('Error: solanaWeb3 not loaded','error');return;}
+  if(!window.solanaWeb3){showToast('Solana library not loaded');log('web3 missing','error');return;}
 
   const fee=walletCount*FEE_PER_WALLET;
   const fundAmount=walletCount*(solPerWallet+TX_FEE_RESERVE);
   const isDev=userPub===DEV_WALLET;
 
-  // Create master + burner wallets
+  // Create wallets first
   log('Creating master + '+walletCount+' burner wallets...');
   masterWallet=await makeWallet();
   log('Master: '+masterWallet.publicKey.slice(0,8)+'...');
@@ -499,10 +500,9 @@ async function startPay(method){
   }
   log(walletCount+' burner wallets created','success');
 
-  // Build Phantom TX: fee (if not dev) + fund master
+  // Build the transaction
   try{
     const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-    const conn=getConn();
     const tx=new Transaction();
 
     if(!isDev){
@@ -521,48 +521,62 @@ async function startPay(method){
       toPubkey:new PublicKey(masterWallet.publicKey),
       lamports:Math.round(fundAmount*LAMPORTS),
     }));
-    log('Funding: '+fundAmount.toFixed(4)+' SOL → master wallet');
 
     const totalCharge=isDev?fundAmount:(fee+fundAmount);
+    log('Total charge: '+totalCharge.toFixed(4)+' SOL');
     showToast('Approve '+totalCharge.toFixed(4)+' SOL in wallet...');
-    log('⚡ Waiting for Phantom approval ('+totalCharge.toFixed(4)+' SOL)...');
 
-    // Use Phantom's signAndSendTransaction — it handles RPC internally
-    // This bypasses our RPC entirely for the user-signed TX
-    const {blockhash,lastValidBlockHeight}=await conn.getLatestBlockhash().catch(async()=>{
-      // If our RPC fails, try alternate RPCs
-      log('Primary RPC failed, trying alternates...','error');
-      for(const alt of ['https://solana-mainnet.g.alchemy.com/v2/demo','https://rpc.ankr.com/solana']){
-        try{
-          const c2=new window.solanaWeb3.Connection(alt,'confirmed');
-          return await c2.getLatestBlockhash();
-        }catch(e2){continue;}
+    // Get blockhash — try multiple RPCs
+    log('Getting blockhash (RPC: '+RPC_URL.slice(0,40)+'...)');
+    let blockhash,lastValidBlockHeight;
+    const rpcsToTry=[RPC_URL,'https://api.mainnet-beta.solana.com','https://rpc.ankr.com/solana','https://solana-rpc.publicnode.com'];
+    let rpcWorked=false;
+    for(const rpcUrl of rpcsToTry){
+      try{
+        const testConn=new window.solanaWeb3.Connection(rpcUrl,'confirmed');
+        const bh=await testConn.getLatestBlockhash('confirmed');
+        blockhash=bh.blockhash;
+        lastValidBlockHeight=bh.lastValidBlockHeight;
+        if(rpcUrl!==RPC_URL) log('Using RPC: '+rpcUrl.slice(0,40)+'...');
+        rpcWorked=true;
+        break;
+      }catch(e){
+        log('RPC failed: '+rpcUrl.slice(0,30)+'... ('+e.message.slice(0,40)+')','error');
       }
-      throw new Error('All RPCs failed — set a custom RPC in settings');
-    });
+    }
+    if(!rpcWorked) throw new Error('All RPCs failed — paste a working Helius RPC URL in settings');
+
     tx.recentBlockhash=blockhash;
     tx.feePayer=new PublicKey(userPub);
 
+    // Send via Phantom — prefer signAndSendTransaction
     let sig;
     if(walletObj.signAndSendTransaction){
-      // Preferred: Phantom handles sending via its own RPC
+      log('Sending via Phantom...');
       const result=await walletObj.signAndSendTransaction(tx);
-      sig=result.signature||result;
-      log('TX sent via Phantom: '+String(sig).slice(0,16)+'...');
+      sig=typeof result==='string'?result:(result.signature||result.publicKey||result);
+      log('TX sent: '+String(sig).slice(0,16)+'...');
     } else {
-      // Fallback: sign + send ourselves
+      log('Signing + sending manually...');
       const signed=await walletObj.signTransaction(tx);
-      sig=await conn.sendRawTransaction(signed.serialize());
+      const sendConn=new window.solanaWeb3.Connection(rpcsToTry.find(u=>u)||RPC_URL,'confirmed');
+      sig=await sendConn.sendRawTransaction(signed.serialize());
       log('TX sent: '+String(sig).slice(0,16)+'...');
     }
+
     // Confirm
-    const conn2=getConn();
-    await conn2.confirmTransaction({signature:String(sig),blockhash,lastValidBlockHeight},'confirmed');
-    log('✦ Confirmed! Master funded.','success');
+    log('Confirming...');
+    const confirmConn=new window.solanaWeb3.Connection(rpcsToTry.find(u=>u)||RPC_URL,'confirmed');
+    await confirmConn.confirmTransaction({signature:String(sig),blockhash,lastValidBlockHeight},'confirmed');
+    log('✦ Confirmed! Master funded with '+fundAmount.toFixed(4)+' SOL','success');
 
   }catch(e){
-    if(e.code===4001){showToast('Cancelled');log('User cancelled','error');}
-    else{log('Payment error: '+e.message,'error');showToast('Failed: '+(e.message||'').slice(0,50));}
+    if(e.code===4001||e.message?.includes('User rejected')){
+      showToast('Cancelled');log('User cancelled','error');
+    } else {
+      log('Payment error: '+e.message,'error');
+      showToast('Failed: '+(e.message||'').slice(0,60));
+    }
     masterWallet=null;subWallets=[];
     return;
   }
@@ -713,6 +727,19 @@ async function returnClose(){
   phase='done';feePaid=false;
   log('✦ All wallets destroyed. Session closed.','success');render();
 }
+async function testRPC(){
+  log('Testing RPC: '+RPC_URL.slice(0,50)+'...');
+  try{
+    const c=new window.solanaWeb3.Connection(RPC_URL,'confirmed');
+    const bh=await c.getLatestBlockhash('confirmed');
+    log('✦ RPC works! Blockhash: '+bh.blockhash.slice(0,12)+'...','success');
+    showToast('✦ RPC connection OK');
+  }catch(e){
+    log('✕ RPC failed: '+e.message,'error');
+    showToast('RPC failed — check URL');
+  }
+}
+
 function exportKeys(){
   if(!subWallets.length && !masterWallet){showToast('No wallets to export');return;}
   const data={
