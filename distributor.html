@@ -80,6 +80,8 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 .toast.show{transform:translateX(0);}
 @media(max-width:780px){.app{flex-direction:column;}.sidebar{width:100%;max-height:200px;border-left:none;border-top:1px solid rgba(153,69,255,.15);}.grid3{grid-template-columns:1fr;}}
 </style>
+<script src="https://unpkg.com/buffer@6.0.3/index.js"></script>
+<script>if(!window.Buffer)window.Buffer=window.buffer?.Buffer||window.buffer;</script>
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
 </head>
 <body>
