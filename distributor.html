@@ -161,8 +161,10 @@ function render(){
   const el=document.getElementById('appContent');
   const totalFee=(walletCount*FEE_PER_WALLET).toFixed(4);
   const totalSOL=(walletCount*(solPerWallet+TX_FEE_RESERVE)).toFixed(4);
+  const fundSOL=totalSOL;
+  const isDev=userPub===DEV_WALLET;
   const pixEq=pixelPrice>0?Math.ceil((walletCount*FEE_PER_WALLET*solPrice)/pixelPrice):0;
-  const phases=['configure','paid','funded','distributed','bought','collected','done'];
+  const phases=['configure','funded','distributed','bought','collected','done'];
   const ci=phases.indexOf(phase);
   const steps=[
     {n:1,name:'CONFIGURE',desc:'Token, wallets, SOL amount',ph:'configure'},
@@ -214,16 +216,11 @@ function render(){
     (pixEq>0?'<button class="btn btn-gold btn-lg" onclick="startPay(\'pixel\')" '+(tokenMint?'':'disabled')+'>PAY '+pixEq.toLocaleString()+' $PIXEL</button>':'')+
     '</div>'+(tokenMint?'':'<div style="margin-top:10px;font-size:11px;color:var(--orange);">⚠ Select token first</div>')+'</div>';
 
-  } else if(phase==='paid'){
-    h+='<div class="card"><div class="card-title">3. Fund Master Wallet</div>'+
-    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">Fee paid! Send <strong style="color:var(--gold);">'+totalSOL+' SOL</strong> to this temporary wallet from Phantom:</div>'+
-    '<div class="addr-hl" onclick="navigator.clipboard.writeText(\''+masterWallet.publicKey+'\');showToast(\'Copied!\')">'+masterWallet.publicKey+'<span style="font-size:10px;color:var(--muted);margin-left:8px;">📋</span></div>'+
-    '<div style="font-size:11px;color:var(--orange);margin-bottom:14px;">⚠ Only send SOL. It auto-distributes to '+walletCount+' wallets.</div>'+
-    '<div id="masterBal" style="font-size:14px;font-weight:700;margin-bottom:14px;">Checking...</div>'+
-    '<div class="row"><button class="btn btn-primary" onclick="checkMaster()">↻ Check Balance</button>'+
-    '<button class="btn btn-success btn-lg" id="distBtn" onclick="distribute()" disabled>DISTRIBUTE → '+walletCount+' WALLETS</button></div></div>';
-    checkMaster();
-
+  } else if(phase==='funded'){
+    h+='<div class="card"><div class="card-title">3. Distribute to Burners</div>'+
+    '<div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">'+
+    'Master wallet funded with <strong style="color:var(--green);">'+totalSOL+' SOL</strong>. Click below to distribute to '+walletCount+' burner wallets and close the master.</div>'+
+    '<button class="btn btn-success btn-lg" onclick="distribute()" style="width:100%;">⚡ DISTRIBUTE → '+walletCount+' BURNERS</button></div>';
   } else if(phase==='distributed'||phase==='bought'){
     const isBuy=phase==='distributed';
     h+='<div class="card"><div class="card-title">'+(isBuy?'5. Buy Tokens':'6. Sell Tokens')+'</div>'+
@@ -325,37 +322,12 @@ function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Select
 async function startPay(method){
   if(!tokenMint){showToast('Select token first');return;}
   if(!walletObj){showToast('Connect wallet first');return;}
+
   const fee=walletCount*FEE_PER_WALLET;
+  const fundAmount=walletCount*(solPerWallet+TX_FEE_RESERVE);
   const isDev=userPub===DEV_WALLET;
 
-  if(isDev){
-    log('✦ Dev wallet detected — fee waived','success');
-  } else {
-    log('Paying fee: '+fee.toFixed(4)+' SOL → treasury...');
-    showToast('Approve '+fee.toFixed(4)+' SOL fee in wallet...');
-    try{
-      const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-      const conn=getConn();
-      const tx=new Transaction().add(SystemProgram.transfer({
-        fromPubkey:new PublicKey(userPub),
-        toPubkey:new PublicKey(TREASURY),
-        lamports:Math.round(fee*LAMPORTS),
-      }));
-      const {blockhash}=await conn.getLatestBlockhash();
-      tx.recentBlockhash=blockhash;
-      tx.feePayer=new PublicKey(userPub);
-      const signed=await walletObj.signTransaction(tx);
-      const sig=await conn.sendRawTransaction(signed.serialize());
-      await conn.confirmTransaction(sig,'confirmed');
-      log('✦ Fee paid: '+sig.slice(0,12)+'...','success');
-    }catch(e){
-      if(e.code===4001){showToast('Cancelled');return;}
-      log('Fee failed: '+e.message,'error');
-      showToast('Fee failed — try again');
-      return;
-    }
-  }
-
+  // Create master + burner wallets first (need master pubkey for TX)
   log('Creating master + '+walletCount+' burner wallets...');
   masterWallet=await makeWallet();
   log('Master: '+masterWallet.publicKey.slice(0,8)+'...');
@@ -365,11 +337,53 @@ async function startPay(method){
     subWallets.push({...w,label:'Burner-'+String(i+1).padStart(3,'0'),solBalance:0,tokenBalance:0,status:'ready'});
   }
   log(walletCount+' burner wallets created','success');
-  feePaid=true;phase='paid';render();
 
-  // Auto-download keys immediately
-  exportKeys();
-  showToast('⚠️ KEYS DOWNLOADED — keep this file safe!');
+  // Build single Phantom TX: fee (if not dev) + fund master
+  const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+  const conn=getConn();
+  const tx=new Transaction();
+
+  if(!isDev){
+    tx.add(SystemProgram.transfer({
+      fromPubkey:new PublicKey(userPub),
+      toPubkey:new PublicKey(TREASURY),
+      lamports:Math.round(fee*LAMPORTS),
+    }));
+    log('TX includes fee: '+fee.toFixed(4)+' SOL → treasury');
+  } else {
+    log('✦ Dev wallet — fee waived','success');
+  }
+
+  tx.add(SystemProgram.transfer({
+    fromPubkey:new PublicKey(userPub),
+    toPubkey:new PublicKey(masterWallet.publicKey),
+    lamports:Math.round(fundAmount*LAMPORTS),
+  }));
+  log('TX includes funding: '+fundAmount.toFixed(4)+' SOL → master wallet');
+
+  const totalCharge=isDev?fundAmount:(fee+fundAmount);
+  showToast('Approve '+totalCharge.toFixed(4)+' SOL in wallet...');
+
+  try{
+    const {blockhash}=await conn.getLatestBlockhash();
+    tx.recentBlockhash=blockhash;
+    tx.feePayer=new PublicKey(userPub);
+    const signed=await walletObj.signTransaction(tx);
+    const sig=await conn.sendRawTransaction(signed.serialize());
+    await conn.confirmTransaction(sig,'confirmed');
+    log('✦ Payment confirmed: '+sig.slice(0,12)+'...','success');
+  }catch(e){
+    if(e.code===4001){showToast('Cancelled');masterWallet=null;subWallets=[];return;}
+    log('Payment failed: '+e.message,'error');
+    showToast('Failed — try again');
+    masterWallet=null;subWallets=[];
+    return;
+  }
+
+  feePaid=true;
+  // Skip straight to distribute (master is already funded)
+  phase='funded';
+  render();
 }
 
 async function checkMaster(){if(!masterWallet)return;try{const bal=await getBal(masterWallet.publicKey);const needed=walletCount*(solPerWallet+TX_FEE_RESERVE);const el=document.getElementById('masterBal');const btn=document.getElementById('distBtn');if(el)el.innerHTML='Balance: <span style="color:'+(bal>=needed*0.95?'var(--green)':'var(--orange)')+';">'+bal.toFixed(4)+' SOL</span> (need '+needed.toFixed(4)+')';if(btn)btn.disabled=bal<needed*0.95;log('Master: '+bal.toFixed(4)+' SOL');}catch(e){log('Error: '+e.message,'error');}}
