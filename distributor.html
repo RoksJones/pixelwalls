@@ -80,8 +80,76 @@ body{background:var(--void);color:var(--white);font-family:'JetBrains Mono',mono
 .toast.show{transform:translateX(0);}
 @media(max-width:780px){.app{flex-direction:column;}.sidebar{width:100%;max-height:200px;border-left:none;border-top:1px solid rgba(153,69,255,.15);}.grid3{grid-template-columns:1fr;}}
 </style>
-<script src="https://unpkg.com/buffer@6.0.3/index.js"></script>
-<script>if(!window.Buffer)window.Buffer=window.buffer?.Buffer||window.buffer;</script>
+<script>
+// Buffer polyfill for browser — required by @solana/web3.js
+(function(){
+  if(typeof globalThis.Buffer!=='undefined'&&typeof globalThis.Buffer.from==='function')return;
+  class B extends Uint8Array{
+    static from(d,e,l){
+      if(typeof d==='string'){
+        if(e==='base64'){const b=atob(d),a=new B(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+        if(e==='hex'){const a=new B(d.length/2);for(let i=0;i<d.length;i+=2)a[i/2]=parseInt(d.substr(i,2),16);return a;}
+        const c=new TextEncoder().encode(d);return new B(c.buffer.slice(0));
+      }
+      if(d instanceof ArrayBuffer)return new B(d,e||0,l||d.byteLength-(e||0));
+      if(ArrayBuffer.isView(d)){const a=new B(d.length);a.set(d);return a;}
+      if(Array.isArray(d)){const a=new B(d.length);for(let i=0;i<d.length;i++)a[i]=d[i]&0xff;return a;}
+      return new B(typeof d==='number'?d:0);
+    }
+    static alloc(s,f){const b=new B(s);if(f!==undefined)b.fill(typeof f==='number'?f:0);return b;}
+    static allocUnsafe(s){return new B(s);}
+    static allocUnsafeSlow(s){return new B(s);}
+    static isBuffer(o){return o instanceof B||o instanceof Uint8Array;}
+    static concat(l,t){if(!t)t=l.reduce((a,b)=>a+b.length,0);const r=new B(t);let o=0;for(const b of l){r.set(b,o);o+=b.length;}return r;}
+    static byteLength(s,e){if(typeof s!=='string')return s.length;return new TextEncoder().encode(s).length;}
+    static isEncoding(){return true;}
+    toString(e,s,n){const a=this.subarray(s||0,n||this.length);
+      if(!e||e==='utf8'||e==='utf-8')return new TextDecoder().decode(a);
+      if(e==='hex')return Array.from(a).map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(e==='base64'){let r='';for(let i=0;i<a.length;i++)r+=String.fromCharCode(a[i]);return btoa(r);}
+      return new TextDecoder().decode(a);
+    }
+    write(s,o,l,e){const c=new TextEncoder().encode(s);const n=Math.min(c.length,l||this.length-(o||0));this.set(c.subarray(0,n),o||0);return n;}
+    copy(t,ts,ss,se){const sl=this.subarray(ss||0,se||this.length);t.set(sl,ts||0);return sl.length;}
+    equals(o){if(this.length!==o.length)return false;for(let i=0;i<this.length;i++)if(this[i]!==o[i])return false;return true;}
+    compare(o){const l=Math.min(this.length,o.length);for(let i=0;i<l;i++){if(this[i]<o[i])return-1;if(this[i]>o[i])return 1;}return this.length<o.length?-1:this.length>o.length?1:0;}
+    slice(s,e){const sl=super.slice(s,e);return B.from(sl);}
+    readUInt8(o){return this[o];}
+    readUInt16LE(o){return this[o]|(this[o+1]<<8);}
+    readUInt16BE(o){return(this[o]<<8)|this[o+1];}
+    readUInt32LE(o){return(this[o]|(this[o+1]<<8)|(this[o+2]<<16))+this[o+3]*0x1000000;}
+    readUInt32BE(o){return this[o]*0x1000000+(this[o+1]<<16|this[o+2]<<8|this[o+3]);}
+    readInt8(o){return(this[o]<<24)>>24;}
+    readInt16LE(o){const v=this[o]|(this[o+1]<<8);return v>0x7fff?v-0x10000:v;}
+    readInt32LE(o){return this[o]|(this[o+1]<<8)|(this[o+2]<<16)|(this[o+3]<<24);}
+    readBigUInt64LE(o){const lo=this.readUInt32LE(o),hi=this.readUInt32LE(o+4);return BigInt(lo)+(BigInt(hi)<<32n);}
+    readBigInt64LE(o){const lo=this.readUInt32LE(o),hi=this.readInt32LE(o+4);return BigInt(lo)+(BigInt(hi)<<32n);}
+    readFloatLE(o){const v=new DataView(this.buffer,this.byteOffset,this.byteLength);return v.getFloat32(o,true);}
+    readDoubleLE(o){const v=new DataView(this.buffer,this.byteOffset,this.byteLength);return v.getFloat64(o,true);}
+    writeUInt8(v,o){this[o]=v&0xff;return o+1;}
+    writeUInt16LE(v,o){this[o]=v&0xff;this[o+1]=(v>>8)&0xff;return o+2;}
+    writeUInt16BE(v,o){this[o]=(v>>8)&0xff;this[o+1]=v&0xff;return o+2;}
+    writeUInt32LE(v,o){this[o]=v&0xff;this[o+1]=(v>>8)&0xff;this[o+2]=(v>>16)&0xff;this[o+3]=(v>>>24)&0xff;return o+4;}
+    writeUInt32BE(v,o){this[o]=(v>>>24)&0xff;this[o+1]=(v>>16)&0xff;this[o+2]=(v>>8)&0xff;this[o+3]=v&0xff;return o+4;}
+    writeInt8(v,o){if(v<0)v=0xff+v+1;this[o]=v&0xff;return o+1;}
+    writeInt16LE(v,o){if(v<0)v=0xffff+v+1;return this.writeUInt16LE(v,o);}
+    writeInt32LE(v,o){if(v<0)v=0xffffffff+v+1;return this.writeUInt32LE(v,o);}
+    writeBigUInt64LE(v,o){const lo=Number(v&0xffffffffn),hi=Number((v>>32n)&0xffffffffn);this.writeUInt32LE(lo,o);this.writeUInt32LE(hi,o+4);return o+8;}
+    writeFloatLE(v,o){const d=new DataView(this.buffer,this.byteOffset,this.byteLength);d.setFloat32(o,v,true);return o+4;}
+    writeDoubleLE(v,o){const d=new DataView(this.buffer,this.byteOffset,this.byteLength);d.setFloat64(o,v,true);return o+8;}
+    toJSON(){return{type:'Buffer',data:Array.from(this)};}
+    fill(v,s,e){super.fill(v,s,e);return this;}
+    includes(v,o){return this.indexOf(v,o)!==-1;}
+    indexOf(v,o){o=o||0;if(typeof v==='number'){for(let i=o;i<this.length;i++)if(this[i]===v)return i;return-1;}return-1;}
+    swap16(){for(let i=0;i<this.length;i+=2){const t=this[i];this[i]=this[i+1];this[i+1]=t;}return this;}
+    swap32(){for(let i=0;i<this.length;i+=4){let t=this[i];this[i]=this[i+3];this[i+3]=t;t=this[i+1];this[i+1]=this[i+2];this[i+2]=t;}return this;}
+    get offset(){return this.byteOffset;}
+  }
+  globalThis.Buffer=B;
+  if(typeof window!=='undefined')window.Buffer=B;
+  if(typeof global!=='undefined')global.Buffer=B;
+})();
+</script>
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
 </head>
 <body>
