@@ -201,13 +201,27 @@ function toKeypair(w){
     throw new Error('Keypair error: '+e.message);
   }
 }
-function getConn(){
+function getConn(altUrl){
   if(!window.solanaWeb3) throw new Error('Solana web3 not loaded — refresh page');
-  if(!RPC_URL) throw new Error('No RPC URL configured');
-  return new window.solanaWeb3.Connection(RPC_URL,'confirmed');
+  const url=altUrl||RPC_URL||DEFAULT_RPC;
+  if(!url) throw new Error('No RPC URL configured');
+  return new window.solanaWeb3.Connection(url,{commitment:'confirmed',confirmTransactionInitialTimeout:60000});
+}
+async function getConnWithFallback(){
+  const urls=[RPC_URL,DEFAULT_RPC,'https://rpc.ankr.com/solana'];
+  for(const url of urls){
+    try{
+      const c=getConn(url);
+      await c.getLatestBlockhash();
+      if(url!==RPC_URL){log('Using fallback RPC: '+url.slice(0,30)+'...');RPC_URL=url;}
+      return c;
+    }catch(e){continue;}
+  }
+  throw new Error('All RPCs unreachable — paste a Helius or QuickNode RPC URL in settings');
 }
 async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
-const RPC_URL='https://api.mainnet-beta.solana.com';
+const DEFAULT_RPC='https://api.mainnet-beta.solana.com';
+let RPC_URL=localStorage.getItem('pw_dist_rpc')||DEFAULT_RPC;
 async function rpc(m,p=[]){
   try{
     const controller=new AbortController();
@@ -334,7 +348,12 @@ function render(){
   }
 
   if(phase==='configure'){
-    h+='<div class="card"><div class="card-title">1. Select Token</div>'+
+    h+='<div class="card" style="padding:12px 16px;margin-bottom:10px;border-color:rgba(255,255,255,.04);"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">'+
+    '<label class="label" style="margin:0;">RPC</label>'+
+    '<input class="inp" style="flex:1;font-size:10px;" value="'+RPC_URL+'" onchange="RPC_URL=this.value.trim();localStorage.setItem(\'pw_dist_rpc\',RPC_URL);log(\'RPC updated\',\'success\')" placeholder="https://mainnet.helius-rpc.com/?api-key=772302a3-3889-468f-b9c5-890179d469ec"/>'+
+    '<button class="btn btn-ghost" style="font-size:9px;padding:4px 8px;" onclick="RPC_URL=DEFAULT_RPC;localStorage.removeItem(\'pw_dist_rpc\');render();log(\'RPC reset to default\')">Reset</button>'+
+    '</div></div>'+
+    '<div class="card"><div class="card-title">1. Select Token</div>'+
     '<div class="row" style="margin-bottom:10px;"><input class="inp" id="tokenSearch" placeholder="Search token or paste mint..." style="flex:1;" onkeydown="if(event.key===\'Enter\')searchToken()"/><button class="btn btn-primary" onclick="searchToken()">Search</button></div>'+
     '<div id="searchResults"></div>'+
     (tokenInfo?'<div class="token-item selected"><div style="font-weight:700;">'+tokenInfo.symbol+'</div><div style="margin-left:auto;font-size:10px;color:var(--muted);">'+tokenMint.slice(0,16)+'...</div></div>':'')+
@@ -508,13 +527,37 @@ async function startPay(method){
     showToast('Approve '+totalCharge.toFixed(4)+' SOL in wallet...');
     log('⚡ Waiting for Phantom approval ('+totalCharge.toFixed(4)+' SOL)...');
 
-    const {blockhash}=await conn.getLatestBlockhash();
+    // Use Phantom's signAndSendTransaction — it handles RPC internally
+    // This bypasses our RPC entirely for the user-signed TX
+    const {blockhash,lastValidBlockHeight}=await conn.getLatestBlockhash().catch(async()=>{
+      // If our RPC fails, try alternate RPCs
+      log('Primary RPC failed, trying alternates...','error');
+      for(const alt of ['https://solana-mainnet.g.alchemy.com/v2/demo','https://rpc.ankr.com/solana']){
+        try{
+          const c2=new window.solanaWeb3.Connection(alt,'confirmed');
+          return await c2.getLatestBlockhash();
+        }catch(e2){continue;}
+      }
+      throw new Error('All RPCs failed — set a custom RPC in settings');
+    });
     tx.recentBlockhash=blockhash;
     tx.feePayer=new PublicKey(userPub);
-    const signed=await walletObj.signTransaction(tx);
-    const sig=await conn.sendRawTransaction(signed.serialize());
-    log('TX sent: '+sig.slice(0,16)+'... confirming...');
-    await conn.confirmTransaction(sig,'confirmed');
+
+    let sig;
+    if(walletObj.signAndSendTransaction){
+      // Preferred: Phantom handles sending via its own RPC
+      const result=await walletObj.signAndSendTransaction(tx);
+      sig=result.signature||result;
+      log('TX sent via Phantom: '+String(sig).slice(0,16)+'...');
+    } else {
+      // Fallback: sign + send ourselves
+      const signed=await walletObj.signTransaction(tx);
+      sig=await conn.sendRawTransaction(signed.serialize());
+      log('TX sent: '+String(sig).slice(0,16)+'...');
+    }
+    // Confirm
+    const conn2=getConn();
+    await conn2.confirmTransaction({signature:String(sig),blockhash,lastValidBlockHeight},'confirmed');
     log('✦ Confirmed! Master funded.','success');
 
   }catch(e){
@@ -537,7 +580,7 @@ async function distribute(){
   if(!subWallets.length){log('No burner wallets','error');return;}
   log('═══ DISTRIBUTING + CLOSING MASTER ═══','success');
   const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-  const conn=getConn();
+  const conn=await getConnWithFallback();
   const masterKp=toKeypair(masterWallet);
   const lamportsEach=Math.round((solPerWallet+TX_FEE_RESERVE)*LAMPORTS);
   const BATCH=8;
@@ -575,7 +618,7 @@ async function buyOne(i){
   if(!window.solanaWeb3){log('Solana library not loaded','error');return;}
   log('[BUY] '+w.label+'...');
   try{
-    const conn=getConn();const kp=toKeypair(w);
+    const conn=await getConnWithFallback();const kp=toKeypair(w);
     // Reserve 0.015 SOL for sell TX fee + sweep fee
     const bal=await conn.getBalance(kp.publicKey);
     const reserve=Math.round(TX_FEE_RESERVE*LAMPORTS);
@@ -606,7 +649,7 @@ async function sellOne(i){
   log('[SELL] '+w.label+'...');
   try{
     if(!w.tokenBalance){log('No tokens','error');return;}
-    const conn=getConn();const kp=toKeypair(w);
+    const conn=await getConnWithFallback();const kp=toKeypair(w);
     const raw=Math.floor(w.tokenBalance*Math.pow(10,tokenInfo?.decimals||6));
     const q=await jupQuote(tokenMint,SOL_MINT,raw,slippage*100);
     const solOut=(parseFloat(q.outAmount)/LAMPORTS).toFixed(4);
@@ -631,7 +674,7 @@ async function collectReturn(){
   collectWallet=await makeWallet();
   log('Collection wallet: '+collectWallet.publicKey.slice(0,8)+'...');
   const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-  const conn=getConn();let total=0;
+  const conn=await getConnWithFallback();let total=0;
   for(let i=0;i<subWallets.length;i++){
     const w=subWallets[i];
     try{
@@ -656,7 +699,7 @@ async function returnClose(){
   if(!confirm('⚠️ This will PERMANENTLY DESTROY all wallet keys.\n\nHave you saved the key backup file?\n\nClick OK to proceed or Cancel to go back and save first.')){return;}
   log('═══ RETURNING FUNDS ═══','success');
   const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-  const conn=getConn();
+  const conn=await getConnWithFallback();
   try{
     const kp=toKeypair(collectWallet);const bal=await conn.getBalance(kp.publicKey);
     if(bal>5000){
