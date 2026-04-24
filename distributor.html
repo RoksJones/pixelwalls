@@ -120,12 +120,50 @@ function b58e(b){const d=[0];for(let i=0;i<b.length;i++){let c=b[i];for(let j=0;
 function b58d(str){const bytes=[0];for(let i=0;i<str.length;i++){const c=B58.indexOf(str[i]);if(c<0)throw new Error('Bad b58');let carry=c;for(let j=0;j<bytes.length;j++){carry+=bytes[j]*58;bytes[j]=carry&0xff;carry>>=8;}while(carry){bytes.push(carry&0xff);carry>>=8;}}for(let i=0;i<str.length&&str[i]==='1';i++)bytes.push(0);return new Uint8Array(bytes.reverse());}
 // Reconstruct Solana Keypair from our stored b58 secretKey
 const DEV_WALLET='9LABvUXzxnQghFCnjVETzAPBwhFAb4UT2qSVsFvHViHk';
-function toKeypair(w){return window.solanaWeb3.Keypair.fromSecretKey(b58d(w.secretKey));}
-function getConn(){return new window.solanaWeb3.Connection(RPC_URL,'confirmed');}
+function toKeypair(w){
+  if(!w||!w.secretKey) throw new Error('No wallet or secret key provided');
+  if(!window.solanaWeb3) throw new Error('Solana web3 not loaded');
+  try{
+    const raw=b58d(w.secretKey);
+    if(raw.length!==64) throw new Error('Invalid key length: '+raw.length+' (expected 64)');
+    return window.solanaWeb3.Keypair.fromSecretKey(raw);
+  }catch(e){
+    throw new Error('Keypair error: '+e.message);
+  }
+}
+function getConn(){
+  if(!window.solanaWeb3) throw new Error('Solana web3 not loaded — refresh page');
+  if(!RPC_URL) throw new Error('No RPC URL configured');
+  return new window.solanaWeb3.Connection(RPC_URL,'confirmed');
+}
 async function makeWallet(){try{const kp=await crypto.subtle.generateKey('Ed25519',true,['sign','verify']);const pub=new Uint8Array(await crypto.subtle.exportKey('raw',kp.publicKey));const priv=new Uint8Array(await crypto.subtle.exportKey('pkcs8',kp.privateKey));const seed=priv.slice(16,48);const sk=new Uint8Array(64);sk.set(seed,0);sk.set(pub,32);return{publicKey:b58e(pub),secretKey:b58e(sk),_kp:kp};}catch{const s=new Uint8Array(32);crypto.getRandomValues(s);const p=new Uint8Array(32);crypto.getRandomValues(p);return{publicKey:b58e(p),secretKey:b58e(new Uint8Array([...s,...p])),_kp:null};}}
 const RPC_URL='https://api.mainnet-beta.solana.com';
-async function rpc(m,p=[]){const r=await fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result;}
-async function getBal(pub){const r=await rpc('getBalance',[pub]);return r.value/LAMPORTS;}
+async function rpc(m,p=[]){
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),15000);
+    const r=await fetch(RPC_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:m,params:p}),signal:controller.signal});
+    clearTimeout(timeout);
+    if(!r.ok) throw new Error('RPC HTTP '+r.status);
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message||'RPC error');
+    return d.result;
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('RPC timeout (15s)');
+    throw e;
+  }
+}
+async function getBal(pub){
+  try{
+    if(!pub||pub.length<32) throw new Error('Invalid pubkey: '+pub);
+    const r=await rpc('getBalance',[pub]);
+    if(!r||typeof r.value==='undefined') throw new Error('No balance data');
+    return r.value/LAMPORTS;
+  }catch(e){
+    log('Balance check failed for '+((pub||'').slice(0,8))+'...: '+e.message,'error');
+    return 0;
+  }
+}
 // Get solana web3 from CDN
 function getWeb3(){return window.solanaWeb3||null;}
 function getWallets(){const w=[];if(window.phantom?.solana?.isPhantom)w.push({name:'Phantom',obj:window.phantom.solana});else if(window.solana?.isPhantom)w.push({name:'Phantom',obj:window.solana});if(window.solflare?.isSolflare)w.push({name:'Solflare',obj:window.solflare});if(window.backpack?.isBackpack)w.push({name:'Backpack',obj:window.backpack});return w;}
@@ -154,8 +192,41 @@ log('Denied — no pixel ownership','error');
 }catch(e){err.style.display='block';err.textContent='Error: '+e.message;log('Gate error: '+e.message,'error');}}
 function unlockApp(){document.getElementById('gateScreen').style.display='none';document.getElementById('mainApp').style.display='flex';fetchPrices();render();}
 async function fetchPrices(){try{const r=await fetch('https://api.dexscreener.com/tokens/v1/solana/'+CA);if(!r.ok)return;const d=await r.json();const arr=Array.isArray(d)?d:(d.pairs||[]);if(arr.length){const p=arr[0];if(p.priceUsd)pixelPrice=parseFloat(p.priceUsd);if(p.priceUsd&&p.priceNative){const s=parseFloat(p.priceUsd)/parseFloat(p.priceNative);if(s>10&&s<10000)solPrice=s;}}}catch(e){}}
-async function jupQuote(a,b,amt,slip){const r=await fetch(JUP+'/quote?inputMint='+a+'&outputMint='+b+'&amount='+amt+'&slippageBps='+slip);if(!r.ok)throw new Error('Quote failed');return r.json();}
-async function jupSwap(q,pub){const r=await fetch(JUP+'/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:pub,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true,prioritizationFeeLamports:'auto'})});if(!r.ok)throw new Error('Swap failed');return r.json();}
+async function jupQuote(a,b,amt,slip){
+  if(!a||!b) throw new Error('Missing mint address');
+  if(amt<=0) throw new Error('Amount must be > 0 (got '+amt+')');
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),20000);
+    const url=JUP+'/quote?inputMint='+a+'&outputMint='+b+'&amount='+amt+'&slippageBps='+slip;
+    const r=await fetch(url,{signal:controller.signal});
+    clearTimeout(timeout);
+    if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error('Jupiter quote HTTP '+r.status+': '+txt.slice(0,100));}
+    const data=await r.json();
+    if(!data.outAmount) throw new Error('No output amount in quote');
+    return data;
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Jupiter quote timeout (20s)');
+    throw e;
+  }
+}
+async function jupSwap(q,pub){
+  if(!q) throw new Error('No quote provided');
+  if(!pub) throw new Error('No public key for swap');
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30000);
+    const r=await fetch(JUP+'/swap',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({quoteResponse:q,userPublicKey:pub,wrapAndUnwrapSol:true,dynamicComputeUnitLimit:true,prioritizationFeeLamports:'auto'}),signal:controller.signal});
+    clearTimeout(timeout);
+    if(!r.ok){const txt=await r.text().catch(()=>'');throw new Error('Jupiter swap HTTP '+r.status+': '+txt.slice(0,100));}
+    const data=await r.json();
+    if(!data.swapTransaction) throw new Error('No swap transaction returned');
+    return data;
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Jupiter swap timeout (30s)');
+    throw e;
+  }
+}
 
 function render(){
   const el=document.getElementById('appContent');
@@ -322,12 +393,13 @@ function selToken(m,s,d){tokenMint=m;tokenInfo={symbol:s,decimals:d};log('Select
 async function startPay(method){
   if(!tokenMint){showToast('Select token first');return;}
   if(!walletObj){showToast('Connect wallet first');return;}
+  if(!window.solanaWeb3){showToast('Solana library not loaded — refresh page');log('Error: solanaWeb3 not loaded','error');return;}
 
   const fee=walletCount*FEE_PER_WALLET;
   const fundAmount=walletCount*(solPerWallet+TX_FEE_RESERVE);
   const isDev=userPub===DEV_WALLET;
 
-  // Create master + burner wallets first (need master pubkey for TX)
+  // Create master + burner wallets
   log('Creating master + '+walletCount+' burner wallets...');
   masterWallet=await makeWallet();
   log('Master: '+masterWallet.publicKey.slice(0,8)+'...');
@@ -338,50 +410,51 @@ async function startPay(method){
   }
   log(walletCount+' burner wallets created','success');
 
-  // Build single Phantom TX: fee (if not dev) + fund master
-  const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
-  const conn=getConn();
-  const tx=new Transaction();
+  // Build Phantom TX: fee (if not dev) + fund master
+  try{
+    const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
+    const conn=getConn();
+    const tx=new Transaction();
 
-  if(!isDev){
+    if(!isDev){
+      tx.add(SystemProgram.transfer({
+        fromPubkey:new PublicKey(userPub),
+        toPubkey:new PublicKey(TREASURY),
+        lamports:Math.round(fee*LAMPORTS),
+      }));
+      log('Fee: '+fee.toFixed(4)+' SOL → treasury');
+    } else {
+      log('✦ Dev wallet — fee waived','success');
+    }
+
     tx.add(SystemProgram.transfer({
       fromPubkey:new PublicKey(userPub),
-      toPubkey:new PublicKey(TREASURY),
-      lamports:Math.round(fee*LAMPORTS),
+      toPubkey:new PublicKey(masterWallet.publicKey),
+      lamports:Math.round(fundAmount*LAMPORTS),
     }));
-    log('TX includes fee: '+fee.toFixed(4)+' SOL → treasury');
-  } else {
-    log('✦ Dev wallet — fee waived','success');
-  }
+    log('Funding: '+fundAmount.toFixed(4)+' SOL → master wallet');
 
-  tx.add(SystemProgram.transfer({
-    fromPubkey:new PublicKey(userPub),
-    toPubkey:new PublicKey(masterWallet.publicKey),
-    lamports:Math.round(fundAmount*LAMPORTS),
-  }));
-  log('TX includes funding: '+fundAmount.toFixed(4)+' SOL → master wallet');
+    const totalCharge=isDev?fundAmount:(fee+fundAmount);
+    showToast('Approve '+totalCharge.toFixed(4)+' SOL in wallet...');
+    log('⚡ Waiting for Phantom approval ('+totalCharge.toFixed(4)+' SOL)...');
 
-  const totalCharge=isDev?fundAmount:(fee+fundAmount);
-  showToast('Approve '+totalCharge.toFixed(4)+' SOL in wallet...');
-
-  try{
     const {blockhash}=await conn.getLatestBlockhash();
     tx.recentBlockhash=blockhash;
     tx.feePayer=new PublicKey(userPub);
     const signed=await walletObj.signTransaction(tx);
     const sig=await conn.sendRawTransaction(signed.serialize());
+    log('TX sent: '+sig.slice(0,16)+'... confirming...');
     await conn.confirmTransaction(sig,'confirmed');
-    log('✦ Payment confirmed: '+sig.slice(0,12)+'...','success');
+    log('✦ Confirmed! Master funded.','success');
+
   }catch(e){
-    if(e.code===4001){showToast('Cancelled');masterWallet=null;subWallets=[];return;}
-    log('Payment failed: '+e.message,'error');
-    showToast('Failed — try again');
+    if(e.code===4001){showToast('Cancelled');log('User cancelled','error');}
+    else{log('Payment error: '+e.message,'error');showToast('Failed: '+(e.message||'').slice(0,50));}
     masterWallet=null;subWallets=[];
     return;
   }
 
   feePaid=true;
-  // Skip straight to distribute (master is already funded)
   phase='funded';
   render();
 }
@@ -389,6 +462,9 @@ async function startPay(method){
 async function checkMaster(){if(!masterWallet)return;try{const bal=await getBal(masterWallet.publicKey);const needed=walletCount*(solPerWallet+TX_FEE_RESERVE);const el=document.getElementById('masterBal');const btn=document.getElementById('distBtn');if(el)el.innerHTML='Balance: <span style="color:'+(bal>=needed*0.95?'var(--green)':'var(--orange)')+';">'+bal.toFixed(4)+' SOL</span> (need '+needed.toFixed(4)+')';if(btn)btn.disabled=bal<needed*0.95;log('Master: '+bal.toFixed(4)+' SOL');}catch(e){log('Error: '+e.message,'error');}}
 
 async function distribute(){
+  if(!window.solanaWeb3){log('Solana library not loaded','error');showToast('Refresh page');return;}
+  if(!masterWallet||!masterWallet.secretKey){log('No master wallet','error');return;}
+  if(!subWallets.length){log('No burner wallets','error');return;}
   log('═══ DISTRIBUTING + CLOSING MASTER ═══','success');
   const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
   const conn=getConn();
@@ -422,7 +498,12 @@ async function distribute(){
 }
 
 async function buyOne(i){
-  const w=subWallets[i];log('[BUY] '+w.label+'...');
+  if(i<0||i>=subWallets.length){log('Invalid wallet index: '+i,'error');return;}
+  const w=subWallets[i];
+  if(!w||!w.secretKey){log('Wallet '+i+' has no key','error');return;}
+  if(!tokenMint){log('No token selected','error');return;}
+  if(!window.solanaWeb3){log('Solana library not loaded','error');return;}
+  log('[BUY] '+w.label+'...');
   try{
     const conn=getConn();const kp=toKeypair(w);
     // Reserve 0.015 SOL for sell TX fee + sweep fee
@@ -448,7 +529,11 @@ async function buyOne(i){
 async function buyAll(){log('═══ BUYING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='funded')await buyOne(i);}log('═══ COMPLETE ═══','success');phase='bought';render();}
 
 async function sellOne(i){
-  const w=subWallets[i];log('[SELL] '+w.label+'...');
+  if(i<0||i>=subWallets.length){log('Invalid wallet index: '+i,'error');return;}
+  const w=subWallets[i];
+  if(!w||!w.secretKey){log('Wallet '+i+' has no key','error');return;}
+  if(!window.solanaWeb3){log('Solana library not loaded','error');return;}
+  log('[SELL] '+w.label+'...');
   try{
     if(!w.tokenBalance){log('No tokens','error');return;}
     const conn=getConn();const kp=toKeypair(w);
@@ -470,6 +555,8 @@ async function sellOne(i){
 async function sellAll(){log('═══ SELLING ALL ═══','success');for(let i=0;i<subWallets.length;i++){if(subWallets[i].status==='bought')await sellOne(i);}log('═══ COMPLETE ═══','success');render();}
 
 async function collectReturn(){
+  if(!window.solanaWeb3){log('Solana library not loaded','error');return;}
+  if(!subWallets.length){log('No wallets to collect from','error');return;}
   log('═══ COLLECTING ═══','success');
   collectWallet=await makeWallet();
   log('Collection wallet: '+collectWallet.publicKey.slice(0,8)+'...');
@@ -493,6 +580,9 @@ async function collectReturn(){
 }
 
 async function returnClose(){
+  if(!window.solanaWeb3){log('Solana library not loaded','error');return;}
+  if(!collectWallet||!collectWallet.secretKey){log('No collection wallet','error');return;}
+  if(!userPub){log('No user wallet connected','error');return;}
   if(!confirm('⚠️ This will PERMANENTLY DESTROY all wallet keys.\n\nHave you saved the key backup file?\n\nClick OK to proceed or Cancel to go back and save first.')){return;}
   log('═══ RETURNING FUNDS ═══','success');
   const {PublicKey,Transaction,SystemProgram}=window.solanaWeb3;
@@ -536,9 +626,27 @@ async function refreshAll(){log('Refreshing...');for(let i=0;i<subWallets.length
 const logC={info:'#b0b0bc',success:'#14F195',error:'#FF4545'};
 function log(msg,type='info'){const ts=new Date().toLocaleTimeString();const b=document.getElementById('logBody');if(!b)return;const d=document.createElement('div');d.className='log-entry';d.style.color=logC[type]||logC.info;d.innerHTML='<span style="color:#555;margin-right:6px;">'+ts+'</span>'+msg;b.appendChild(d);b.scrollTop=b.scrollHeight;while(b.children.length>300)b.removeChild(b.firstChild);}
 function clearLogs(){const b=document.getElementById('logBody');if(b)b.innerHTML='';}
+// Global error handler — catches anything we missed
+window.addEventListener('unhandledrejection',e=>{
+  log('Unhandled error: '+(e.reason?.message||e.reason||'unknown'),'error');
+  console.error('Unhandled:',e.reason);
+});
+window.onerror=function(msg,src,line){
+  log('JS error: '+msg+' (line '+line+')','error');
+  return false;
+};
+
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3800);}
 
-window.addEventListener('load',async()=>{for(const w of getWallets()){try{if(w.obj.isConnected&&w.obj.publicKey){userPub=w.obj.publicKey.toString();walletObj=w.obj;document.getElementById('walletBtn').textContent='✦ '+userPub.slice(0,4)+'...'+userPub.slice(-4);document.getElementById('walletBtn').classList.add('connected');await checkGate();break;}}catch(e){}}});
+window.addEventListener('load',async()=>{
+  // Verify web3.js loaded from CDN
+  if(!window.solanaWeb3){
+    log('⚠️ Solana web3.js failed to load — transactions will not work','error');
+    showToast('Warning: Solana library failed to load');
+  } else {
+    log('Solana web3.js loaded ✓');
+  }
+for(const w of getWallets()){try{if(w.obj.isConnected&&w.obj.publicKey){userPub=w.obj.publicKey.toString();walletObj=w.obj;document.getElementById('walletBtn').textContent='✦ '+userPub.slice(0,4)+'...'+userPub.slice(-4);document.getElementById('walletBtn').classList.add('connected');await checkGate();break;}}catch(e){}}});
 </script>
 </body>
 </html>
